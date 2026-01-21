@@ -10,4 +10,5 @@ numpy
 jupyter
 ipywidgets
 pandas
-brian2
+# brian2
+# pyNN
