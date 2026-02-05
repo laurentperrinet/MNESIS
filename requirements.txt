@@ -10,5 +10,7 @@ numpy
 jupyter
 ipywidgets
 pandas
+torch
+snnTorch
 # brian2
 # pyNN
