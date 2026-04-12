@@ -2,15 +2,28 @@
 # use it to install (and update) dependencies with
 # `pip install -U -r requirements.txt`
 pip
-ruff
-seaborn
-cmocean
-matplotlib
-numpy
-jupyter
-ipywidgets
-pandas
 torch
-snnTorch
-# brian2
-# pyNN
+snntorch
+ipykernel
+matplotlib
+seaborn
+numpy
+pandas
+jinja2
+prompt-toolkit
+ipython
+jupyter_server
+jupyter
+jupyterlab-git
+jupyter_contrib_nbextensions
+nbconvert
+jupyterlab
+ipynb
+optuna
+optuna-dashboard
+tqdm
+plotly
+torch_optimizer
+scipy
+statsmodels
+scikit-learn
