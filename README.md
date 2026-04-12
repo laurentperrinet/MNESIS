@@ -1,172 +1,118 @@
-# MNESIS: Memory Network - Every Spike Is Sacred
+# MNESIS Polychronous Chains
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![DOI](https://img.shields.io/badge/DOI-10.xxxx/xxxxx-blue.svg)](https://doi.org/xxxxx)
 
-A collection of spiking neural network (SNN) simulations exploring distributed memory networks with axonal delays. MNESIS implements various approaches to modeling recurrent neural networks where each spike is treated as a discrete event with transmission delays.
+Accurate detection and generation of polychronous spike motifs using spiking neural networks with snnTorch.
 
-## Overview
+## Introduction
 
-This repository contains implementations of spiking neural networks that investigate fundamental questions in computational neuroscience:
+Polychronous chains are temporally precise spike patterns that emerge in recurrent neural networks with axonal delays. This notebook implements a spiking neural network (SNN) capable of detecting and generating such patterns using gradient-based learning with snnTorch.
 
-- **Distributed memory encoding** - How memories form through spike patterns across neural populations
-- **Temporal coding** - Information encoding and processing through precise spike timing
-- **Network dynamics** - Self-sustained activity, synchronization, and stability in recurrent networks
-- **Biological realism** - Incorporation of axonal conduction delays (2-40ms) and leaky integrate-and-fire neuron dynamics
+## Principles
 
-The "Every Spike Is Sacred" philosophy emphasizes treating each neural spike as a discrete, meaningful event that contributes to memory formation and information processing in distributed neural systems.
+### Polychronous Groups
+- Groups of neurons that fire in a time-locked but not synchronous manner
+- Activity propagates through the network via axonal delays
+- Different neurons fire at different times, creating temporal spike motifs
 
-## Implementation Frameworks
+### Spike Motifs as Memory
+- Each spiking motif (SM) represents a distributed memory pattern
+- The network learns to reproduce target spike patterns from initial conditions
+- Temporal precision enables dense information storage
 
-MNESIS implements spiking neural networks using multiple simulation approaches:
+### Key Hypothesis
+A spiking neural network with appropriately initialized recurrent weights can learn to propagate polychronous chains from an initial seed pattern, enabling controlled pattern generation and memory retrieval.
 
-### Event-Based Spiking Networks
-- Multi-threaded SNN where each neuron runs as a separate thread
-- Uses priority queues for precise timing of delayed spikes
-- Implements Poisson spike generation and delayed spike transmission
-- Scalable from small networks (32 neurons) to large ones (8192+ neurons)
+## Methods
 
-### Standard Neuroscience Frameworks
-- **NumPy-based SNN** - Custom LIF neuron implementation using NumPy arrays
-- **Brian2** - Implementation using the Brian2 SNN simulation library
-- **PyNN** - Standardized neural simulations using PyNN interface
+### Network Architecture
+- **Neuron Model**: Leaky Integrate-and-Fire (LIF) with surrogate gradients
+- **Input Layer**: Flattened spike windows of size `num_delay × N_neuron`
+- **Hidden Layer**: Dense recurrent connections with dropout regularization
+- **Output**: Spike trains for each neuron over time
 
-### Modern Deep Learning Integration
-- **snnTorch** - Integration with snnTorch for hybrid SNN-deep learning approaches
-- **HD encoding** - High-dimensional computing integration with spiking networks
+### Key Parameters
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `N_neuron` | 256 | Number of presynaptic neurons |
+| `num_delay` | 41 | Temporal window size (timesteps) |
+| `N_SM` | 4 | Number of spiking motifs |
+| `N_time` | 2000 | Total simulation duration (timesteps) |
+| `p_A` | 0.001 | Spontaneous firing probability |
+| `lif_beta` | 0.7 | Membrane potential decay rate |
 
-### Networking Approaches
-- ZeroMQ-based implementations for inter-process communication
-- Threading vs multiprocessing performance comparisons
-- Scalability tests across network sizes
+### Weight Initialization
+Weights are initialized using a pseudo-inverse approach:
+1. Collect context-target spike pairs from target patterns
+2. Compute Moore-Penrose pseudo-inverse of context matrix
+3. Set weights to minimize reconstruction error
+4. Apply gain factor for spike generation
 
-## Notebook Examples
+### Loss Function
+**Spike F1-Score Loss**: Balances precision and recall for spike prediction
+- Precision: TP / (TP + FP) - minimizes false positives
+- Recall: TP / (TP + FN) - minimizes false negatives
+- F1 Score: Harmonic mean of precision and recall
 
-### Core Implementations
+### Training Procedure
+1. Generate random target spike patterns
+2. Initialize input spikes with spontaneous activity + target seed
+3. Forward pass through LIF network with recurrent connections
+4. Compute F1-score loss between predicted and target spikes
+5. Backpropagate through time using surrogate gradients
+6. Update weights with SGD or Adam optimizer
+7. Use cosine learning rate schedule with warmup
 
-| Notebook | Description | Key Features |
-|----------|-------------|--------------|
-| `2026-01-21 event-based SNN.ipynb` | Multi-threaded event-based SNN | Priority queues, delayed transmission, wall-clock timing |
-| `2026-01-21 numpy-based SNN.ipynb` | Custom LIF neuron implementation | Complete control over neuron dynamics, spike propagation |
-| `2026-01-21 brian-based SNN.ipynb` | Brian2 library implementation | Standardized SNN simulation, rapid prototyping |
-| `2025-09-25 polychronous chain.ipynb` | Polychronous neural groups | Temporal pattern formation, synfire chains |
+## Results
 
-### Advanced Architectures
+### Performance
+- Training achieves **near-perfect F1 scores** (precision=1.0, recall=1.0) on target pattern reproduction
+- The network successfully propagates spike patterns through time using learned recurrent weights
+- Initial pseudo-inverse weights provide strong baseline performance
 
-| Notebook | Description | Applications |
-|----------|-------------|--------------|
-| `2026-02-02_snnTorch.ipynb` | snnTorch integration | Hybrid SNN-deep learning, gradient-based training |
-| `2026-02-05_HD-snnTorch.ipynb` | High-dimensional computing | Binary vector embeddings, pattern recognition |
+### Spike Pattern Generation
+- Input: Initial spike seed (first `num_delay` timesteps of target pattern) + spontaneous activity
+- Output: Full target spike pattern reproduced by the recurrent network
+- The network acts as a **pattern completion system** - from seed to full motif
 
-## Key Features
+### Parameter Scans
+The notebook systematically explores:
+- **Number of patterns (N_SM)**: How many distinct motifs can be stored
+- **Pattern duration (N_time)**: Temporal extent of spike patterns
+- **Maximum delay (num_delay)**: Range of axonal delays
+- **Network size (N_neuron)**: Scaling with number of neurons
+- **Spontaneous firing rate (p_A)**: Noise robustness
 
-###Neural Modeling
-- Leaky Integrate-and-Fire (LIF) neurons with biophysically realistic parameters
-- Variable axonal delays (2-40ms range) for conduction timing
-- Poisson spike generation with configurable base firing rates (~1Hz)
-- Sparse connectivity patterns with configurable connection density (~20%)
-
-### Technical Innovations
-- Thread-safe priority queues for precise spike timing
-- ZeroMQ integration for distributed communication between network components
-- Memory-efficient spike tracking and counting mechanisms
-- Real-time simulation with wall-clock timing synchronization
-
-### Scalability & Performance
-- Seamless scaling from small networks (32 neurons) to large-scale simulations (8192+ neurons)
-- Multi-core processing support via threading and multiprocessing
-- Memory-optimized data structures for large-scale network simulations
-- Performance benchmarking across different implementation approaches
+### Visualizations
+- Raster plots showing target vs predicted spike patterns
+- Weight distribution histograms
+- Training loss and F1-score curves
 
 ## Getting Started
 
-### Prerequisites
-
-Install the required dependencies:
-
+### Requirements
 ```bash
-pip install -U -r requirements.txt
+pip install torch snntorch numpy matplotlib
 ```
 
-Core dependencies include:
-- `numpy` - Numerical computations
-- `matplotlib` - Visualization
-- `torch` + `snnTorch` - Deep learning integration
-- `jupyter` + `ipywidgets` - Interactive notebooks
-- Additional packages: `seaborn`, `cmocean`, `pandas`
-
-### Running Simulations
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd MNESIS
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install -U -r requirements.txt
-   ```
-
-3. Launch Jupyter notebook:
-   ```bash
-   jupyter notebook
-   ```
-
-4. Open any notebook file and execute cells sequentially
-5. Modify parameters to explore different network configurations:
-
-   - Network size: 32-8192+ neurons
-   - Connectivity density: 5-50%
-   - Axonal delays: 2-40ms
-   - Firing rates: 0.5-5Hz
-
-## Project Structure
-
-```
-MNESIS/
-├── *.ipynb              # Jupyter notebooks with complete SNN implementations
-│   ├── 2025-09-25 polychronous chain.ipynb
-│   ├── 2026-01-21 event-based SNN.ipynb
-│   ├── 2026-01-21 numpy-based SNN.ipynb
-│   ├── 2026-01-21 brian-based SNN.ipynb
-│   ├── 2026-02-02_snnTorch.ipynb
-│   └── 2026-02-05_HD-snnTorch.ipynb
-├── requirements.txt     # Python dependencies
-├── LICENSE              # MIT License
-└── README.md            # This file
+### Run the Notebook
+```bash
+jupyter notebook MNESIS_polychronous-chains.ipynb
 ```
 
-Each notebook contains executable code with detailed explanations, parameter descriptions, and visualization code for analyzing network activity.
-
-## Research Applications
-
-This research toolkit enables investigation of:
-
-### Distributed Memory Systems
-- Pattern storage and recall in recurrent networks
-- Memory capacity analysis across network sizes
-- Robustness of memory retrieval to noise and neuron loss
-
-### Temporal Processing
-- Spike-timing dependent plasticity (STDP) effects
-- Temporal pattern recognition and classification
-- Network responses to precisely timed inputs
-
-### Network Dynamics
-- Emergent synchronization and oscillations
-- Balanced excitation/inhibition dynamics
-- Criticality and power-law distributions in activity
+### Cached Data
+Training results are cached in `cached_data/` directory:
+- `*_init.pth`: Initial weights from pseudo-inverse
+- `*.pth`: Trained model weights
+- `*.json`: Parameter scan results
 
 ## Citation
 
-If you use this code in your research, please cite:
-
 ```bibtex
-@software{MNESIS2026,
-  author = {Author Name},
-  title = {MNESIS: Memory Network Every Spike Is Sacred},
+@software{MNESIS_polychronous2026,
+  author = {Laurent Perrinet},
+  title = {MNESIS Polychronous Chains: Spike Motif Detection with SNNs},
   year = {2026},
   publisher = {GitHub},
   url = {<repository-url>}
@@ -175,8 +121,4 @@ If you use this code in your research, please cite:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-This work contributes to the computational neuroscience community's efforts to understand how temporal dynamics and distributed representations enable memory and computation in biological and artificial neural systems.
+MIT License - see [LICENSE](LICENSE) for details.
