@@ -1,0 +1,345 @@
+%!TeX TS-program = lualatex
+%!TeX encoding = UTF-8 Unicode
+%!TeX spellcheck = fr-FR
+%!BIB TS-program = bibtex
+% -*- coding: UTF-8; -*-
+% vim: set fenc=utf-8
+%
+% Adapted from the NeurIPS Conference:
+% - Any appearance of "neurips_2023" was replaced by "airov26".
+% - The footer was adapted accordingly.
+% - A package option "anonymous" was added.
+% - hyperref was moved to airov.sty, with specific customisation
+% - For the [final] version the page number was removed.
+\documentclass{article}
+
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading airov26
+
+% https://airov.at/2026/
+
+% ready for submission
+\usepackage[final]{airov26}
+
+
+% if your workshop requires anonymous submission, add the [anonymous] option:
+% \usepackage[anonymous]{airov26}
+
+
+% to compile a preprint version, e.g., for submission to arXiv, add the
+% [preprint] option:
+% \usepackage[preprint]{airov26}
+
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+% \usepackage[final]{airov26}
+
+
+% to avoid loading the natbib package, add option nonatbib:
+% \usepackage[nonatbib]{airov26}
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+% \usepackage{siunitx}
+% \sisetup{output-exponent-marker=\ensuremath{\mathrm{e}}}
+% \newcommand{\ms}{\si{\milli\second}}%
+\usepackage{amssymb} % Required for \lesssim
+\graphicspath{{./figures/}}%
+
+
+\title{
+Working Memory in a Recurrent Spiking Neural Networks With Heterogeneous Synaptic Delays
+}
+
+
+\author{%
+  Laurent U Perrinet\thanks{More information on \url{https://laurentperrinet.github.io/publication/perrinet-26-airov/}.} \\
+  Institut de Neurosciences de la Timone (UMR7289) \\
+  Aix Marseille Univ, CNRS\\
+  27 Bd Moulin, 13005 Marseille, France \\
+  \texttt{laurent.perrinet@univ-amu.fr} \\
+}
+
+
+\begin{document}
+
+
+\maketitle
+
+% Weaknesses:
+% * Test data too simple: Only fake patterns, not real ones like SHD or video.
+% * Unknown limits: Tests just 8 patterns—how many more can it hold?
+% * Too many parameters: 10M weights need slimming down.
+% * No comparisons: Doesn't test against normal spiking nets or other memory methods
+
+
+\begin{abstract}
+Working memory --- the ability to store and recall precise temporal patterns of neural activity --- remains an open challenge for spiking neural networks (SNNs). We propose a recurrent SNN of $N$ neurons in which each synapse is equipped with $D = 41$ delays, modelled as a weight tensor $\mathbf{W} \in \mathbb{R}^{N \times N \times D}$ and trained end-to-end with surrogate-gradient backpropagation through time. The network stores $M$ arbitrary target spike patterns by representing each as a sequential chain of overlapping Spiking Motifs: contiguous windows of length $D$ that uniquely predict spikes at the next time step. On a synthetic benchmark of $M=8$ patterns ($N=512$ neurons, $T=1000$ steps), training achieves a mean F1 score of $0.966$, with recall emerging first near the clamped initialisation window and propagating forward in time. This result demonstrates that heterogeneous delays provide an efficient substrate for working memory in SNNs, enabling energy-efficient neuromorphic edge deployment.
+\end{abstract}
+
+
+\section{Introduction}
+%----------------------------%
+%----------------------------%
+\begin{figure}%[t]
+  \includegraphics[width=\linewidth]{izhikevich_rec.pdf}%
+  \caption{%
+    \textbf{Working memory as sequential spike prediction via heterogeneous delays.}
+    %
+    \emph{Left:} A recurrent HD-SNN of five neurons numbered $1$--$5$, connected by two subsets of recurrent connections that define two Spiking Motifs from the presynaptic side (neurons $a$) to the postsynaptic side (neurons $b$): dark-red connections from $a_2$, $a_3$, $a_4$, and $a_5$ target $b_1$ with delays $4$, $9$, $6$, $3$\,ms; green connections from $a_1$, $a_2$, $a_3$, $a_4$ target $b_5$ with delays $1$, $6$, $3$, $8$\,ms. %
+    \emph{Right:} Raster plot illustrating how the network predicts successive spikes from a past context window.
+    %
+    \emph{Step~1 --- first prediction (green box):} the orange input spikes emitted at staggered times by $a_2$--$a_5$ within the first context window (dashed green box) with precise interspike intervals. These are used to define a heterogeneous Spiking Motif such that the (green) delays of all four spikes converge \emph{synchronously} at $b_5$, crossing the firing threshold and producing the green output spike. 
+    %
+    \emph{Step~2 --- second prediction (dark-red box):} the green spike of $a_5$ re-enters the network as a new input and, together with the spikes now visible in the shifted context window (dashed dark-red box), is routed through the dark-red delays in order to converge synchronously on $b_1$, generating its output spike.
+    %
+    Because output spikes re-enter the same population, detecting one Spiking Motif provides the context for predicting the next spike in the sequence, implementing working memory as a chain of temporal predictions grounded in the preceding context window.
+  }
+  \label{fig:izhikevich}
+\end{figure}
+%----------------------------%
+
+A century ago,~\citet{Adrian1926} established that neural communication relies on all-or-none action potentials, \emph{spikes}. Whether information is encoded in precise spike timing or in the coarser measure of instantaneous firing rate remains debated~\citep{Softky1993,Bohte2004,Grimaldi2023} --- a question that becomes especially sharp for working memory, where the brain must maintain and manipulate information across delays of seconds. In traditional artificial neural networks, long-range temporal dependencies are addressed by gated recurrent unit (GRU) architectures or Transformers~\citep{Vaswani2017}, which decouple temporal binding range from the timescale of individual units. The analogous problem for spiking neural networks (SNNs) --- binding activity patterns separated by intervals far exceeding a single neuron's time constant --- lacks a general solution and remains a key challenge for biologically plausible sequence processing~\citep{Yin2026}.
+
+One principled approach relies on the \emph{precise relative timing} of spikes across a population.~\citet{Abeles1982} was a precursor in proposing that cortical neurons act as coincidence detectors;~\citet{Bienenstock1995} formalised this into \emph{synfire chains}, feedforward pools in which synchronous volleys propagate reliably. Experimental support came from~\citet{Bruno2006}, who showed that thalamocortical inputs are individually weak but effective through precise synchrony; theoretical work further showed such synchrony can be learned in an unsupervised manner~\citep{Perrinet2002b}.~\citet{Ikegaya2004} then directly observed recurring spatiotemporal spike sequences in neocortex at both sub- and supra-second timescales, and complementary hippocampal evidence shows that such sequences self-organise spontaneously as internal population templates~\citep{Villette2015}.
+
+\citet{Izhikevich2006} extended the synfire framework by introducing heterogeneous axonal delays with spike-timing-dependent plasticity (STDP). The resulting \emph{polychronous neuronal groups} (PNGs) --- time-locked, non-synchronous firing patterns at millisecond precision --- vastly outnumber the neurons in the network, yielding a large short-term memory capacity exploited for visual feature binding~\citep{Eguchi2018} and sequence classification~\cite{Paugam-Moisy2008}.~\citet{Szatmary2010} showed that short-term plasticity can cue a PNG's reactivation and sustain a working memory. However, storing spike patterns of arbitrary length is inherently difficult: the sequential structure of the task means each context window is not an independent query but is itself the output of the network at the previous step, so small errors at early time steps propagate and amplify towards the end of the sequence --- a compounding difficulty absent from static associative memory.
+
+The limitation of the original model is that delays are fixed rather than learned. Recent work addresses this:~\citet{Goltz2021} demonstrated fast, energy-efficient inference on neuromorphic hardware using first-spike-time coding, while~\citet{Hammouamri2023} introduced gradient-based delay learning via dilated convolutions with learnable spacings (DCLS), achieving sparse solutions in which only $\sim\!20\%$ of delay channels remain active. Applied to event-based vision, heterogeneous learned delays in a single spiking layer suffice for fast motion detection~\citep{Grimaldi2023a}, scalable to always-on object recognition~\citep{Grimaldi2024}. Multiple learned delays per synapse give rise to \emph{Spiking Motifs} (SMs)~\citep{Perrinet2023}: precisely timed spike patterns that generalise PNGs to a trainable, hardware-compatible framework, here referred to as Heterogeneous-Delay SNNs (HD-SNNs).~\citet{Kronland-Martinet2025} recently extended this to motifs of arbitrary length by chaining sub-motif detectors with bounded synaptic delays, achieving robust encoding of complete Spiking Heidelberg Digits patterns.
+
+The present work generalises this chain-of-motifs framework to enable working memory in a recurrent SNN. Rather than relying on fixed delays and unsupervised STDP rules as in the original polychronisation model, we extend the spike-timing theory of~\citep{Kronland-Martinet2025} to a fully recurrent topology: once primed by a short clamping window, the network autonomously recalls arbitrary-length spike sequences. The model is trained end-to-end with surrogate gradients~\citep{Neftci2019a}, bridging the computational neuroscience framework of polychronisation with gradient-based machine learning and targeting the energy-efficiency and sparsity objectives central to neuromorphic edge deployment.
+
+\section{Methods}
+\label{sec:methods}
+
+%%%-----------------------------------------------------------------
+\subsection{Representation of spiking activity}
+%%%-----------------------------------------------------------------
+
+In neurobiological recordings or the output of event-based cameras, any generic raster plot consists of a stream of \emph{spikes}, defined as a list of address--timestamp tuples
+\[
+  \mathcal{E}
+  = \bigl\{(a_r,\, t_r)\bigr\}_{r \in [1,\, N_\mathrm{ev}]},
+\]
+where $N_\mathrm{ev} \in \mathbb{N}$ is the total number of events and $r$ indexes each event in temporal order~\citep{Grimaldi2024}. Each event has a time of occurrence $t_r$ and an address $a_r$ in the neural population space $\mathcal{A}$. In a Single Unit Activity (SUA) recording for instance, $\mathcal{A}$ is the identified set of neurons.
+
+Neurons are characterised by their membrane potential dynamics and by the integration of synaptic potentials along their dendritic tree. Crucially, neurons can receive inputs from multiple presynaptic neurons with \emph{heterogeneous delays} $\delta_s$, representing the travel time of the presynaptic spike to the soma of the postsynaptic neuron. Scanning all pre- and postsynaptic pairs, we define the set of $N_s \in \mathbb{N}$ synapses as
+\[
+  \mathcal{S}
+  = \bigl\{(a_s,\, b_s,\, w_s,\, \delta_s)\bigr\}_{s \in [1,\, N_s]},
+\]
+where $a_s \in \mathcal{A}$ and $b_s \in \mathcal{A}$ are respectively the pre- and postsynaptic addresses, $w_s$ is the synaptic weight, and $\delta_s$ is the delay. Note that neurons in the human cortex have on average 30000 synapses~\citep{Rockland2002}, an order of magnitude which is seldom reached in artificial networks. In our model, two neurons may contact each other via multiple synapses, each with a different delay. The \emph{receptive field} of neuron $b$ is the sub-set of synapses that project onto it:
+\[
+  \mathcal{S}^b
+  = \bigl\{(a_s,\, b_s,\, w_s,\, \delta_s) \mid b_s = b
+    \bigr\}_{s \in [1,\, N_s]}.
+\]
+Each spike from the event stream $\mathcal{E}$ gets multiplexed in time by these synapses to later converge on the post-synaptic neurons.
+%  into a new stream
+% \[
+%   \bigcup_{r=1}^{N_\mathrm{ev}}
+%   \bigl\{(b_s,\; w_s,\; t_r + \delta_s)\bigr\}_{s \in \mathcal{S}_{a_r}},
+% \]
+% which in biology is naturally ordered in time as spikes arrive at postsynaptic somas. 
+Crucially, as they reach  the post-synaptic neuron, a synchronous convergence of multiple spikes on the soma --- made possible by the interplay of heterogeneous delays --- increases the postsynaptic firing probability, enabling the detection of precise spiking motifs (see Figure~\ref{fig:izhikevich}).
+
+To allow for the simulation of this network on standard hardware we transform this event-based representation into the Boolean matrix $A \in \{0,1\}^{N \times T}$, where $N = |\mathcal{A}|$ is the number of neurons and $T$ is the number of discrete time steps of $1\,\mathrm{ms}$ each (see Figure~\ref{fig:model}, right panel). Delays are discretised as integers in $[0, D)$, so the synaptic set for all neurons is compactly represented by
+% The full connectivity is encoded in the 
+the weight tensor
+$\mathbf{W} \in \mathbb{R}^{N \times N \times D}$, with
+% which corresponds to
+% the kernel matrix $K^b$ of Section~\ref{sec:methods}.1 for every neuron
+% $b$ simultaneously.
+% the kernel matrix
+% $K \in \mathbb{R}^{N \times N \times D}$, with
+\[
+  \mathbf{W}_{b_s, a_s, \delta_s} = w_s
+  \quad \forall s \in [1,\, N_s],
+  \quad \text{and zero otherwise.}
+\]
+
+%%%-----------------------------------------------------------------
+\subsection{Recurrent HD-SNN architecture} % MNESIS
+%%%-----------------------------------------------------------------
+
+The recurrent Heterogeneous-Delay SNN (HD-SNN) consists of a population $\mathcal{A}$ of $N = 512$ leaky integrate-and-fire (LIF) neurons implemented in {\sc snnTorch}~\citep{Eshraghian2023} and simulated over $T = 1000$ steps of $1\,\mathrm{ms}$ each (total duration: $1\,\mathrm{s}$). Extending the feedforward Spiking Motif Detector of~\citet{Perrinet2023}, our architecture includes full recurrence: each neuron $j \in \mathcal{A}$  integrates inputs from  \emph{all} other neurons across the preceding $D = 41$ time steps. This particular choice for the maximum delay is justified from biological observations and similar to the value used in the original polychronisation study~\citep{Izhikevich2006}. The membrane potential $u_j(t)$ evolves as
+\begin{equation}
+  u_j(t)
+  = \beta\,u_j(t-1)\,(1 - s_j(t-1))
+    + \sum_{i=1}^{N} \bigl (  
+      % b_i + 
+      \sum_{d=1}^{D} \mathbf{W}_{j, i, d} \cdot s_i(t-d) \bigr ), 
+  \label{eq:lif}
+\end{equation}
+where $\beta \in (0,1)$ is the membrane decay constant (initialised to $\beta_0 = 0.5$ and updated during training), $s_j(t) \in \{0,1\}$ is the spike of neuron $j$ at time $t$, and $\mathbf{W}_{j, i, d}$ is the synaptic weight from neuron $i$ to neuron $j$ at delay $d$. % and $b_i$ is a bias term for each presynaptic neuron $i$. 
+A spike is emitted when $u_j(t)$ exceeds the threshold $\vartheta = 1$, after which the membrane is reset.
+
+In our implementation, the spike history of all $N$ neurons over the past $D$ steps is concatenated into a flattened context vector of dimension $N \cdot D$ at each time step, so that $\mathbf{W}$ is reshaped as $\mathbf{W} \in \mathbb{R}^{N \times (N \cdot D)}$. This is equivalent to the temporal convolution that we used previously in a feedforward setting~\citep{Perrinet2023}, here extended to a fully recurrent topology. Using such an implementation, the HD-SNN is thus corresponding to a standard computational graph which we could train using surrogate gradient descent (see Figure~\ref{fig:model} - Left).
+
+%%%-----------------------------------------------------------------
+\subsection{Synthetic dataset and memory cuing}
+%%%-----------------------------------------------------------------
+
+To assess working-memory capacity, we generated a dataset of $M = 8$ distinct target patterns $\mathbf{S}^{(\mu)} \in \{0,1\}^{N \times T}$. Following~\citet{Perrinet2023}, each pattern is drawn as independent Bernoulli trials over $N$ neurons and $T$ time steps with 
+\[
+  \mathbf{S}^{(\mu)} \sim  \sigma( \sigma^{-1}(p_A) + e_A^{(\mu)} )
+\]
+where $p_A$ is the mean firing rate that we set as $1\,\mathrm{Hz}$ (spike probability $10^{-3}$ per neuron per
+step) and the evidence term ${e_A}^{(\mu)} \in \{0,1\}^{N \times T}$ is first drawn from a normal distribution of standard deviation $E_{SM}=4$:
+\[
+  {e_A}^{(\mu)} \sim \mathcal{N}(0, e) 
+\]
+To simulate realistic sparse activity, we retain only the top $p_{SM} = 0.5\% $ of these activation values, setting the rest to zero. Finally, a refractory period is enforced by imposing a minimum inter-spike interval of $4\,\mathrm{ms}$, yielding biologically plausible sparse activity.
+
+Given a target pattern $\mathbf{S}^*$, each contiguous window of length $D$, i.e.\ the slice $\mathbf{S}^*[\cdot,\, t{-}D:t{-}1]$, constitutes a unique context that may predict the spiking activity of all neurons at time $t$. The network is therefore trained to generate a sequential chain of overlapping Spiking Motifs~\citep{Perrinet2023,Kronland-Martinet2025} that faithfully reproduces the target. Memory retrieval is cued by clamping all neuron activities to the target pattern during the initial $D$ time steps ($0 \le t < D$), corresponding to one elementary Spiking Motif (see Figure~\ref{fig:model} - right); the network then generates the remainder of the sequence autonomously.
+
+%%%-----------------------------------------------------------------
+\subsection{Analytical weight initialisation}
+%%%-----------------------------------------------------------------
+
+Before training, the weight tensor $\mathbf{W}$ can be initialised analytically by treating the task as a linear regression problem. For each target pattern $\mathbf{S}^{*(\mu)} \in \{0,1\}^{N \times T}$, the context window at time $t$ is the flattened vector $\mathbf{c}^{(\mu)}(t) \in \{0,1\}^{N \cdot D}$ containing the spike history of all neurons over steps $t-D$ to $t-1$. Stacking all $K = M \cdot (T-D)$ context--output pairs across patterns and time steps yields
+\[
+  \mathbf{C} \in \{0,1\}^{ND \times K},
+  \qquad
+  \mathbf{S}^* \in \{0,1\}^{N \times K},
+\]
+and the initialisation problem is $\mathbf{W}\,\mathbf{C} \approx \mathbf{S}^*$. Since the system is strongly underdetermined ($K \ll ND$), the minimum-norm solution is the Moore--Penrose pseudo-inverse $\mathbf{W}^* = \mathbf{S}^*\,\mathbf{C}^+$. With sparse Bernoulli activity at rate $p_A = 10^{-3}$, consecutive context windows are nearly orthogonal, so the Gram matrix satisfies $\mathbf{C}\mathbf{C}^\top \approx N \cdot D \cdot p_A\,\mathbf{I}$, giving the closed-form Hebbian initialisation
+\begin{equation}
+  w_{ij}^{(d)}
+  = \frac{1}{N D p_A\, M}
+    \sum_{\mu=1}^{M}\sum_{t=D+1}^{T}
+    s_j^{*(\mu)}(t)\cdot s_i^{*(\mu)}(t-d).
+  \label{eq:init}
+\end{equation}
+Each weight $w_{ij}^{(d)}$ is thus proportional to the normalised cross-correlation between the spike train of neuron $j$ and that of neuron $i$ shifted by delay $d$, averaged over all $M$ stored patterns. This initialisation resembles classical Hebbian learning and mirrors the form of spike-timing-dependent plasticity (STDP) as notably used in the seminal paper on polychronisation~\citep{Izhikevich2006}. Notice however that at inference time, the network does not receive ground-truth contexts, but it receives the context it generated itself at the previous step such that the spike train may be corrupted by previous errors.
+
+%%%-----------------------------------------------------------------
+\subsection{Training}
+%%%-----------------------------------------------------------------
+%%%----------------------------------------------------------------- 
+\begin{figure}[!ht]
+  \begin{center}
+    \includegraphics[width=.475\textwidth]{unrolled.pdf}\hfill
+    \includegraphics[width=.5\textwidth]{pattern.pdf}
+  \end{center}
+  \caption{%
+    Network architecture and a sample target pattern. \emph{Left:} Unrolled view of the recurrent HD-SNN over time, illustrating delayed connections between neurons: Blue arrows indicate synaptic connections that integrate past activity across heterogeneous delays; for clarity only one delay is shown. \emph{Right:} One representative target spike pattern ($N=512$ neurons, $T=1000$ time steps, of which we show $64$ neurons and $128$ time steps); each red circle marks one target spike. The goal of the network is to memorise $M=8$ such patterns, initialised by clamping all neuron activities to the target during the first $D=41$ time steps  (as denoted by blue crosses in the region left of the dashed red line).
+  }\label{fig:model}
+\end{figure}
+%%%-----------------------------------------------------------------
+The loss is defined as $\mathcal{L} = 1 - F_1$, where $F_1$ is the mean F1 score between the predicted and target spike trains, averaged over time (in the prediction window), neurons and patterns. The F1 score is the harmonic mean of precision (proportion of produced spikes that are correct) and recall (proportion of target spikes that are successfully reproduced), so minimising $\mathcal{L}$ simultaneously penalises over-active networks (low precision) and silent networks (low recall). Learning is carried out with surrogate-gradient BPTT~\citep{Neftci2019a}, using a fast-sigmoid surrogate with sharpness parameter $\alpha = 10$. Weights are optimised with Adam (learning rate $\eta = 10^{-6}$, momentum $\mu = 10^{-1}$, weight decay $\lambda = 10^{-3}$). Training runs for $4096$ gradient steps; to mitigate overfitting and stabilise delay learning, the learning rate is annealed with a cosine schedule, as used for instance in~\cite{Hammouamri2023}. The validation loss is monitored for detecting overfitting.
+
+The gradient-based learning in our recurrent HD-SNN shares fundamental principles with biological STDP, despite operating at different scales. Both mechanisms exploit temporal correlations in spike timing to adjust synaptic strengths. However, while STDP implements local pairwise updates based on individual spike timings, our approach performs global optimisation that effectively learns the collective interaction of multiple delayed spike trains across the entire network. The analytical initialisation (see Equation~\ref{eq:init}) reveals this connection most clearly: it implements a Hebbian-like rule that is mathematically equivalent to averaging STDP updates across all stored patterns, suggesting that gradient descent in this context can be viewed as a principled, globally optimal implementation of temporally structured synaptic plasticity.
+
+Our implementation is available at \url{https://github.com/laurentperrinet/MNESIS}. The recurrent HD-SNN was implemented using the snnTorch~\citep{Eshraghian2023} library with custom extensions for heterogeneous delay handling. The implementation leverages PyTorch with the Metal Performance Shader (MPS) backend for accelerated computation on Apple Silicon (M3 Ultra chip featuring 32 CPU cores and 80 GPU cores, with 512\,GB of unified memory architecture) and further tested with the CUDA backend on the Jean Zay supercluster at GENCI. The MPS and CUDA backends enabled efficient training and simulation of the large recurrent networks required for working memory tasks, leveraging the parallel processing capabilities of the GPU cores while maintaining low-latency access to the substantial memory resources necessary for storing all tensors' parameters. Training typically converged within $4096$ gradient steps, requiring approximately $10$ minutes of computation time per training.
+
+
+
+\section{Results}
+
+\subsection{Training dynamics}
+
+Performing the training on the recurrent HD-SNN with surrogate-gradient BPTT~\cite{Neftci2019a} consistently maximised the mean F1 score across all $M=8$ target patterns to an average value of $1 - 3.4 \cdot 10^{-2}$. We observed two characteristic failure modes during early training: episodes of complete silence, in which the network emits no spikes, and over-activation, in which nearly all neurons fire at every time step. Both are well-known pathological attractors of recurrent SNNs~\citep{Izhikevich2006}. The F1 score is the harmonic mean of precision and recall, and maximising it therefore penalises both failure modes symmetrically: low precision corresponds to an over-active network and low recall to a silent one. In addition, the cosine learning-rate schedule~\citep{Hammouamri2023} helped guide the network away from these extremes towards a balanced, sparse-firing regime.
+
+
+%%%----------------------------------------------------------------- 
+\begin{figure}[!ht]
+  \begin{center}
+    \includegraphics[width=\textwidth]{target.pdf}
+  \end{center}
+  \caption{%
+    Learning dynamics of the recurrent HD-SNN.
+    The raster plot shows network activity (blue crosses, $N=512$ neurons) versus the target pattern (red circles) at an intermediate training epoch ($512$ epochs). Correct recall emerges first in the time steps immediately following the clamped initialisation window ($0 \leq t < D = 41$, delimited by the dashed red line) and progressively extends to the full sequence duration ($T = 1000$ steps).
+  }\label{fig:target}
+\end{figure}
+%%%-----------------------------------------------------------------
+
+% \subsection{Sequential learning of spike patterns}
+
+Training was not uniform in time: the network first reproduced spikes immediately following the clamping window ($0 \leq t < D$), then progressively extended correct recall towards later time steps, as shown in Figure~\ref{fig:target}. This behaviour is a direct consequence of the sequential structure of the task: because each window $[t-D,\, t-1]$ uniquely predicts the activity at $t$, errors at early time steps propagate into all subsequent predictions, making temporal proximity to the clamped initial condition the primary driver of learning progress. We therefore expect the number of gradient steps required to memorise a pattern to scale approximately linearly with its duration $T$.
+
+
+% TODO: memory-like behaviour
+
+
+% \subsection{Effect of hyperparameters}
+
+% We performed a systematic sweep over the key hyperparameters and report their effect on the mean F1 score at convergence.
+
+% \paragraph{Surrogate sharpness $\alpha$.}
+% The sharpness of the surrogate gradient had the largest single effect on performance. Low values of $\alpha$ produced gradients that were too smooth to discriminate precise spike times, while excessively high values caused gradient vanishing. The value $\alpha = 10$ provided the best trade-off, consistent with findings in~\citet{Neftci2019a}.
+
+% \paragraph{Target firing rate.}
+% The best recall was obtained at low target firing rates ($1\,\mathrm{Hz}$ per neuron), confirming that sparse activity facilitates stable recurrent dynamics~\citep{Izhikevich2006,Yin2026}. Higher firing rates led to increased inter-pattern interference and degraded precision, echoing the capacity bounds reported for polychronous neuronal groups~\citep{Szatmary2010}.
+
+
+%%%----------------------------------------------------------------- 
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=0.325\linewidth]{MNESIS_num_delay.pdf}\hfill
+  \includegraphics[width=0.325\linewidth]{MNESIS_N_time.pdf}\hfill
+  \includegraphics[width=0.325\linewidth]{MNESIS_p_A.pdf}
+  \caption{%
+    Effect of three key parameters on working-memory performance (loss $\mathcal{L} = 1 - F_1$, mean $\pm$ s.e.\ over $N_\mathrm{cv} = 10$ cross-validation folds). %
+    \emph{Left:} Increasing the maximum delay $D$ consistently reduces the loss, confirming that deeper delay windows provide a larger, more orthogonal context and that longer maximum delays directly increase the capacity of the recurrent HD-SNN. % (Section~\ref{sec:capacity}). %
+    \emph{Middle:} Loss grows slowly and monotonically with pattern duration $T$, consistent with the compounding-error and gradient-vanishing arguments: longer sequences require the network to maintain coherent predictions further from the clamped initialisation window. %
+    \emph{Right:} Performance is optimal at low background firing rates ($p_A \lesssim 10^{-3}$) and degrades sharply at higher rates. 
+  }\label{fig:scan}
+\end{figure}
+%%%----------------------------------------------------------------- 
+
+
+\subsection{Effect of delay depth, pattern duration, and background firing rate}
+
+To characterise how the architectural parameters govern working-memory performance, we conducted a systematic one-at-a-time scan over the maximum delay $D$, the pattern duration $T$, and the background firing rate $p_A$, holding all other hyperparameters at their default values (Section~\ref{sec:methods}). Each condition was evaluated with $N_\mathrm{cv} = 10$ by drawing different seeds for the random number generator and results are reported as mean loss $\mathcal{L} = 1 - F_1$ (Figure~\ref{fig:scan}).
+
+\paragraph{Delay depth $D$ (Figure~\ref{fig:scan}, left).} The loss decreases monotonically as $D$ grows from $3$ to $127$\,ms, dropping from $\mathcal{L} \approx 0.85$ at $D = 3$ to near zero at $D = 127$. This confirms an intuition about the capacity of the network: the parameter budget $N^2 \times D$ and the context-window size $N \times D$ both scale linearly with $D$. A wider delay window provides more temporally diverse synaptic pathways, increasing the number of simultaneously representable Spiking Motifs and reducing the interference between overlapping context windows. Concretely, at $D = 3$ the context vector has only $N \times D = 768$ dimensions with expected activity $N \times D  \times p_A \approx 0.77$ per window --- a regime where contexts are nearly all-zero and indistinguishable. At $D = 127$ the context has $N \times D = 32512$ dimensions with expected activity $\approx 32.5$, and near-orthogonality is strongly satisfied.
+
+\textbf{Pattern duration $T$ (Figure~\ref{fig:scan}, middle).} The loss grows monotonically with $T$, from $\mathcal{L} \approx 0.004$ at $T = 64$ to $\mathcal{L} \approx 0.08$ at $T = 2048$. This is the empirical signature of the two compounding difficulties identified in the capacity analysis. Longer sequences impose a larger open-loop rollout: the error propagation recurrence accumulates over $T - D$ steps, and even a sub-critical propagation coefficient $\lambda < 1/D$ eventually allows errors to reach a non-negligible fraction of $N$ spikes. 
+
+\textbf{Background firing rate $p_A$ (Figure~\ref{fig:scan}, right).} The loss exhibits a clear optimum around $p_A = 10^{-4}$ to $10^{-3}$ and degrades rapidly for $p_A \geq 2 \times 10^{-3}$. This is consistent with the capacity bound linked to interference: increasing $p_A$ linearly reduces the SNR of the cross-correlation initialisation and increases the Gram-matrix off-diagonal terms, degrading context orthogonality. 
+
+Taken together, the three scans quantitatively validate the theoretical framework: delay depth is the primary capacity lever (loss $\propto 1/(N \times D \times p_A)$), pattern duration is the primary difficulty lever (loss grows with $T$ through gradient vanishing and error compounding), and firing rate sets the orthogonality regime that determines whether the initialisation and learning are likely to converge. These results suggest that the most efficient path to storing longer patterns is to increase $D$ rather than $N$, since $D$ enters both the parameter capacity $N^2 \times D$ and the context orthogonality $N \times D \times p_A$ while adding no new neurons or lateral connections. Yet, increasing $D$ is limited by biological constraints~\citep{Grimaldi2023}.
+
+\section{Discussion}
+
+\subsection{Memory capacity and the role of heterogeneous delays}
+
+We have demonstrated that a recurrent SNN with heterogeneous synaptic delays can be trained end-to-end to reproduce arbitrary target spike patterns. The result is noteworthy from a capacity standpoint: the entire network is parameterised by a single weight tensor $\mathbf{W} \in \mathbb{R}^{N \times N \times D}$ of dimension $N^2 \times D = 512^2 \times 41 \approx 10^7$ parameters, yet it can faithfully store $M$ patterns each of $N \times T$ binary values. This compression is made possible precisely by the temporal structure introduced by the $D$ delay channels: rather than requiring one parameter per stored bit, the network exploits the sequential dependencies between consecutive windows of length $D$ to represent the entire pattern as a chain of overlapping Spiking Motifs~\citep{Perrinet2023,Kronland-Martinet2025}. This provides concrete evidence that heterogeneous delays are a computational asset rather than a biological nuisance --- a point argued theoretically in~\citet{Izhikevich2006} and in the context of learnable delays by~\citet{Grimaldi2023a} and~\citet{Hammouamri2023}, and now demonstrated in a recurrent working-memory setting.
+
+\subsection{Limitations and directions for improvement}
+
+The present model is deliberately minimal, and several design choices impose limits on capacity and robustness that future work should address.
+
+\textbf{Capacity and robustness.}
+A systematic evaluation of memory capacity --- how many patterns of what duration can be reliably stored and retrieved --- remains to be carried out. The theoretical capacity of polychronous networks scales super-linearly with network size~\citep{Izhikevich2006}, but the practical limit under gradient-based training and the sensitivity of recall to initial-condition perturbations are open questions. The analogy with attractor networks~\citep{Szatmary2010} suggests that capacity should scale with $N^2 \times D$, but interference between stored patterns at high memory load may degrade precision in ways that the F1 training objective does not fully penalise.
+
+\textbf{Richer neuron models and dynamics.}
+We used the simplest LIF model with a learned membrane decay $\beta$. Introducing adaptive threshold dynamics or more complex single-neuron models, as studied in~\citet{Szatmary2010}, should increase the diversity of intrinsic timescales available to the network and improve both capacity and retrieval fidelity.
+
+\textbf{Latent reservoir neurons.}
+The current architecture connects every neuron directly to every other neuron across all delays. Partitioning the population into input-output neurons and a larger pool of latent ``reservoir'' neurons, as in delay-based reservoir computing~\citep{Paugam-Moisy2008}, would enrich the internal spiking dynamics. Such a hybrid architecture could combine the representational power of random recurrent networks with the precision of gradient-trained delay weights~\citep{Neftci2019a}, potentially closing the gap between biologically inspired models and the efficiency of sparse selective-update architectures~\citep{Yin2026}.
+
+
+\subsection{Perspectives: unsupervised learning and neural data}
+
+The most immediate application of this framework is to neurophysiological data. 
+Future work will explore whether self-supervised objectives can extract Spiking Motifs directly from raw multi-electrode array recordings without labelled targets. Such approaches could bridge the gap between biologically plausible learning and practical deployment on edge devices.
+The supervised memorisation task studied here requires a known target, but in practice one would like to discover the latent Spiking Motifs present in recorded multi-unit activity --- the problem originally addressed by~\citet{Ikegaya2004} and~\citet{Villette2015}. A natural extension is therefore to replace the supervised F1 loss with a self-supervised or contrastive objective that trains the network to predict upcoming spikes from the recent spike history, without access to ground-truth labels. This is analogous to the contrastive predictive coding paradigm applied to continuous neural time series, here instantiated in a fully spike-based setting~\citep{Grimaldi2023}. Such a model would provide a principled, energy-efficient method for identifying the temporal structure of neural population codes, with direct relevance to the debate on rate coding versus temporal coding~\citep{Softky1993,Bohte2004} and to understanding the neural mechanisms of working memory more broadly. Deployed on neuromorphic hardware~\citep{Goltz2021,Eshraghian2023}, it could operate in real time on streaming electrophysiological data, opening a new avenue for closed-loop brain-machine interface applications.
+
+\acksection
+This work was performed using HPC resources from GENCI-IDRIS (Grant 20XX--AD010314955R2). The authors declare no competing interests regarding this manuscript. The funders had no role in the design of the study; in the collection, analyses, or interpretation of data; in the writing of the manuscript; or in the decision to publish the results. For the purpose of open access, the authors have applied a CC-BY public copyright licence to any Author-Accepted Manuscript version arising from this submission.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{plainnat}
+\bibliography{mnesis}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
