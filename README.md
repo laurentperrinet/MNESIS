@@ -42,11 +42,12 @@ A recurrent SNN with heterogeneous synaptic delays can represent arbitrary spike
 ### Network Architecture
 
 **Recurrent Heterogeneous-Delay SNN (HD-SNN)**:
-- **Neurons**: *N* = 256 Leaky Integrate-and-Fire (LIF) neurons
+- **Neurons**: *N* = 512 Leaky Integrate-and-Fire (LIF) neurons
 - **Delays**: *D* = 41 discrete delay channels per synapse (1-41 ms)
-- **Duration**: *T* = 2000 time steps (2 seconds total)
-- **Patterns**: *M* = 4 distinct target spike patterns
-- **Parameters**: Weight tensor **W** ∈ ℝ^(N×N×D) ≈ 2.7×10⁶ parameters
+- **Duration**: *T* = 1000 time steps (1 second total)
+- **Patterns**: *M* = 16 distinct target spike patterns
+- **Firing rate**: p_A = 0.002 (2 Hz per neuron)
+- **Parameters**: Weight tensor **W** ∈ ℝ^(N×N×D) ≈ 10.7×10⁶ parameters
 
 ### Membrane Dynamics
 
@@ -55,7 +56,7 @@ u_j(t) = β·u_j(t-1)·(1 - s_j(t-1)) + Σ_i Σ_d W_{j,i,d}·s_i(t-d)
 ```
 
 where:
-- β = 0.7 is the membrane decay constant
+- β = 0.8 is the membrane decay constant (time constant τ ≈ 4.5 steps)
 - s_j(t) ∈ {0,1} is the spike of neuron j at time t
 - W_{j,i,d} is the synaptic weight from neuron i to j at delay d
 - Spike emitted when u_j(t) > ϑ = 1, then membrane reset
@@ -82,13 +83,14 @@ Equivalent to Hebbian-like learning averaged over all stored patterns.
 
 ### Training Procedure
 
-1. Generate *M* = 4 random target patterns (Bernoulli, p = 10⁻³)
+1. Generate *M* = 16 random target patterns (Bernoulli, p = 0.002)
 2. Clamp initial window: t ∈ [0, D) to target values
 3. Forward pass through recurrent network
 4. Compute F1 loss between prediction and target
-5. Backpropagate through time using surrogate gradients (fast-sigmoid, α = 20)
-6. Optimize with SGD (lr = 2×10⁻⁴, momentum = 0.99, weight decay = 10⁻¹⁰)
+5. Backpropagate through time using surrogate gradients (fast-sigmoid, α = 15)
+6. Optimize with SGD (lr = 10⁻³, momentum = 0.99, weight decay = 0)
 7. Cosine learning rate schedule with warmup for 16 epochs
+8. Dropout regularization: 0.37
 
 ### Implementation
 
@@ -105,11 +107,11 @@ Equivalent to Hebbian-like learning averaged over all stored patterns.
 
 | Metric | Value |
 |--------|-------|
-| Mean F1 Score | 0.966 |
-| Patterns stored | M = 4 |
-| Network size | N = 256 neurons |
-| Pattern duration | T = 2000 steps (2 s) |
-| Parameters | N² × D ≈ 2.7×10⁶ |
+| Mean F1 Score | 1.0 (perfect) |
+| Patterns stored | M = 16 |
+| Network size | N = 512 neurons |
+| Pattern duration | T = 1000 steps (1 s) |
+| Parameters | N² × D ≈ 10.7×10⁶ |
 
 ### Sequential Learning
 
