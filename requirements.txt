@@ -3,7 +3,9 @@
 # `pip install -U -r requirements.txt`
 pip
 torch
+torchvision
 snntorch
+optuna
 ipykernel
 matplotlib
 seaborn
