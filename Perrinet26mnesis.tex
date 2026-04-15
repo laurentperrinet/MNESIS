@@ -56,6 +56,7 @@
 \graphicspath{{./figures/}}%
 \usepackage{dsfont}
 
+\usepackage{adjustbox}
 
 \title{
 Working Memory in a Recurrent Spiking Neural Networks With Heterogeneous Synaptic Delays
@@ -226,13 +227,13 @@ Each weight $w_{ij}^{(d)}$ is thus proportional to the normalised cross-correlat
 \subsection{Training}
 %%%-----------------------------------------------------------------
 %%%----------------------------------------------------------------- 
-\begin{figure}[!ht]
-  \begin{center}
-    \includegraphics[width=.475\textwidth]{unrolled.pdf}\hfill
-    \includegraphics[width=.5\textwidth]{pattern.pdf}
-  \end{center}
+\begin{figure}[htbp]
+    \centering
+    \adjustbox{valign=t}{\includegraphics[width=0.425\textwidth]{unrolled.pdf}}
+    \hfill
+    \adjustbox{valign=t}{\includegraphics[width=0.52\textwidth]{pattern.pdf}}
   \caption{%
-    Network architecture and a sample target pattern. \emph{Left:} Unrolled view of the recurrent HD-SNN over time, illustrating delayed connections between neurons: Blue arrows indicate synaptic connections that integrate past activity across heterogeneous delays; for clarity only one delay is shown. \emph{Right:} One representative target spike pattern ($N=512$ neurons, $T=1000$ time steps, of which we show $256$ neurons and $400$ time steps); each red circle marks one target spike. The goal of the network is to memorise $M=16$ such patterns, initialised by clamping all neuron activities to the target during the first $D=41$ time steps  (as denoted by blue crosses in the region left of the dashed red line).
+    Network architecture and a sample target pattern. \emph{Left:} Unrolled view of the recurrent HD-SNN over time (one comlumn representing one time step), illustrating delayed connections between neurons: Blue arrows indicate synaptic connections that integrate past activity across heterogeneous delays; for clarity only one delay is shown. \emph{Right:} One representative target spike pattern ($N=512$ neurons, $T=1000$ time steps, of which we show $256$ neurons and $400$ time steps); each red circle marks one target spike. The goal of the network is to memorise $M=16$ such patterns, initialised by clamping all neuron activities to the target during the first $D=41$ time steps  (as denoted by blue crosses in the region left of the dashed red line).
   }\label{fig:model}
 \end{figure}
 %%%-----------------------------------------------------------------
@@ -257,8 +258,8 @@ Performing the training on the recurrent HD-SNN with surrogate-gradient BPTT~\ci
     \includegraphics[width=\textwidth]{target.pdf}
   \end{center}
   \caption{%
-    Learning dynamics of the recurrent HD-SNN.
-    The raster plot shows network activity (blue crosses, $N=512$ neurons) versus the target pattern (red circles) after training. Correct recall emerges first in the time steps immediately following the clamped initialisation window ($0 \leq t < D = 41$, delimited by the dashed red line) and progressively extends to the full sequence duration ($T = 1000$ steps).
+    Pattern retrieval from the recurrent HD-SNN.
+    The raster plot shows network activity (blue crosses, $N=512$ neurons) versus one of the $16$ target pattern (red circles) after training. Correct recall emerges first in the time steps immediately following the clamped initialisation window ($0 \leq t < D = 41$, delimited by the dashed red line) and progressively extends to the full sequence duration ($T = 1000$ steps).
   }\label{fig:target}
 \end{figure}
 %%%-----------------------------------------------------------------
