@@ -181,14 +181,7 @@ The recurrent Heterogeneous-Delay SNN (HD-SNN) consists of a population $\mathca
       \sum_{d=1}^{D} \mathbf{W}_{j, i, d} \cdot s_i(t-d) \bigr ), 
   \label{eq:lif}
 \end{equation}
-TODO:
-where $\beta \in (0,1)$ is the membrane decay constant ($\beta = 0.7$ in our simulations, that is, a time constant of $\tau= 1 / \ln(\frac 1 \beta) \approx 2.8$ steps), $\mathbf{W}_{j, i, d}$ is the synaptic weight from neuron $i$ to neuron $j$ at delay $d$, and $s_j(t) \in \{0,1\}$  is the spike indicator $s_j(t) = \mathds{1}[u_j(t) \geq \vartheta]$, that is, a spike is emitted when $u_j(t)$ exceeds the threshold $\vartheta = 1$. After spiking, the membrane potential that is accumulated in Equation~\ref{eq:lif} is reset to zero.
-
-=======
-
 where $\beta \in (0,1)$ is the membrane decay constant ($\beta = 0.8$ in our simulations, that is, a time constant of $\tau= 1 / \ln(\frac 1 \beta) \approx 4.5$ steps), $\mathbf{W}_{j, i, d}$ is the synaptic weight from neuron $i$ to neuron $j$ at delay $d$, and $s_j(t) \in \{0,1\}$  is the spike indicator $s_j(t) = \mathds{1}[u_j(t) \geq \vartheta]$, that is, a spike is emitted when $u_j(t)$ exceeds the threshold $\vartheta = 1$. After spiking, the membrane potential that is accumulated in Equation~\ref{eq:lif} is reset to zero.
-
- 49a29f0ed92794a5ce7bc403487ca51eac6ff33b
 
 In our implementation, the spike history of all $N$ neurons over the past $D$ steps is concatenated into a flattened context vector of dimension $N \cdot D$ at each time step, so that $\mathbf{W}$ is reshaped as $\mathbf{W} \in \mathbb{R}^{N \times (N \cdot D)}$. This is equivalent to the temporal convolution that we used previously in a feedforward setting~\citep{Perrinet2023}, here extended to a fully recurrent topology. Using such an implementation, the HD-SNN is thus corresponding to a standard computational graph which we could train using surrogate gradient descent (see Figure~\ref{fig:model} - Left).
 
