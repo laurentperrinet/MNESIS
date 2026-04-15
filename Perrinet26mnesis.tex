@@ -219,6 +219,7 @@ and the initialisation problem is $\mathbf{W}\,\mathbf{C} \approx \mathbf{S}^*$.
     s_j^{*(\mu)}(t)\cdot s_i^{*(\mu)}(t-d).
   \label{eq:init}
 \end{equation}
+
 Each weight $w_{ij}^{(d)}$ is thus proportional to the normalised cross-correlation between the spike train of neuron $j$ and that of neuron $i$ shifted by delay $d$, averaged over all $M$ stored patterns. This initialisation resembles classical Hebbian learning and mirrors the form of spike-timing-dependent plasticity (STDP) as notably used in the seminal paper on polychronisation~\citep{Izhikevich2006}. Notice however that at inference time, the network does not receive ground-truth contexts, but it receives the context it generated itself at the previous step such that the spike train may be corrupted by previous errors.
 
 %%%-----------------------------------------------------------------
