@@ -112,7 +112,7 @@ Working memory --- the ability to store and recall precise temporal patterns of 
 
 A century ago,~\citet{Adrian1926} established that neural communication relies on all-or-none action potentials, \emph{spikes}. Whether information is encoded in precise spike timing or in the coarser measure of instantaneous firing rate remains debated~\citep{Softky1993,Bohte2004,Grimaldi2023} --- a question that becomes especially sharp for working memory, where the brain must maintain and manipulate information across delays of seconds. In traditional artificial neural networks, long-range temporal dependencies are addressed by gated recurrent unit (GRU) architectures or Transformers~\citep{Vaswani2017}, which decouple temporal binding range from the timescale of individual units. The analogous problem for spiking neural networks (SNNs) --- binding activity patterns separated by intervals far exceeding a single neuron's time constant --- lacks a general solution and remains a key challenge for biologically plausible sequence processing~\citep{Yin2026}.
 
-One principled approach relies on the \emph{precise relative timing} of spikes across a population.~\citet{Abeles1982} was a precursor in proposing that cortical neurons act as coincidence detectors;~\citet{Bienenstock1995} formalised this into \emph{synfire chains}, feedforward pools in which synchronous volleys propagate reliably. Experimental support came from~\citet{Bruno2006}, who showed that thalamocortical inputs are individually weak but effective through precise synchrony; theoretical work further showed such synchrony can be learned in an unsupervised manner~\citep{Perrinet2002b}.~\citet{Ikegaya2004} then directly observed recurring spatiotemporal spike sequences in neocortex at both sub- and supra-second timescales, and complementary hippocampal evidence shows that such sequences self-organise spontaneously as internal population templates~\citep{Villette2015}.
+One principled approach relies on the \emph{precise relative timing} of spikes across a population.~\citet{Abeles1982} was a precursor in proposing that cortical neurons act as coincidence detectors;~\citet{Bienenstock1995} formalised this into \emph{synfire chains}, feedforward pools in which synchronous volleys propagate reliably. Experimental support came from~\citet{Bruno2006}, who showed that thalamocortical inputs are individually weak but effective through precise synchrony; theoretical work further showed such synchrony can be learned in an unsupervised manner~\citep{Perrinet2002}.~\citet{Ikegaya2004} then directly observed recurring spatiotemporal spike sequences in neocortex at both sub- and supra-second timescales, and complementary hippocampal evidence shows that such sequences self-organise spontaneously as internal population templates~\citep{Villette2015}.
 
 \citet{Izhikevich2006} extended the synfire framework by introducing heterogeneous axonal delays with spike-timing-dependent plasticity (STDP). The resulting \emph{polychronous neuronal groups} (PNGs) --- time-locked, non-synchronous firing patterns at millisecond precision --- vastly outnumber the neurons in the network, yielding a large short-term memory capacity exploited for visual feature binding~\citep{Eguchi2018} and sequence classification~\cite{Paugam-Moisy2008}.~\citet{Szatmary2010} showed that short-term plasticity can cue a PNG's reactivation and sustain a working memory. However, storing spike patterns of arbitrary length is inherently difficult: the sequential structure of the task means each context window is not an independent query but is itself the output of the network at the previous step, so small errors at early time steps propagate and amplify towards the end of the sequence --- a compounding difficulty absent from static associative memory.
 
@@ -194,7 +194,7 @@ To assess working-memory capacity, we generated a dataset of $M = 16$ distinct t
 \[
   \mathbf{S}^{(\mu)} \sim  \sigma( \sigma^{-1}(p_A) + e_A^{(\mu)} )
 \]
-where $p_A$ is the mean firing rate that we set as $1\,\mathrm{Hz}$ (spike probability $1\times10^{-3}$ per neuron per step) and the evidence term ${e_A}^{(\mu)} \in \{0,1\}^{N \times T}$ is first drawn from a normal distribution of standard deviation $E_{SM}=4$:
+for $\mu \in [1 \ldots M]$ and where $p_A$ is the mean firing rate that we set as $1\,\mathrm{Hz}$ (spike probability $1\times10^{-3}$ per neuron per step) and the evidence term ${e_A}^{(\mu)} \in \{0,1\}^{N \times T}$ is first drawn from a normal distribution of standard deviation $E_{SM}=4$:
 \[
   {e_A}^{(\mu)} \sim \mathcal{N}(0, e) 
 \]
@@ -205,32 +205,35 @@ Given a target pattern $\mathbf{S}^*$, each contiguous window of length $D$, i.e
 %%%-----------------------------------------------------------------
 \subsection{Analytical weight initialisation}
 %%%-----------------------------------------------------------------
-Before training, the weight tensor $\mathbf{W}$ can be initialised analytically by treating the task as a linear regression problem. For each target pattern $\mathbf{S}^{*(\mu)} \in \{0,1\}^{N \times T}$, the context window at time $t$ is the flattened vector $\mathbf{c}^{(\mu)}(t) \in \{0,1\}^{ND}$ containing the spike history of all neurons over steps $t-D$ to $t-1$. Stacking all $K = M(T-D)$ context--output pairs across patterns and time steps yields
+Before training, the weight tensor $\mathbf{W}$ can be initialised analytically by treating the task as a linear regression problem. For each target pattern $\mathbf{S}^{*(\mu)} \in \{0,1\}^{N \times T}$, the context window at time $t$ is the flattened vector $\mathbf{c}^{(\mu)}(t) \in \{0,1\}^{N \cdot D}$ containing the spike history of all neurons over steps $t-D$ to $t-1$. Stacking all $K = M \cdot (T-D)$ context--output pairs across patterns and time steps yields
 \[
-  \mathbf{C} \in \{0,1\}^{ND \times K},
+  \mathbf{C} \in \{0,1\}^{(N \cdot D) \times K},
   \qquad
   \mathbf{I}^* \in \mathbb{R}^{N \times K},
 \]
 and the initialisation problem is $\mathbf{W}\,\mathbf{C} \approx \mathbf{I}^*$.
  
-The choice of regression target $\mathbf{I}^*$ requires care. A naive choice is the binary spike matrix $\mathbf{S}^*$ itself, which would ask the network to produce a current equal to the target spike at each step. However, from Equation~\ref{eq:lif}, the synaptic current $I_j(t) = \sum_{i,d} \mathbf{W}_{j,i,d}\,s_i(t-d)$ does not directly generate a spike: it is first \emph{filtered} by the membrane dynamics, which act as a causal first-order IIR low-pass filter with transfer function $H(z) = \frac{1}{1 - \beta\,z^{-1}}$.
-To produce a membrane potential that rises precisely to $\vartheta$ at $t^*$ and is immediately reset (a temporal Dirac), the required input current is the deconvolution of this target membrane trajectory by $h(t)$. The inverse filter of $H(z)$ is $H^{-1}(z) = 1 - \beta\,z^{-1}$, which corresponds to the first-order difference operator. Applied to the binary target spike train $s^*_j(t)$, the optimal input current is therefore
+The choice of regression target $\mathbf{I}^*$ requires care. A naive choice is the binary spike matrix $\mathbf{S}^*$ itself, which would ask the network to produce a current equal to the target spike at each step. However, from Equation~\ref{eq:lif}, the synaptic current $I_j(t) = \sum_{i,d} \mathbf{W}_{j,i,d} \cdot s_i(t-d)$ does not directly generate a spike: it is first \emph{filtered} by the membrane which acts as a causal first-order IIR low-pass filter with transfer function $H(z) = \frac{1}{1 - \beta \cdot z^{-1}}$.
+To produce a membrane potential that rises precisely to $\vartheta=1$ at $t^*$ and is immediately reset (a temporal Dirac), the required input current is the deconvolution of this target membrane trajectory by $h(t)$. The inverse filter of $H(z)$ is $H^{-1}(z) = 1 - \beta \cdot z^{-1}$, which corresponds to the first-order difference operator. Applied to the binary target spike train $s^*_j(t)$, the optimal input current is therefore
  \begin{equation}
-  I^*_j(t) \;=\; s^*_j(t) - \beta\,s^*_j(t-1).
+  I^*_j(t) \;=\; s^*_j(t) - \beta \cdot s^*_j(t-1).
   \label{eq:deconv_target}
 \end{equation}
 This is a \emph{biphasic} waveform: $+1$ at each target spike time $t^*$, $-\beta$ exactly one step later (which cancels the residual membrane charge left by the leak), and zero everywhere else. For $\beta \to 0$ the correction vanishes and $I^*(t) \to s^*(t)$, recovering the naive binary target. For $\beta = 0.8$ the correction term $-0.8$ is substantial and significantly reduces spurious early spikes at initialisation.
  
-Since the system is strongly underdetermined ($K \ll ND$), the minimum-$\ell_2$-norm solution is the Moore--Penrose pseudo-inverse $\mathbf{W}^* = \mathbf{I}^*\,\mathbf{C}^+$. With sparse Bernoulli activity at rate $p_A = 10^{-3}$, consecutive context windows are nearly orthogonal, so the Gram matrix satisfies $\mathbf{C}\mathbf{C}^\top \approx NDp_A\,\mathbf{I}$, giving the closed-form initialisation
+Since the system is strongly underdetermined ($K \ll ND$), the minimum-$\ell_2$-norm solution is the Moore--Penrose pseudo-inverse $\mathbf{W}^* = \mathbf{I}^* \cdot \mathbf{C}^+$. With sparse Bernoulli activity at rate $p_A = 10^{-3}$, consecutive context windows are nearly orthogonal, so the Gram matrix satisfies $\mathbf{C}\mathbf{C}^\top \approx NDp_A \cdot \mathbf{I}$, giving the closed-form initialisation
 \begin{equation}
-  w_{ij}^{(d)}
-  = \frac{1}{NDp_A M}
-    \sum_{\mu=1}^{M}\sum_{t=D+1}^{T}
-    \bigl(s_j^{*(\mu)}(t) - \beta\,s_j^{*(\mu)}(t-1)\bigr)
-    \cdot s_i^{*(\mu)}(t-d).
+  w_{i, j, d}
+  = \frac{1}{N \cdot D \cdot p_A \cdot M}
+  \sum_{t=D+1}^{T}
+  \sum_{\mu=1}^{M}
+    % \bigl(s_j^{*(\mu)}(t) - \beta \cdot s_j^{*(\mu)}(t-1)\bigr)
+    s_i^{*(\mu)}(t-d)
+    \cdot 
+    I^*_j(t).
   \label{eq:init}
 \end{equation}
-Each weight $w_{ij}^{(d)}$ is thus proportional to the normalised cross-correlation between the \emph{deconvolved} spike train of target neuron $j$ and the raw spike train of neuron $i$ shifted by delay $d$, averaged over all $M$ stored patterns. This initialisation resembles classical Hebbian learning and mirrors the form of spike-timing-dependent plasticity (STDP) as used in the seminal paper on polychronisation~\citep{Izhikevich2006}, with the additional $-\beta$ correction term that accounts for the membrane leak. Note, however, that at inference time the network does not receive ground-truth contexts but the context it generated itself at the previous step, so the spike train may be corrupted by previous errors.
+Each weight $w_{ij}^{(d)}$ is thus proportional to the normalised cross-correlation between the \emph{deconvolved} spike train of target neuron $j$ and the raw spike train of neuron $i$ shifted by delay $d$, averaged over all $M$ stored patterns. This initialisation resembles classical Hebbian learning~\citep{Perrinet2002} and mirrors the form of spike-timing-dependent plasticity (STDP) as used in the seminal paper on polychronisation~\citep{Izhikevich2006}, with the additional $-\beta$ correction term that accounts for the membrane leak. Note, however, that at inference time the network does not receive ground-truth contexts but the context it generated itself at the previous step, so the spike train may be corrupted by previous errors.
 %%%-----------------------------------------------------------------
 \subsection{Training}
 %%%-----------------------------------------------------------------
@@ -250,7 +253,6 @@ The loss is defined as $\mathcal{L} = 1 - F_1$, where $F_1$ is the mean F1 score
 The gradient-based learning in our recurrent HD-SNN shares fundamental principles with biological STDP, despite operating at different scales. Both mechanisms exploit temporal correlations in spike timing to adjust synaptic strengths. However, while STDP implements local pairwise updates based on individual spike timings, our approach performs global optimisation that effectively learns the collective interaction of multiple delayed spike trains across the entire network. The analytical initialisation (see Equation~\ref{eq:init}) reveals this connection most clearly: it implements a Hebbian-like rule that is mathematically equivalent to averaging STDP updates across all stored patterns, suggesting that gradient descent in this context can be viewed as a principled, globally optimal implementation of temporally structured synaptic plasticity.
 
 Our implementation is available at \url{https://github.com/laurentperrinet/MNESIS}. The recurrent HD-SNN was implemented using the snnTorch~\citep{Eshraghian2023} library with custom extensions for heterogeneous delay handling. The implementation leverages PyTorch with the Metal Performance Shader (MPS) backend for accelerated computation on Apple Silicon (M3 Ultra chip featuring 32 CPU cores and 80 GPU cores, with 512\,GB of unified memory architecture) and further tested with the CUDA backend on the Jean Zay supercluster at GENCI. The MPS and CUDA backends enabled efficient training and simulation of the large recurrent networks required for working memory tasks, leveraging the parallel processing capabilities of the GPU cores while maintaining low-latency access to the substantial memory resources necessary for storing all tensors' parameters. Training typically converged within $4096$ gradient steps, requiring approximately $10$ minutes of computation time per training.
-
 
 
 \section{Results}
