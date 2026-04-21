@@ -205,6 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# my stuff
 Perrinet26mnesis.aux
 Perrinet26mnesis.bbl
 Perrinet26mnesis.blg
