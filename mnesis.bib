@@ -257,6 +257,23 @@
   archiveprefix = {arXiv}
 }
 
+@misc{Queant2025,
+  title = {{{DelRec}}: Learning Delays in Recurrent Spiking Neural Networks},
+  shorttitle = {{{DelRec}}},
+  author = {Queant, Alexandre and Ran{\c c}on, Ulysse and Cottereau, Benoit R. and Masquelier, Timoth{\'e}e},
+  year = 2025,
+  month = sep,
+  number = {arXiv:2509.24852},
+  eprint = {2509.24852},
+  primaryclass = {cs},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.2509.24852},
+  url = {http://arxiv.org/abs/2509.24852},
+  urldate = {2025-10-02},
+  abstract = {Spiking neural networks (SNNs) are a bio-inspired alternative to conventional real-valued deep learning models, with the potential for substantially higher energy efficiency. Interest in SNNs has recently exploded due to a major breakthrough: surrogate gradient learning (SGL), which allows training SNNs with backpropagation, strongly outperforming other approaches. In SNNs, each synapse is characterized not only by a weight but also by a transmission delay. While theoretical works have long suggested that trainable delays significantly enhance expressivity, practical methods for learning them have only recently emerged. Here, we introduce ''DelRec'', the first SGL-based method to train axonal or synaptic delays in recurrent spiking layers, compatible with any spiking neuron model. DelRec leverages a differentiable interpolation technique to handle non-integer delays with well-defined gradients at training time. We show that trainable recurrent delays outperform feedforward ones, leading to new state-of-the-art (SOTA) on two challenging temporal datasets (Spiking Speech Command, an audio dataset, and Permuted Sequential MNIST, a vision one), and match the SOTA on the now saturated Spiking Heidelberg Digit dataset using only vanilla Leaky-Integrate-and-Fire neurons with stateless (instantaneous) synapses. Our results demonstrate that recurrent delays are critical for temporal processing in SNNs and can be effectively optimized with DelRec, paving the way for efficient deployment on neuromorphic hardware with programmable delays. Our code is available at : https://github.com/alexmaxad/DelRec.},
+  archiveprefix = {arXiv}
+}
+
 @article{Ikegaya2004,
   title = {Synfire {{Chains}} and {{Cortical Songs}}: {{Temporal Modules}} of {{Cortical Activity}}},
   author = {Ikegaya, Yuji and Aaron, Gloster and Cossart, Rosa and Aronov, Dmitriy and Lampl, Ilan and Ferster, David and Yuste, Rafael},
