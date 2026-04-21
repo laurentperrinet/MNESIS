@@ -210,21 +210,35 @@ Before training, the weight tensor $\mathbf{W}$ can be initialised analytically 
 \[
   \mathbf{C} \in \{0,1\}^{ND \times K},
   \qquad
-  \mathbf{S}^* \in \{0,1\}^{N \times K},
+  \mathbf{I}^* \in \mathbb{R}^{N \times K},
 \]
-and the initialisation problem is $\mathbf{W}\,\mathbf{C} \approx \mathbf{S}^*$. Notice that from Equation~\ref{eq:lif}, the leak term $\beta$ introduces a smoothing memory. As the goal of the network is to predict a spike at precisely the timing of the target, one may use as a superivision the slice $\mathbf{S}^*[\cdot,\, t{-}D:t{-}1]-\beta\cdot \mathbf{S}^*[\cdot,\, t-D-1:t-2]$. If the network succeeds in producing such a current, then it generates a spike at the correct time and then resets the neuron. In numerical simulations, we have shown that this slightly improves the capacity of the network.
+and the initialisation problem is therefore that $\mathbf{W}\,\mathbf{C} \approx (1 + \varepsilon) \cdot \mathbf{I}^*$ with $\varepsilon<<1$ a small number enough to reach the threshold $\vartheta = 1$.
 
-Since the system is strongly underdetermined ($K \ll ND$), the minimum-norm solution is the Moore--Penrose pseudo-inverse $\mathbf{W}^* = \mathbf{S}^*\,\mathbf{C}^+$. With sparse Bernoulli activity at rate $p_A = 10^{-3}$, consecutive context windows are nearly orthogonal, so the Gram matrix satisfies $\mathbf{C}\mathbf{C}^\top \approx N \cdot D \cdot p_A\,\mathbf{I}$, giving the closed-form Hebbian initialisation
+The choice of the regression target $\mathbf{I}^*$ requires care. A naive choice is the binary spike matrix $\mathbf{S}^*$ itself, which would ask the network to produce a current equal to the target spike at each step. However, from Equation~\ref{eq:lif}, the synaptic current $I_j(t) = \sum_{i,d} \mathbf{W}_{j,i,d}\,s_i(t-d)$ does not directly generate a spike: it is first \emph{filtered} by the membrane dynamics, which act as a causal first-order IIR low-pass filter with transfer function
+\[
+  H(z) = \frac{1}{1 - \beta\,z^{-1}}, \qquad h(t) = \beta^t.
+\]
+To produce a membrane potential that rises precisely to $\vartheta$ at $t^*$ and is immediately reset (a temporal Dirac), the required input current is the \emph{deconvolution} of this target membrane trajectory by $h(t)$. The inverse filter of $H(z)$ is
+\[
+  H^{-1}(z) = 1 - \beta\,z^{-1},
+\]
+which corresponds to the first-order difference operator. Applied to the binary target spike train $s^*_j(t)$, the optimal input current is therefore
+\begin{equation}
+  I^*_j(t) \;=\; s^*_j(t) - \beta \cdot s^*_j(t-1).
+  \label{eq:deconv_target}
+\end{equation}
+This is a \emph{biphasic} waveform: $+1$ at each target spike time $t^*$, $-\beta$ exactly one step later (which cancels the residual membrane charge left by the leak), and zero everywhere else. For $\beta \to 0$ the correction vanishes and $I^*(t) \to s^*(t)$, recovering the naive binary target. For $\beta = 0.8$, the correction term is $-0.8$, which is substantial and significantly reduces spurious early spikes at initialisation.
+
+Since the system is strongly underdetermined ($K \ll ND$), the minimum error (with a L$_2$ -norm) solution is the Moore-Penrose pseudo-inverse $\mathbf{W}^* = \mathbf{I}^*\,\mathbf{C}^+$. With sparse Bernoulli activity at rate $p_A = 10^{-3}$, consecutive context windows are nearly orthogonal, so the Gram matrix satisfies $\mathbf{C}\mathbf{C}^\top \approx N \cdot D \cdot p_A\,\mathbf{I}$, giving the closed-form initialisation
 \begin{equation}
   w_{ij}^{(d)}
-  = \frac{1}{N D p_A\, M}
+  = \frac{1}{N D p_A M}
     \sum_{\mu=1}^{M}\sum_{t=D+1}^{T}
-    s_j^{*(\mu)}(t)\cdot s_i^{*(\mu)}(t-d).
+    \bigl(s_j^{*(\mu)}(t) - \beta\,s_j^{*(\mu)}(t-1)\bigr)
+    \cdot s_i^{*(\mu)}(t-d).
   \label{eq:init}
 \end{equation}
-
-Each weight $w_{ij}^{(d)}$ is thus proportional to the normalised cross-correlation between the spike train of neuron $j$ and that of neuron $i$ shifted by delay $d$, averaged over all $M$ stored patterns. This initialisation resembles classical Hebbian learning and mirrors the form of spike-timing-dependent plasticity (STDP) as notably used in the seminal paper on polychronisation~\citep{Izhikevich2006}. Notice however that at inference time, the network does not receive ground-truth contexts, but it receives the context it generated itself at the previous step such that the spike train may be corrupted by previous errors.
-
+Each weight $w_{ij}^{(d)}$ is thus proportional to the normalised cross-correlation between the \emph{deconvolved} spike train of the target neuron $j$ and the raw spike train of neuron $i$ shifted by delay $d$, averaged over all $M$ stored patterns. This initialisation resembles classical Hebbian learning and mirrors the form of spike-timing-dependent plasticity (STDP) as used in the seminal paper on polychronisation~\citep{Izhikevich2006}, with the additional $-\beta$ correction term that accounts for the leak of the membrane. Notice however that at inference time the network does not receive ground-truth contexts but the context it generated itself at the previous step, so the spike train may be corrupted by previous errors.
 %%%-----------------------------------------------------------------
 \subsection{Training}
 %%%-----------------------------------------------------------------
