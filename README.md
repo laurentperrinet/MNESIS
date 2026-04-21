@@ -42,12 +42,12 @@ A recurrent SNN with heterogeneous synaptic delays can represent arbitrary spike
 ### Network Architecture
 
 **Recurrent Heterogeneous-Delay SNN (HD-SNN)**:
-- **Neurons**: *N* = 512 Leaky Integrate-and-Fire (LIF) neurons
+- **Neurons**: *N* = 1024 Leaky Integrate-and-Fire (LIF) neurons
 - **Delays**: *D* = 41 discrete delay channels per synapse (1-41 ms)
 - **Duration**: *T* = 1000 time steps (1 second total)
 - **Patterns**: *M* = 16 distinct target spike patterns
-- **Firing rate**: p_A = 0.002 (2 Hz per neuron)
-- **Parameters**: Weight tensor **W** ∈ ℝ^(N×N×D) ≈ 10.7×10⁶ parameters
+- **Firing rate**: p_A = 0.001 (1 Hz per neuron)
+- **Parameters**: Weight tensor **W** ∈ ℝ^(N×N×D) ≈ 42.9×10⁶ parameters
 
 ### Membrane Dynamics
 
@@ -56,7 +56,7 @@ u_j(t) = β·u_j(t-1)·(1 - s_j(t-1)) + Σ_i Σ_d W_{j,i,d}·s_i(t-d)
 ```
 
 where:
-- β = 0.8 is the membrane decay constant (time constant τ ≈ 4.5 steps)
+- β = 0.7 is the membrane decay constant (time constant τ ≈ 2.8 steps)
 - s_j(t) ∈ {0,1} is the spike of neuron j at time t
 - W_{j,i,d} is the synaptic weight from neuron i to j at delay d
 - Spike emitted when u_j(t) > ϑ = 1, then membrane reset
@@ -125,9 +125,9 @@ MNESIS/
 |--------|-------|
 | Mean F1 Score | 1.0 (perfect) |
 | Patterns stored | M = 16 |
-| Network size | N = 512 neurons |
+| Network size | N = 1024 neurons |
 | Pattern duration | T = 1000 steps (1 s) |
-| Parameters | N² × D ≈ 10.7×10⁶ |
+| Parameters | N² × D ≈ 42.9×10⁶ |
 
 ### Sequential Learning
 
