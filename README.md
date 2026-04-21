@@ -9,9 +9,9 @@ This repository contains the notebook and paper for MNESIS, a recurrent spiking 
 
 **Laurent U. Perrinet** (2026). *Working Memory in a Recurrent Spiking Neural Networks With Heterogeneous Synaptic Delays*. AIROV 2026.
 
-- **Paper (PDF)**: [`Perrinet26mnesis.pdf`](Perrinet26mnesis.pdf)
-- **Source (LaTeX)**: [`Perrinet26mnesis.tex`](Perrinet26mnesis.tex)
-- **Bibliography**: [`mnesis.bib`](mnesis.bib)
+- **Paper (PDF)**: [`tex/Perrinet26mnesis.pdf`](tex/Perrinet26mnesis.pdf)
+- **Source (LaTeX)**: [`tex/Perrinet26mnesis.tex`](tex/Perrinet26mnesis.tex)
+- **Bibliography**: [`tex/mnesis.bib`](tex/mnesis.bib)
 
 ## Notebook
 
@@ -99,6 +99,22 @@ Equivalent to Hebbian-like learning averaged over all stored patterns.
 - **Training time**: ~10 minutes per run
 - **Code**: `MNESIS_polychronous-chains.ipynb`
 
+## Directory Structure
+
+```
+MNESIS/
+├── MNESIS_polychronous-chains.ipynb    # Main notebook
+├── requirements.txt                     # Python dependencies
+├── README.md                            # This file
+├── figures/                             # Generated plots and figures
+└── tex/                                 # Paper source files
+    ├── Perrinet26mnesis.tex            # Main LaTeX file
+    ├── Perrinet26mnesis.pdf            # Compiled paper PDF
+    ├── mnesis.bib                      # Bibliography
+    ├── llncs.cls                       # Springer LNCS class
+    └── splncs04.bst                    # BibTeX style
+```
+
 ---
 
 ## Results
@@ -182,8 +198,10 @@ Training exhibits **temporal progression**:
 ### Requirements
 
 ```bash
-pip install torch snntorch numpy matplotlib pandas
+pip install -r requirements.txt
 ```
+
+See [`requirements.txt`](requirements.txt) for full list of dependencies.
 
 ### Run
 
@@ -197,6 +215,8 @@ Results cached in `cached_data/`:
 - `*_init.pth`: Pseudo-inverse initialized weights
 - `*.pth`: Trained model weights
 - `*_scan_*.json`: Parameter sweep results
+
+**Note**: Cached data may be stored in the root `cached_data/` directory, while figures are in `figures/` and paper source in `tex/`.
 
 ---
 
