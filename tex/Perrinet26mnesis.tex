@@ -36,6 +36,13 @@
 % to compile a camera-ready version, add the [final] option, e.g.:
 % \usepackage[final]{airov26}
 
+% \usepackage[
+%    backend=biber,  % Important: Use Biber as the backend
+%    style=alphabetic, % Or your preferred citation style
+%  ]{biblatex}
+% \addbibresource{mnesis.bib}
+\usepackage{natbib}
+
 
 % to avoid loading the natbib package, add option nonatbib:
 % \usepackage[nonatbib]{airov26}
@@ -64,7 +71,7 @@ Working Memory in a Recurrent Spiking Neural Networks With Heterogeneous Synapti
 
 
 \author{%
-  Laurent U Perrinet\thanks{More information on \url{https://laurentperrinet.github.io/talk/2026-04-16-cerco/}.} \\
+  Laurent U Perrinet\\ %\thanks{More information on \url{https://laurentperrinet.github.io/talk/2026-04-16-cerco/}.} \\
   Institut de Neurosciences de la Timone (UMR7289) \\
   Aix Marseille Univ, CNRS\\
   27 Bd Moulin, 13005 Marseille, France \\
@@ -351,5 +358,6 @@ This work was performed using HPC resources from GENCI-IDRIS (Grant 20XX--AD0103
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{plainnat}
 \bibliography{mnesis}
+% \printbibliography
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
