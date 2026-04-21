@@ -4,52 +4,30 @@
 %!BIB TS-program = bibtex
 % -*- coding: UTF-8; -*-
 % vim: set fenc=utf-8
+%-----------------------
+% TODO next step is publishing in NCE https://comms.ioppublishing.org/c/11pKpgTTUWOrS8lSYz5Lz1YVXNoA
 %
-% Adapted from the NeurIPS Conference:
-% - Any appearance of "neurips_2023" was replaced by "airov26".
-% - The footer was adapted accordingly.
-% - A package option "anonymous" was added.
-% - hyperref was moved to airov.sty, with specific customisation
-% - For the [final] version the page number was removed.
-\documentclass{article}
+\documentclass[runningheads]{llncs} % , citeauthoryear
 
+\usepackage[T1]{fontenc}
 
-% if you need to pass options to natbib, use, e.g.:
-%     \PassOptionsToPackage{numbers, compress}{natbib}
-% before loading airov26
+\usepackage[%
+  square,        % for square brackets
+  comma,         % use commas as separators
+  numbers,       % for numerical citations;
+%  sort,          % orders multiple citations into the sequence in which they appear in the list of references;
+  sort&compress, % as sort but in addition multiple numerical citations
+                 % are compressed if possible (as 3-6, 15);
+]{natbib}
+% In the bibliography, references have to be formatted as 1., 2., ... not [1], [2], ...
+\renewcommand{\bibnumfmt}[1]{#1.}
 
-% https://airov.at/2026/
+\renewcommand{\bibsection}{\section*{References}} % requried for natbib to have "References" printed and as section*, not chapter*
 
-% ready for submission
-\usepackage[final]{airov26}
-
-
-% if your workshop requires anonymous submission, add the [anonymous] option:
-% \usepackage[anonymous]{airov26}
-
-
-% to compile a preprint version, e.g., for submission to arXiv, add the
-% [preprint] option:
-% \usepackage[preprint]{airov26}
-
-
-% to compile a camera-ready version, add the [final] option, e.g.:
-% \usepackage[final]{airov26}
-
-% \usepackage[
-%    backend=biber,  % Important: Use Biber as the backend
-%    style=alphabetic, % Or your preferred citation style
-%  ]{biblatex}
-% \addbibresource{mnesis.bib}
-\usepackage{natbib}
-
-
-% to avoid loading the natbib package, add option nonatbib:
-% \usepackage[nonatbib]{airov26}
 \usepackage{graphicx}
 \usepackage{amsmath}
 
-% \usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
 \usepackage{booktabs}       % professional-quality tables
 \usepackage{amsfonts}       % blackboard math symbols
@@ -65,24 +43,35 @@
 
 \usepackage{adjustbox}
 
+\begin{document}
+%
 \title{
 Working Memory in a Recurrent Spiking Neural Networks With Heterogeneous Synaptic Delays
 }
 
-
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
 \author{%
-  Laurent U Perrinet\\ %\thanks{More information on \url{https://laurentperrinet.github.io/talk/2026-04-16-cerco/}.} \\
-  Institut de Neurosciences de la Timone (UMR7289) \\
+  Laurent U Perrinet\orcidID{0000-0002-9536-010X}
+}
+%
+\authorrunning{L. Perrinet}
+\titlerunning{Working Memory in Spiking Neural Networks with Delays}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{Institut de Neurosciences de la Timone (UMR7289) \\
   Aix Marseille Univ, CNRS\\
   27 Bd Moulin, 13005 Marseille, France \\
-  \texttt{laurent.perrinet@univ-amu.fr} \\
+\url{https://laurentperrinet.github.io/publication/perrinet-26-icann/} 
+\email{laurent.perrinet@univ-amu.fr}
 }
-
-
-\begin{document}
-
-
-\maketitle
+%
+\maketitle              % typeset the header of the contribution
+%
 
 % Weaknesses:
 % * Test data too simple: Only fake patterns, not real ones like SHD or video.
@@ -93,6 +82,8 @@ Working Memory in a Recurrent Spiking Neural Networks With Heterogeneous Synapti
 
 \begin{abstract}
 Working memory --- the ability to store and recall precise temporal patterns of neural activity --- remains an open challenge for spiking neural networks (SNNs). We propose a recurrent SNN of $N$ neurons in which each synapse is equipped with $D = 41$ delays, modelled as a weight tensor $\mathbf{W} \in \mathbb{R}^{N \times N \times D}$ and trained end-to-end with surrogate-gradient backpropagation through time. The network stores $M$ arbitrary target spike patterns by representing each as a sequential chain of overlapping Spiking Motifs: contiguous windows of length $D$ that uniquely predict spikes at the next time step. On a synthetic benchmark of $M=16$ patterns ($N=512$ neurons, $T=1000$ steps), training achieves a mean F1 score of $1.0$, with recall emerging first near the clamped initialisation window and propagating forward in time. This result demonstrates that heterogeneous delays provide an efficient substrate for working memory in SNNs, enabling energy-efficient neuromorphic edge deployment.
+%
+  \keywords{Spiking Neural Networks  \and Heterogeneous delays \and Working memory.}
 \end{abstract}
 
 
@@ -353,10 +344,15 @@ The most immediate application of this framework is to neurophysiological data.
 Future work will explore whether self-supervised objectives can extract Spiking Motifs directly from raw multi-electrode array recordings without labelled targets. Such approaches could bridge the gap between biologically plausible learning and practical deployment on edge devices.
 The supervised memorisation task studied here requires a known target, but in practice one would like to discover the latent Spiking Motifs present in recorded multi-unit activity --- the problem originally addressed by~\citet{Ikegaya2004} and~\citet{Villette2015}. A natural extension is therefore to replace the supervised F1 loss with a self-supervised or contrastive objective that trains the network to predict upcoming spikes from the recent spike history, without access to ground-truth labels. This is analogous to the contrastive predictive coding paradigm applied to continuous neural time series, here instantiated in a fully spike-based setting~\citep{Grimaldi2023}. Such a model would provide a principled, energy-efficient method for identifying the temporal structure of neural population codes, with direct relevance to the debate on rate coding versus temporal coding~\citep{Softky1993,Bohte2004} and to understanding the neural mechanisms of working memory more broadly. Deployed on neuromorphic hardware~\citep{Goltz2021,Eshraghian2023}, it could operate in real time on streaming electrophysiological data, opening a new avenue for closed-loop brain-machine interface applications.
 
-\acksection
+\section*{Acknowledgements} 
 This work was performed using HPC resources from GENCI-IDRIS (Grant 20XX--AD010314955R2). The authors declare no competing interests regarding this manuscript. The funders had no role in the design of the study; in the collection, analyses, or interpretation of data; in the writing of the manuscript; or in the decision to publish the results. For the purpose of open access, the authors have applied a CC-BY public copyright licence to any Author-Accepted Manuscript version arising from this submission.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliographystyle{plainnat}
+% \bibliographystyle{plainnat}
+% Use natbib compatbile splncsnat style.
+% It does provide all features of splncs03, but is developed in a clean way.
+% Source: http://phaseportrait.blogspot.de/2011/02/natbib-compatible-bibtex-style-bst-file.html
+% now at https://raw.githubusercontent.com/tpavlic/splncs04nat/refs/heads/master/splncs04nat.bst
+\bibliographystyle{splncs04}
 \bibliography{mnesis}
 % \printbibliography
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
