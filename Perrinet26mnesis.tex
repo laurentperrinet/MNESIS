@@ -177,7 +177,7 @@ The recurrent Heterogeneous-Delay SNN (HD-SNN) consists of a population $\mathca
 \begin{equation}
   u_j(t)
   = \beta \cdot u_j(t-1) \cdot (1 - s_j(t-1))
-    + \sum_{i=1}^{N} \bigl (  
+    + \sum_{i=1}^{N} \bigl (
       % b_i + 
       \sum_{d=1}^{D} \mathbf{W}_{j, i, d} \cdot s_i(t-d) \bigr ), 
   \label{eq:lif}
@@ -194,7 +194,7 @@ To assess working-memory capacity, we generated a dataset of $M = 16$ distinct t
 \[
   \mathbf{S}^{(\mu)} \sim  \sigma( \sigma^{-1}(p_A) + e_A^{(\mu)} )
 \]
-where $p_A$ is the mean firing rate that we set as $2\,\mathrm{Hz}$ (spike probability $2\times10^{-3}$ per neuron per step) and the evidence term ${e_A}^{(\mu)} \in \{0,1\}^{N \times T}$ is first drawn from a normal distribution of standard deviation $E_{SM}=4$:
+where $p_A$ is the mean firing rate that we set as $1\,\mathrm{Hz}$ (spike probability $1\times10^{-3}$ per neuron per step) and the evidence term ${e_A}^{(\mu)} \in \{0,1\}^{N \times T}$ is first drawn from a normal distribution of standard deviation $E_{SM}=4$:
 \[
   {e_A}^{(\mu)} \sim \mathcal{N}(0, e) 
 \]
@@ -212,7 +212,9 @@ Before training, the weight tensor $\mathbf{W}$ can be initialised analytically 
   \qquad
   \mathbf{S}^* \in \{0,1\}^{N \times K},
 \]
-and the initialisation problem is $\mathbf{W}\,\mathbf{C} \approx \mathbf{S}^*$. Since the system is strongly underdetermined ($K \ll ND$), the minimum-norm solution is the Moore--Penrose pseudo-inverse $\mathbf{W}^* = \mathbf{S}^*\,\mathbf{C}^+$. With sparse Bernoulli activity at rate $p_A = 10^{-3}$, consecutive context windows are nearly orthogonal, so the Gram matrix satisfies $\mathbf{C}\mathbf{C}^\top \approx N \cdot D \cdot p_A\,\mathbf{I}$, giving the closed-form Hebbian initialisation
+and the initialisation problem is $\mathbf{W}\,\mathbf{C} \approx \mathbf{S}^*$. Notice that from Equation~\ref{eq:lif}, the leak term $\beta$ introduces a smoothing memory. As the goal of the network is to predict a spike at precisely the timing of the target, one may use as a superivision the slice $\mathbf{S}^*[\cdot,\, t{-}D:t{-}1]-\beta\cdot \mathbf{S}^*[\cdot,\, t-D-1:t-2]$. If the network succeeds in producing such a current, then it generates a spike at the correct time and then resets the neuron. In numerical simulations, we have shown that this slightly improves the capacity of the network.
+
+Since the system is strongly underdetermined ($K \ll ND$), the minimum-norm solution is the Moore--Penrose pseudo-inverse $\mathbf{W}^* = \mathbf{S}^*\,\mathbf{C}^+$. With sparse Bernoulli activity at rate $p_A = 10^{-3}$, consecutive context windows are nearly orthogonal, so the Gram matrix satisfies $\mathbf{C}\mathbf{C}^\top \approx N \cdot D \cdot p_A\,\mathbf{I}$, giving the closed-form Hebbian initialisation
 \begin{equation}
   w_{ij}^{(d)}
   = \frac{1}{N D p_A\, M}
