@@ -5,7 +5,6 @@
 % -*- coding: UTF-8; -*-
 % vim: set fenc=utf-8
 %-----------------------
-% TODO next step is publishing in NCE https://comms.ioppublishing.org/c/11pKpgTTUWOrS8lSYz5Lz1YVXNoA
 %
 \documentclass[runningheads]{llncs} % , citeauthoryear
 
@@ -48,18 +47,15 @@
 \title{
 Working Memory in a Recurrent Spiking Neural Networks With Heterogeneous Synaptic Delays
 }
-
+%
+\author{Laurent U Perrinet\orcidID{0000-0002-9536-010X}}
+%
+\authorrunning{Laurent U Perrinet}
 %
 %\titlerunning{Abbreviated paper title}
 % If the paper title is too long for the running head, you can set
 % an abbreviated paper title here
-%
-\author{%
-  Laurent U Perrinet\orcidID{0000-0002-9536-010X}
-}
-%
-\authorrunning{L. Perrinet}
-\titlerunning{Working Memory in Spiking Neural Networks with Delays}
+\titlerunning{Working Memory in Spiking Neural Networks}
 % First names are abbreviated in the running head.
 % If there are more than two authors, 'et al.' is used.
 %
@@ -119,7 +115,7 @@ The present work generalises this chain-of-motifs framework to enable working me
 
 \section{Methods}
 \label{sec:methods}
-
+% TODO align the methods section with what is described in 10_MNESIS_polychronous-chains.ipynb
 %%%-----------------------------------------------------------------
 \subsection{Representation of spiking activity}
 %%%-----------------------------------------------------------------
@@ -254,7 +250,7 @@ Our implementation is available at \url{https://github.com/laurentperrinet/MNESI
 
 \section{Results}
 
-\subsection{Training dynamics}
+\subsection{Training dynamics and results}
 
 Performing the training on the recurrent HD-SNN with surrogate-gradient BPTT~\cite{Neftci2019a} consistently maximised the mean F1 score across all $M=16$ target patterns to a perfect score of $1.0$. We observed two characteristic failure modes during early training: episodes of complete silence, in which the network emits no spikes, and over-activation, in which nearly all neurons fire at every time step. Both are well-known pathological attractors of recurrent SNNs~\citep{Izhikevich2006}. The F1 score is the harmonic mean of precision and recall, and maximising it therefore penalises both failure modes symmetrically: low precision corresponds to an over-active network and low recall to a silent one. In addition, the cosine learning-rate schedule~\citep{Hammouamri2023} helped guide the network away from these extremes towards a balanced, sparse-firing regime.
 
@@ -271,24 +267,58 @@ Performing the training on the recurrent HD-SNN with surrogate-gradient BPTT~\ci
 \end{figure}
 %%%-----------------------------------------------------------------
 
-% \subsection{Sequential learning of spike patterns}
+\subsection{Effect of hyperparameters}
+
+% TODO align that sebsection with 25_MNESIS_optuna.ipynb
+
+We performed a systematic sweep over the key hyperparameters and report their effect on the mean F1 score at convergence.
+
+\paragraph{Surrogate sharpness $\alpha$.}
+The sharpness of the surrogate gradient had the largest single effect on performance. Low values of $\alpha$ produced gradients that were too smooth to discriminate precise spike times, while excessively high values caused gradient vanishing. The value $\alpha = 10$ provided the best trade-off, consistent with findings in~\citet{Neftci2019a}.
+
+\paragraph{Target firing rate.}
+The best recall was obtained at low target firing rates ($1\,\mathrm{Hz}$ per neuron), confirming that sparse activity facilitates stable recurrent dynamics~\citep{Izhikevich2006,Yin2026}. Higher firing rates led to increased inter-pattern interference and degraded precision, echoing the capacity bounds reported for polychronous neuronal groups~\citep{Szatmary2010}.
+
+\subsection{Retrieval of multiple spike patterns}
 
 Training was not uniform in time: the network first reproduced spikes immediately following the trigger window ($0 \leq t < D$), then progressively extended correct recall towards later time steps, as shown in Figure~\ref{fig:target}. This behaviour is a direct consequence of the sequential structure of the task: because each window $[t-D,\, t-1]$ uniquely predicts the activity at $t$, errors at early time steps propagate into all subsequent predictions, making temporal proximity to the triggered initial condition the primary driver of learning progress. We therefore expect the number of gradient steps required to memorise a pattern to scale approximately linearly with its duration $T$.
 
+%%%----------------------------------------------------------------- 
+\begin{figure}[!ht]
+  \begin{center}
+    \includegraphics[width=\textwidth]{retrieval.pdf}
+  \end{center}
+  \caption{%
+%  TODO describe the experiment done in retrieval showing that we learn multiple patterns  this is computed in 13_MNESIS_testing-inference.ipynb
+  }\label{fig:retrieval}
+\end{figure}
+%%%-----------------------------------------------------------------
 
-% TODO: memory-like behaviour
+\subsection{Working memory and robustness to noise}
+
+% TODO: include all studies for noise etc - and insist on how it makes it similar to a memory-like behaviour
+
+% TODO : one paragraph for 14_MNESIS_testing-noise.ipynb
+% TODO : one paragraph for 15_MNESIS_testing-trigger-duration.ipynb
+% TODO : one paragraph for 16_MNESIS_testing-trigger-fraction.ipynb
 
 
-% \subsection{Effect of hyperparameters}
+%%%----------------------------------------------------------------- 
+\begin{figure}[!t] 
+  \centering
+  \includegraphics[width=0.325\linewidth]{p_flip_score.pdf}\hfill
+  \includegraphics[width=0.325\linewidth]{trigger_time_score.pdf}\hfill
+  \includegraphics[width=0.325\linewidth]{fraction_target_score.pdf}
+  \caption{%
+% TODO: make a caption from tha above paragraphs in a form similar to that in fig:scan below
+  }\label{fig:noise}
+\end{figure}
+%%%----------------------------------------------------------------- 
 
-% We performed a systematic sweep over the key hyperparameters and report their effect on the mean F1 score at convergence.
 
-% \paragraph{Surrogate sharpness $\alpha$.}
-% The sharpness of the surrogate gradient had the largest single effect on performance. Low values of $\alpha$ produced gradients that were too smooth to discriminate precise spike times, while excessively high values caused gradient vanishing. The value $\alpha = 10$ provided the best trade-off, consistent with findings in~\citet{Neftci2019a}.
+\subsection{Effect of delay depth, pattern duration, and background firing rate}
 
-% \paragraph{Target firing rate.}
-% The best recall was obtained at low target firing rates ($1\,\mathrm{Hz}$ per neuron), confirming that sparse activity facilitates stable recurrent dynamics~\citep{Izhikevich2006,Yin2026}. Higher firing rates led to increased inter-pattern interference and degraded precision, echoing the capacity bounds reported for polychronous neuronal groups~\citep{Szatmary2010}.
-
+% TODO align that sebsection with 20_MNESIS_scanning-parameters.ipynb
 
 %%%----------------------------------------------------------------- 
 \begin{figure}[!t] 
@@ -304,9 +334,6 @@ Training was not uniform in time: the network first reproduced spikes immediatel
   }\label{fig:scan}
 \end{figure}
 %%%----------------------------------------------------------------- 
-
-
-\subsection{Effect of delay depth, pattern duration, and background firing rate}
 
 To characterise how the architectural parameters govern working-memory performance, we conducted a systematic one-at-a-time scan over the maximum delay $D$, the pattern duration $T$, and the background firing rate $p_A$, holding all other hyperparameters at their default values (Section~\ref{sec:methods}). Each condition was evaluated with $N_\mathrm{cv} = 10$ by drawing different seeds for the random number generator and results are reported as mean loss $\mathcal{L} = 1 - F_1$ (Figure~\ref{fig:scan}).
 
@@ -339,6 +366,8 @@ The current architecture connects every neuron directly to every other neuron ac
 
 
 \subsection{Perspectives: unsupervised learning and neural data}
+
+% TODO:  online learning of temporary patterns
 
 The most immediate application of this framework is to neurophysiological data. 
 Future work will explore whether self-supervised objectives can extract Spiking Motifs directly from raw multi-electrode array recordings without labelled targets. Such approaches could bridge the gap between biologically plausible learning and practical deployment on edge devices.
