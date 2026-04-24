@@ -188,7 +188,7 @@ Training exhibits **temporal progression**:
 | [`figures/MNESIS_num_delay.pdf`](figures/MNESIS_num_delay.pdf) | Effect of delay depth D |
 | [`figures/MNESIS_N_time.pdf`](figures/MNESIS_N_time.pdf) | Effect of pattern duration T |
 | [`figures/MNESIS_p_A.pdf`](figures/MNESIS_p_A.pdf) | Effect of firing rate p_A |
-| [`figures/MNESIS_N_SM.pdf`](figures/MNESIS_N_SM.pdf) | Effect of number of patterns M |
+| [`figures/MNESIS_N_pattern.pdf`](figures/MNESIS_N_pattern.pdf) | Effect of number of patterns M |
 | [`figures/MNESIS_N_neuron.pdf`](figures/MNESIS_N_neuron.pdf) | Effect of network size N |
 
 ---
