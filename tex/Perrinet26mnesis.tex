@@ -89,7 +89,7 @@ Working memory --- the ability to store and recall precise temporal patterns of 
   \caption{%
     \textbf{Working memory as sequential spike prediction via heterogeneous delays.}
     %
-    \emph{Left:} A recurrent HD-SNN of five neurons numbered $1$--$5$, connected by two subsets of recurrent connections that define two Spiking Motifs from the presynaptic side (neurons $a$) to the post-synaptic side (neurons $b$): dark-red connections from $a_2$, $a_3$, $a_4$, and $a_5$ target $b_1$ with delays $4$, $9$, $6$, $3$\,ms; green connections from $a_1$, $a_2$, $a_3$, $a_4$ target $b_5$ with delays $1$, $6$, $3$, $8$\,ms. %
+    \emph{Left:} A recurrent HD-SNN of five neurons numbered $1$--$5$, connected by two subsets of recurrent connections that define two Spiking Motifs from the pre-synaptic side (neurons $a$) to the post-synaptic side (neurons $b$): dark-red connections from $a_2$, $a_3$, $a_4$, and $a_5$ target $b_1$ with delays $4$, $9$, $6$, $3$\,ms; green connections from $a_1$, $a_2$, $a_3$, $a_4$ target $b_5$ with delays $1$, $6$, $3$, $8$\,ms. %
     \emph{Right:} Raster plot illustrating how the network predicts successive spikes from a past context window.
     %
     \emph{Step~1 --- first prediction (green dashed box):} the orange input spikes emitted at staggered times by $a_2$--$a_5$ within the first context window (dashed green box) with precise interspike intervals. The (green) delays of all four spikes converge \emph{synchronously} at $b_5$ define a first Spiking Motif such that the spikes in the (green dashed) context window cause the (green) output spike at $b_5$ at a precise timing. 
@@ -125,7 +125,7 @@ In neurobiological recordings or the output of event-based cameras, any generic 
 \]
 where $N_\mathrm{ev} \in \mathbb{N}$ is the total number of events and $r$ indexes each event in temporal order~\citep{Grimaldi2024}. Each event has a time of occurrence $t_r$ and an address $a_r$ in the neural population space $\mathcal{A}$. In a Single Unit Activity (SUA) recording for instance, $\mathcal{A}$ is the identified set of neurons.
 
-Neurons are characterised by their membrane potential dynamics and by the integration of synaptic potentials along their dendritic tree. Crucially, neurons can receive inputs from multiple presynaptic neurons with \emph{heterogeneous delays} $\delta_s$, representing the travel time of the presynaptic spike to the soma of the post-synaptic neuron. Scanning all pre- and post-synaptic pairs, we define the set of $N_s \in \mathbb{N}$ synapses as
+Neurons are characterised by their membrane potential dynamics and by the integration of synaptic potentials along their dendritic tree. Crucially, neurons can receive inputs from multiple pre-synaptic neurons with \emph{heterogeneous delays} $\delta_s$, representing the travel time of the pre-synaptic spike to the soma of the post-synaptic neuron. Scanning all pre- and post-synaptic pairs, we define the set of $N_s \in \mathbb{N}$ synapses as
 \[
   \mathcal{S}
   = \bigl\{(a_s,\, b_s,\, w_s,\, \delta_s)\bigr\}_{s \in [1,\, N_s]},
@@ -394,8 +394,7 @@ The most immediate application of this framework is to neurophysiological data. 
 %%%----------------------------------------------------------------- 
 \section*{Acknowledgements} 
 This work was performed using HPC resources from GENCI-IDRIS (Grant 20XX--AD010314955R2). The authors declare no competing interests regarding this manuscript. The funders had no role in the design of the study; in the collection, analyses, or interpretation of data; in the writing of the manuscript; or in the decision to publish the results. For the purpose of open access, the authors have applied a CC-BY public copyright licence to any Author-Accepted Manuscript version arising from this submission.
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \bibliographystyle{plainnat}
 % Use natbib compatbile splncsnat style.
 % It does provide all features of splncs03, but is developed in a clean way.
@@ -404,6 +403,5 @@ This work was performed using HPC resources from GENCI-IDRIS (Grant 20XX--AD0103
 \bibliographystyle{splncs04}
 \bibliography{mnesis}
 % \printbibliography
-%%%----------------------------------------------------------------- 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
