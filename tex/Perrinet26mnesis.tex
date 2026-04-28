@@ -383,6 +383,7 @@ We used the simplest LIF model with a fixed membrane decay $\beta$. Introducing 
 The current architecture connects every neuron directly to every other neuron across all delays. Partitioning the population into input-output neurons and a larger pool of latent ``reservoir'' neurons, as in delay-based reservoir computing~\citep{Paugam-Moisy2008}, would enrich the internal spiking dynamics without increasing the number of trained parameters proportionally. Such a hybrid architecture could combine the representational power of random recurrent networks with the precision of gradient-trained delay weights~\citep{Neftci2019a}, potentially closing the gap between biologically inspired models and sparse selective-update architectures~\citep{Yin2026}.
 
 \paragraph{Online and unsupervised learning.}
+% TODO introduce other learning types see \citep{Koopman2026}
 The present model requires a fixed set of target patterns known in advance. A natural extension is an online learning rule that updates the weights continuously as new patterns are presented, without catastrophic forgetting of previously stored sequences. The closed-form Hebbian initialisation (Eq.~\ref{eq:init}) suggests a natural online update: each new spike $s_j(t)$ incrementally adjusts $w_{i, j, d}$ in proportion to $s_i(t-d)$, recovering a local STDP-like rule~\citep{Izhikevich2006}. Whether such online updates are stable under recurrent feedback and can support continual working memory remains to be established.
 
 \subsection{Perspectives: unsupervised learning and neural data}
