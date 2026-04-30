@@ -379,6 +379,8 @@ A systematic evaluation of memory capacity --- how many patterns of what duratio
 \paragraph{Richer neuron models and dynamics.}
 We used the simplest LIF model with a fixed membrane decay $\beta$. Introducing adaptive threshold dynamics or more complex single-neuron models, as studied in~\citet{Szatmary2010}, should increase the diversity of intrinsic timescales available to the network and improve both capacity and retrieval fidelity. In particular, the deconvolution analysis (Section~\ref{sec:methods}) shows that the optimal weight profile depends critically on $\beta$: larger values of $\beta$ require exponentially amplified weights at long delays, suggesting that adaptive $\beta$ per neuron could allow the network to exploit the full delay range more efficiently.
 
+% TODO Idea of chunking in a hierarchical architecture~\citep{}
+
 \paragraph{Latent reservoir neurons.}
 The current architecture connects every neuron directly to every other neuron across all delays. Partitioning the population into input-output neurons and a larger pool of latent ``reservoir'' neurons, as in delay-based reservoir computing~\citep{Paugam-Moisy2008}, would enrich the internal spiking dynamics without increasing the number of trained parameters proportionally. Such a hybrid architecture could combine the representational power of random recurrent networks with the precision of gradient-trained delay weights~\citep{Neftci2019a}, potentially closing the gap between biologically inspired models and sparse selective-update architectures~\citep{Yin2026}.
 
