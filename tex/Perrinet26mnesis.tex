@@ -182,17 +182,24 @@ where $\beta \in (0,1)$ is the membrane decay constant ($\beta = 0.7$ in our sim
 In our implementation, the spike history of all $N$ neurons over the past $D$ steps is concatenated into a flattened context vector of dimension $N \cdot D$ at each time step, so that $\mathbf{W}$ is reshaped as $\mathbf{W} \in \mathbb{R}^{N \times (N \cdot D)}$. This is equivalent to the temporal convolution that we used previously in a feedforward setting~\citep{Perrinet2023}, here extended to a fully recurrent topology. The HD-SNN thus maps onto a standard static computational graph that can be trained with surrogate gradient descent (see Figure~\ref{fig:model}, left panel).
 
 %%%-----------------------------------------------------------------
-\subsection{Synthetic dataset and memory cuing}
+\subsection{Synthetic dataset}
 %%%-----------------------------------------------------------------
-To assess working-memory capacity, we generated a dataset of $M = 16$ distinct target patterns $\mathbf{S}^{(\mu)} \in \{0,1\}^{N \times T}$. Following previous work~\citep{Perrinet2023}, each pattern is drawn as independent Bernoulli trials over $N$ neurons and $T$ time steps with 
+To assess working-memory capacity, we generated a dataset of $M = 16$ distinct target patterns $\mathbf{S}^{(\mu)} \in \{0,1\}^{N \times T}$. Following previous work~\citep{Perrinet2023}, each pattern is generated using a stochastic spiking pattern generator with structured and background components. Specifically, for each pattern we define a probability map:
 \[
-  \mathbf{S}^{(\mu)} \sim  \sigma( \sigma^{-1}(p_A) + e_A^{(\mu)} )
+  P^{(\mu)} = p_b \cdot (1 - M^{(\mu)}) + p_s \cdot M^{(\mu)}
 \]
-for $\mu \in [1 \ldots M]$ and where $p_A$ is the mean firing rate that we set as $1\,\mathrm{Hz}$ (spike probability $1\times10^{-3}$ per neuron per step) and we define an evidence term ${e_A}^{(\mu)} \in \mathbb{R}^{N \times T}$ which is drawn from a normal distribution of standard deviation $E_{S}=4$:
+where $p_b = 1.6 \times 10^{-4}$ is the background spike probability, $p_s = 0.925$ is the structured spike probability, and $M^{(\mu)} \in \{0,1\}^{N \times T}$ is a binary mask indicating structured regions with sparseness parameter $\alpha = 0.6$. The mask is generated as:
 \[
-  {e_A}^{(\mu)} \sim \mathcal{N}(0, E_{S}) 
+  M^{(\mu)} \sim \mathrm{Bernoulli}(\alpha \cdot p_b / p_s)
 \]
-To simulate realistic sparse activity, we retain only the top $p_{SM} = 0.5\% $ of these activation values, setting the rest to zero. Finally, a refractory period is enforced by imposing a minimum inter-spike interval of $4\,\mathrm{ms}$, yielding biologically plausible sparse activity.
+The final spike pattern is then drawn as independent Bernoulli trials:
+\[
+  \mathbf{S}^{(\mu)} \sim \mathrm{Bernoulli}(P^{(\mu)})
+\]
+This results in an overall mean firing rate of $p_A = 1.6 \times 10^{-4}$ per neuron per time step ($0.16\,\mathrm{Hz}$ for $1\,\mathrm{ms}$ time bins). A refractory period is enforced by imposing a minimum inter-spike interval of $4\,\mathrm{ms}$, yielding biologically plausible sparse activity. 
+%%%-----------------------------------------------------------------
+\subsection{Working memory task: memory cuing}
+%%%-----------------------------------------------------------------
 
 Given a target pattern $\mathbf{S}^*$, each contiguous window of length $D$, i.e.\ the slice $\mathbf{S}^*[\cdot,\, t{-}D:t{-}1]$, constitutes a unique context that may predict the spiking activity of all neurons at time $t$. The network is therefore trained to generate a sequential chain of overlapping Spiking Motifs~\citep{Perrinet2023,Kronland-Martinet2025} that faithfully reproduces the target. Memory retrieval is cued by clamping all neuron activities to the target pattern during the trigger window which corresponds to the initial $D$ time steps ($0 \le t < D$), corresponding to one elementary Spiking Motif (see Figure~\ref{fig:model}, right panel); the network then generates the remainder of the sequence autonomously.
 
