@@ -30,7 +30,10 @@ Working memory in biological neural circuits relies on precise spike timing rath
 ```
 MNESIS/
 ├── src/                          # All Jupyter notebooks (numbered pipeline)
-│   ├── 10_MNESIS_polychronous-chains.ipynb   # Model definition and core mechanism
+│   ├── 01_MNESIS_boilerplate.ipynb           # Imports, device setup, shared utilities
+│   ├── 05_MNESIS_parameters.ipynb            # Params dataclass, hyperparameter defaults
+│   ├── 08_MNESIS_generative-model.ipynb      # Generative model for synthetic patterns
+│   ├── 10_MNESIS_polychronous-chains.ipynb   # HD_SNN class, analytical initialisation
 │   ├── 11_MNESIS_learn-synthetic.ipynb       # Training on synthetic patterns
 │   ├── 13_MNESIS_testing-inference.ipynb     # Sequential retrieval of M patterns
 │   ├── 14_MNESIS_testing-noise.ipynb         # Robustness to bit-flip noise
@@ -65,7 +68,7 @@ Core dependencies: `torch`, `snntorch`, `numpy`, `scipy`, `matplotlib`, `jupyter
 
 ### Run the notebooks in order
 
-The notebooks are numbered and designed to be run sequentially. Each notebook saves its outputs (model weights, scan results) to `cached_data/` so that downstream notebooks can load them without recomputation.
+The notebooks are numbered and designed to be run sequentially. Notebooks 01, 05, and 08 set up shared infrastructure (imports, parameters, generative model) and are prerequisites for all downstream notebooks. Each notebook saves its outputs (model weights, scan results) to `cached_data/` so that downstream notebooks can load them without recomputation.
 
 ```bash
 cd src
@@ -74,14 +77,17 @@ jupyter notebook
 
 | # | Notebook | Purpose |
 |---|----------|---------|
-| 10 | `10_MNESIS_polychronous-chains.ipynb` | Define the `HD_SNN` class, generative model, and the analytical weight initialisation (Hebbian cross-correlation with LIF deconvolution). Corresponds to the Methods section of the paper. |
-| 11 | `11_MNESIS_learn-synthetic.ipynb` | Train the network on $M = 16$ synthetic sparse patterns. Demonstrates that analytical init alone reaches $F_1 = 1.0$; gradient training then improves noise robustness. |
-| 13 | `13_MNESIS_testing-inference.ipynb` | Concatenate all $M = 16$ patterns in sequence with spontaneous inter-trial intervals; evaluate sliding-window $F_1$ to confirm selective, cross-interference-free retrieval. |
-| 14 | `14_MNESIS_testing-noise.ipynb` | Bit-flip noise on the trigger window ($p_\mathrm{flip} \in [0, 1]$). Quantifies attractor-like robustness of retrieval. |
-| 15 | `15_MNESIS_testing-trigger-duration.ipynb` | Truncated trigger window (0 to $D-1$ steps). Finds the minimum cue length for reliable recall. |
-| 16 | `16_MNESIS_testing-trigger-fraction.ipynb` | Partial neuron coverage (0 to $N$ neurons silenced in trigger). Quantifies population-size tolerance. |
-| 20 | `20_MNESIS_scanning-parameters.ipynb` | Systematic one-at-a-time scans over $D$, $T$, $p_A$, $N$, $E_S$, $p_\mathrm{SM}$, etc. with $N_\mathrm{cv} = 10$ seeds. Produces the parameter-scan figures. |
-| 25 | `25_MNESIS_optuna.ipynb` | Automated hyperparameter search with [Optuna](https://optuna.org/) for learning rate, dropout, surrogate sharpness, and momentum. |
+| 01 | `01_MNESIS_boilerplate.ipynb` | Shared imports, device detection (MPS / CUDA / CPU), random-seed utilities, and helper functions reused by all downstream notebooks. Run once before anything else. |
+| 05 | `05_MNESIS_parameters.ipynb` | Defines the `Params` dataclass with all hyperparameter defaults ($N$, $D$, $T$, $M$, $\beta$, $p_A$, $p_\mathrm{SM}$, $E_\mathrm{SM}$, optimiser settings, etc.). Edit this notebook to change the global configuration. |
+| 08 | `08_MNESIS_generative-model.ipynb` | Implements the generative model for synthetic sparse patterns: draws Gaussian logit maps $\ell \sim \mathcal{N}(0, E_\mathrm{SM})$, thresholds to keep the top $p_\mathrm{SM}$ fraction, convolves with the biphasic spike shape, and samples Bernoulli spike trains at rate $p_A$. Visualises the resulting patterns. |
+| 10 | `10_MNESIS_polychronous-chains.ipynb` | Defines the `HD_SNN` class and the analytical weight initialisation: Hebbian cross-correlation with LIF deconvolution, targeting $\vartheta_0 = 0.8 < \vartheta = 1$. Corresponds to the Methods section of the paper. |
+| 11 | `11_MNESIS_learn-synthetic.ipynb` | Trains the network on $M = 16$ synthetic sparse patterns. Demonstrates that the analytical init alone reaches $F_1 = 1.0$; gradient training with AdamW and cosine schedule then improves noise robustness. |
+| 13 | `13_MNESIS_testing-inference.ipynb` | Concatenates all $M = 16$ patterns in sequence with $N_\mathrm{pretime} = 50$ steps of spontaneous inter-trial activity; evaluates sliding-window $F_1$ to confirm selective, cross-interference-free retrieval. |
+| 14 | `14_MNESIS_testing-noise.ipynb` | Bit-flip noise on the trigger window ($p_\mathrm{flip} \in [0, 1]$). Quantifies attractor-like robustness; $F_1 = 0.967$ at $p_\mathrm{flip} = 0.25$. |
+| 15 | `15_MNESIS_testing-trigger-duration.ipynb` | Truncated trigger window (0 to $D-1$ steps). Finds the minimum cue length for reliable recall; $F_1 = 0.862$ at 75% of $D$. |
+| 16 | `16_MNESIS_testing-trigger-fraction.ipynb` | Partial neuron coverage (0 to $N$ neurons silenced in trigger). Perfect recall maintained with 87.5% of neurons active. |
+| 20 | `20_MNESIS_scanning-parameters.ipynb` | Systematic one-at-a-time scans over $D$, $T$, $p_A$, $N$, $E_\mathrm{SM}$, $p_\mathrm{SM}$, etc. with $N_\mathrm{cv} = 10$ seeds. Produces the parameter-scan figures of the paper. |
+| 25 | `25_MNESIS_optuna.ipynb` | Automated hyperparameter search with [Optuna](https://optuna.org/) over learning rate, dropout, surrogate sharpness, and momentum. |
 
 ### Cached data
 
