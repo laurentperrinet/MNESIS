@@ -44,9 +44,12 @@
 \begin{document}
 %
 \title{
-Working Memory
-with 
-Polychronous Chains
+%ICANN
+Working Memory in a Recurrent Spiking Neural Networks With Heterogeneous Synaptic Delays
+% post-ICANN
+% Working Memory
+% with 
+% Polychronous Chains
 % in a Recurrent Spiking Neural Network with
 % Heterogeneous Synaptic Delays
 }
@@ -91,7 +94,7 @@ Working memory --- the ability to store and recall precise temporal patterns of 
 \begin{figure}%[t]
   \includegraphics[width=\linewidth]{izhikevich_rec.pdf}%
   \caption{%
-    \textbf{Working memory as sequential spike prediction via heterogeneous delays.}
+    \textbf{Working memory as a chained sequential spike prediction via heterogeneous delays.}
     %
     \emph{Left:} A recurrent HD-SNN of five neurons numbered $1$--$5$, connected by two subsets of recurrent connections that define two Spiking Motifs from the pre-synaptic side (neurons $a$) to the post-synaptic side (neurons $b$): dark-red connections from $a_2$, $a_3$, $a_4$, and $a_5$ target $b_1$ with delays $4$, $9$, $6$, $3$\,ms; green connections from $a_1$, $a_2$, $a_3$, $a_4$ target $b_5$ with delays $1$, $6$, $3$, $8$\,ms. %
     \emph{Right:} Raster plot illustrating how the network predicts successive spikes from a past context window.
@@ -184,24 +187,35 @@ In our implementation, the spike history of all $N$ neurons over the past $D$ st
 %%%-----------------------------------------------------------------
 \subsection{Synthetic dataset}
 %%%-----------------------------------------------------------------
-To assess working-memory capacity, we generated a dataset of $M = 16$ distinct target patterns $\mathbf{S}^{(\mu)} \in \{0,1\}^{N \times T}$. Following previous work~\citep{Perrinet2023}, each pattern is generated using a stochastic spiking pattern generator with structured and background components. Specifically, for each pattern we define a probability map:
+To assess working-memory capacity in all generality, we generated a dataset of $M = 16$ distinct target patterns $\mathbf{S}^{(\mu)} \in \{0,1\}^{N \times T}$. Following previous work~\citep{Perrinet2023}, each pattern is generated using a stochastic spiking pattern generator with both a structured and background components. Specifically, for each pattern we define a frozen pattern as $P^{(\mu)} \in \{0,1\}^{N \times T}$:
 \[
-  P^{(\mu)} = p_b \cdot (1 - M^{(\mu)}) + p_s \cdot M^{(\mu)}
+  P^{(\mu)} \sim \mathrm{Bernoulli}(p_A)
 \]
-where $p_b = 1.6 \times 10^{-4}$ is the background spike probability, $p_s = 0.925$ is the structured spike probability, and $M^{(\mu)} \in \{0,1\}^{N \times T}$ is a binary mask indicating structured regions with sparseness parameter $\alpha = 0.6$. The mask is generated as:
+where we set $p_A = 0.16 \times 10^{-4}$ spike per neuron per time step ($0.16\,\mathrm{Hz}$ for $1\,\mathrm{ms}$ time bins) as the average spike probability. This follows the estimation of the average spiking frequency in the human brain~\citep{Lennie2003}. 
+
+To account for the stochasticity inherent to neural activity, we further include a balanced bit flipping mechanism with probability $p_\text{flip} = 0.05$. This defines the binary mask  $M^{(\mu)} \in \{0,1\}^{N \times T}$ of bit flips as:
 \[
-  M^{(\mu)} \sim \mathrm{Bernoulli}(\alpha \cdot p_b / p_s)
+  M^{(\mu)} \sim \mathrm{Bernoulli}(p_\text{flip})
 \]
-The final spike pattern is then drawn as independent Bernoulli trials:
-\[
-  \mathbf{S}^{(\mu)} \sim \mathrm{Bernoulli}(P^{(\mu)})
-\]
-This results in an overall mean firing rate of $p_A = 1.6 \times 10^{-4}$ per neuron per time step ($0.16\,\mathrm{Hz}$ for $1\,\mathrm{ms}$ time bins). A refractory period is enforced by imposing a minimum inter-spike interval of $4\,\mathrm{ms}$, yielding biologically plausible sparse activity. 
+The final spike pattern $S^{(\mu)} \in \{0,1\}^{N \times T}$ is then obtained by applying the bit flipping mask to the frozen pattern:
+\begin{equation}
+  \mathbf{S}^{(\mu)} \sim \mathrm{Bernoulli}(P^{(\mu)} \cdot (1 - M^{(\mu)}) + (1 - P^{(\mu)}) \cdot M^{(\mu)})
+  \label{eq:pattern_generation}
+\end{equation}
+
+Note that the bit flipping mechanism introduces additional variability into the spike patterns, however, it does not change the average firing rate. Indeed, since the generation of $\mathbf{S}^{(\mu)}$ and $\mathbf{S}^{(\mu)}$ are independent, the expected firing rate $E(\mathbf{S}^{(\mu)})$ is equal to $p_A \cdot (1 - p_\text{flip}) + p_A \cdot p_\text{flip}= p_A$. Moreover, 
 %%%-----------------------------------------------------------------
 \subsection{Working memory task: memory cuing}
 %%%-----------------------------------------------------------------
 
 Given a target pattern $\mathbf{S}^*$, each contiguous window of length $D$, i.e.\ the slice $\mathbf{S}^*[\cdot,\, t{-}D:t{-}1]$, constitutes a unique context that may predict the spiking activity of all neurons at time $t$. The network is therefore trained to generate a sequential chain of overlapping Spiking Motifs~\citep{Perrinet2023,Kronland-Martinet2025} that faithfully reproduces the target. Memory retrieval is cued by clamping all neuron activities to the target pattern during the trigger window which corresponds to the initial $D$ time steps ($0 \le t < D$), corresponding to one elementary Spiking Motif (see Figure~\ref{fig:model}, right panel); the network then generates the remainder of the sequence autonomously.
+
+As an accuracy metric, we use the mean F1 score between the predicted and target spike trains, averaged over time (in the prediction window), neurons and patterns. The F1 score is the harmonic mean of precision (proportion of predicted activity that are correct) and recall (proportion of predicted activity that is successfully reproduced). Knowing $p_\text{flip}$ then one may first compute the precision as the ratio of expected true positives to the sum of true positives and false positives, that is, $\frac{p_A \cdot (1 - p_\text{flip} + p_A \cdot p_\text{flip})}{p_A \cdot (1 - p_\text{flip} + p_A \cdot p_\text{flip}) + p_\text{flip} \cdot (1 - p_A) \cdot p_A} = 1 - p_\text{flip} \cdot (1 - p_A)$. Then, recall is equal to precision as the average ratio of false negatives $p_A \cdot p_\text{flip}) + p_\text{flip} \cdot (1 - p_A) \cdot p_A$ is equal to that of false positives (remember that the average frequency is not changed by the balanced bit flip operation). As a result, the F1 score between the frozen and perturbed patterns equals the precision and recall and is given by:
+\begin{equation}
+  F_1 = 1 - p_\text{flip} \cdot (1 - p_A)
+  \label{eq:f1} 
+\end{equation}
+This will provide a theoretical bound for the F1 score that can be achieved by the network, as it is impossible to recover the original frozen pattern from the perturbed one.
 
 %%%-----------------------------------------------------------------
 \subsection{Analytical weight initialisation}
@@ -249,7 +263,7 @@ Each weight $w_{i, j, d}$ is proportional to the cross-correlation between the d
   }\label{fig:model}
 \end{figure}
 %%%-----------------------------------------------------------------
-The loss is defined as $\mathcal{L} = 1 - F_1$, where $F_1$ is the mean F1 score between the predicted and target spike trains, averaged over time (in the prediction window), neurons and patterns. The F1 score is the harmonic mean of precision (proportion of predicted activity that are correct) and recall (proportion of predicted activity that is successfully reproduced). Knowing that ap priori activity is sparse, minimising $\mathcal{L}$ simultaneously penalises over-active networks (low precision) and silent networks (low recall). Learning is carried out with surrogate-gradient BPTT~\citep{Neftci2019a}, using a fast-sigmoid surrogate with sharpness parameter $\alpha = 15$. Weights are optimised with AdamW (learning rate $\eta = 10^{-3}$, momentum $\mu = 0.99$, weight decay $\lambda = 0$). Dropout regularization with probability $0.37$ is applied. To mitigate overfitting and stabilise delay learning, the learning rate is annealed with a cosine schedule with warmup, as used for instance in~\citep{Hammouamri2023}. The validation loss is monitored for detecting overfitting.
+The loss is defined as $\mathcal{L} = 1 - F_1$, such that minizing this loss (with a maximum of $1$ and minimum of $0$) maximises the mean F1 score across all $M$ target patterns. Knowing a priori that activity is sparse, minimising $\mathcal{L}$ simultaneously penalises over-active networks (low precision) and silent networks (low recall). Learning is carried out with surrogate-gradient BPTT~\citep{Neftci2019a}, using a fast-sigmoid surrogate with sharpness parameter $\alpha = 15$. Weights are optimised with AdamW (learning rate $\eta = 10^{-3}$, momentum $\mu = 0.99$, weight decay $\lambda = 0$). Dropout regularization with probability $0.37$ is applied. To mitigate overfitting and stabilise delay learning, the learning rate is annealed with a cosine schedule with warmup, as used for instance in~\citep{Hammouamri2023}. The validation loss is monitored for detecting overfitting.
 
 The gradient-based learning in our recurrent HD-SNN shares fundamental principles with biological STDP, despite operating at different scales. Both mechanisms exploit temporal correlations in spike timing to adjust synaptic strengths. However, while STDP implements local pairwise updates based on individual spike timings, our approach performs global optimisation that effectively learns the collective interaction of multiple delayed spike trains across the entire network. The analytical initialisation (see Equation~\ref{eq:init}) reveals this connection most clearly: it implements a Hebbian-like rule that is mathematically equivalent to averaging STDP updates across all stored patterns, suggesting that gradient descent in this context can be viewed as a principled, globally optimal implementation of temporally structured synaptic plasticity.
 
