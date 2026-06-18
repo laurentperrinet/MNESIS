@@ -45,7 +45,7 @@
 %
 \title{
 %ICANN
-Working Memory in a Recurrent Spiking Neural Networks With Heterogeneous Synaptic Delays
+Working Memory in Recurrent Spiking Neural Networks With Heterogeneous Synaptic Delays
 % post-ICANN
 % Working Memory
 % with 
@@ -82,7 +82,7 @@ Working Memory in a Recurrent Spiking Neural Networks With Heterogeneous Synapti
 % * No comparisons: Doesn't test against normal spiking nets or other memory methods
 %
 \begin{abstract}
-Working memory --- the ability to store and recall precise temporal patterns of neural activity --- remains an open challenge for spiking neural networks (SNNs). We propose a recurrent SNN of $N=1024$ neurons in which each synapse is equipped with $D = 41$ heterogeneous delays, parameterised as a weight tensor $\mathbf{W} \in \mathbb{R}^{N \times N \times D}$ and trained end-to-end with surrogate-gradient backpropagation through time. Each stored pattern is represented as a sequential chain of overlapping Spiking Motifs: contiguous context windows of length $D$ that uniquely predict the activity at the next time step. A closed-form Hebbian initialisation, derived by deconvolving the LIF membrane response and targeting a sub-threshold membrane value $\vartheta_0 = 0.8 < \vartheta = 1$, achieves perfect recall ($F_1 = 1.0$) before any gradient step on a benchmark of $M=16$ patterns of duration $T=1000\,\mathrm{ms}$. The network tolerates up to $25\%$ bit-flip noise in the trigger window, demonstrating attractor-like retrieval dynamics consistent with hippocampal pattern completion. These results show that heterogeneous synaptic delays are an efficient and scalable substrate for working memory in SNNs, with direct implications for neuromorphic edge deployment.
+Working memory --- the ability to store and recall precise temporal patterns of neural activity --- remains an open challenge for spiking neural networks (SNNs). We propose a recurrent SNN of $N=1024$ neurons in which each synapse is equipped with $D = 41$ heterogeneous delays, parameterised as a weight tensor $\mathbf{W} \in \mathbb{R}^{N \times N \times D}$ and trained end-to-end with surrogate-gradient backpropagation through time. Each stored pattern is represented as a sequential chain of overlapping Spiking Motifs: contiguous context windows of length $D$ that uniquely predict the activity at the next time step. A closed-form Hebbian initialisation, derived by deconvolving the LIF membrane response and targeting a sub-threshold membrane potential value superior to the threshold $\vartheta$, achieves perfect accuracy as measured by the $F_1$-score relative when noise is absent. before any gradient step on a benchmark of $M=16$ patterns of duration $T=1000\,\mathrm{ms}$. With learning, the network tolerates up to $25\%$ bit-flip noise, and reaches $F_1$ scrores closeto the value expected from the noise level. These results demonstrate attractor-like retrieval dynamics consistent with hippocampal pattern completion. These results show that heterogeneous synaptic delays are an efficient and scalable substrate for working memory in SNNs, with direct implications for neuromorphic edge deployment.
 %
 \keywords{Spiking Neural Networks  \and Heterogeneous delays \and Working memory.}
 \end{abstract}
@@ -90,6 +90,7 @@ Working memory --- the ability to store and recall precise temporal patterns of 
 
 \section{Introduction}
 %----------------------------%
+% review biol cyb : The authors' strategy of subdividing a long motif into a series of shorter ones and then connecting a series of subnetworks to detect the long motif reminds this referee of the architecture of the original McCulloch-Pitts network (McCulloch, Warren S., and Walter Pitts. "A logical calculus of the ideas immanent in nervous activity." The bulletin of mathematical biophysics 5.4 (1943): 115-133.) Is there a natural way to interpret the authors' construction (which is in a continuous time neural network model) as a continuous time version of an analogous McCulloch-Pitts (hence, discrete time) model?
 %----------------------------%
 \begin{figure}%[t]
   \includegraphics[width=\linewidth]{izhikevich_rec.pdf}%
@@ -125,14 +126,14 @@ The present work extends the chain-of-motifs framework of~\citet{Kronland-Martin
 \subsection{Representation of spiking activity}
 %%%-----------------------------------------------------------------
 
-In neurobiological recordings or the output of event-based cameras, any generic raster plot consists of a stream of \emph{spikes}, defined as a list of address--timestamp tuples
+In neurobiological recordings or the output of event-based cameras, any generic raster plot consists of a stream of \emph{spikes}, defined as a list of address--timestamp tuples to form an address-event representation (AER)~\citep{Grimaldi2024}. Formally, we define the event stream as
 \[
   \mathcal{E}
   = \bigl\{(a_r,\, t_r)\bigr\}_{r \in [1,\, N_\mathrm{ev}]},
 \]
-where $N_\mathrm{ev} \in \mathbb{N}$ is the total number of events and $r$ indexes each event in temporal order~\citep{Grimaldi2024}. Each event has a time of occurrence $t_r$ and an address $a_r$ in the neural population space $\mathcal{A}$. In a Single Unit Activity (SUA) recording for instance, $\mathcal{A}$ is the identified set of neurons.
+where $N_\mathrm{ev} \in \mathbb{N}$ is the total number of events and $r$ indexes each event in the natural temporal order~\citep{Grimaldi2024}. Each event has a time of occurrence $t_r$ and an address $a_r$ in the neural population space $\mathcal{A}$. In a Single Unit Activity (SUA) recording for instance, $\mathcal{A}$ is the identified set of neurons.
 
-Neurons are characterised by their membrane potential dynamics and by the integration of synaptic potentials along their dendritic tree. Crucially, neurons can receive inputs from multiple pre-synaptic neurons with \emph{heterogeneous delays} $\delta_s$, representing the travel time of the pre-synaptic spike to the soma of the post-synaptic neuron. Scanning all pre- and post-synaptic pairs, we define the set of $N_s \in \mathbb{N}$ synapses as
+Neurons are characterised by their membrane potential dynamics and by the integration of synaptic potentials along their dendritic tree. Crucially, neurons can receive inputs from multiple pre-synaptic neurons with \emph{heterogeneous delays} $\delta_s$, representing the travel time from the spike generation in the pre-synaptic neuron to its arrival at the soma of the post-synaptic neuron. Scanning all pre- and post-synaptic pairs, we define the set of $N_s \in \mathbb{N}$ synapses as
 \[
   \mathcal{S}
   = \bigl\{(a_s,\, b_s,\, w_s,\, \delta_s)\bigr\}_{s \in [1,\, N_s]},
@@ -171,7 +172,9 @@ $\mathbf{W} \in \mathbb{R}^{N \times N \times D}$, with
 \subsection{Recurrent HD-SNN architecture} % MNESIS
 %%%-----------------------------------------------------------------
 
-The recurrent Heterogeneous-Delay SNN (HD-SNN) consists of a population $\mathcal{A}$ of $N = 1024$ leaky integrate-and-fire (LIF) neurons implemented in {\sc snnTorch}~\citep{Eshraghian2023} and simulated over $T = 1000$ steps of $1\,\mathrm{ms}$ each (total duration: $1\,\mathrm{s}$). Extending the feedforward Spiking Motif Detector~\citep{Perrinet2023}, our architecture will include full recurrence: each neuron $j \in \mathcal{A}$  integrates inputs from \emph{all} other neurons across \emph{all} preceding $D = 41$ time steps. Such network is the most general for learning purposes, and at inference, pruning of the synapses may be added to gain from the sparseness of synapses on the energy budget. Moreover, the choice for the maximum delay value is justified from biological observations and similar to the value used in the original polychronisation study~\citep{Izhikevich2006}. The membrane potential $u_j(t)$ evolves as
+In a previous work, we have demonstrated that a feedforward HD-SNN can learn to detect Spiking Motifs~\citep{Perrinet2023}. However, this architecture is limited to motifs of length $D$, the maximum synaptic delay. To store and recall longer sequences, it is possible to extend this architecture to a fully recurrent topology, where each neuron receives inputs from all other neurons across all delays. Our core concept is to retrieve a memory progressively, in which each motif of length $D$ would allow to predict the next spikes in the memory to retrieve. This allows the network to generate a chain of overlapping Spiking Motifs, where each motif provides the context for predicting the next spikes in the sequence (see Figure~\ref{fig:izhikevich}).
+
+In practice, we will study a recurrent Heterogeneous-Delay SNN (HD-SNN) which consists of a population $\mathcal{A}$ of $N = 1024$ leaky integrate-and-fire (LIF) neurons implemented in {\sc snnTorch}~\citep{Eshraghian2023} and simulated over $T = 1000$ steps of $1\,\mathrm{ms}$ each (total duration: $1\,\mathrm{s}$). Extending the feedforward Spiking Motif Detector~\citep{Perrinet2023}, our architecture will include full recurrence: each neuron $j \in \mathcal{A}$  integrates inputs from \emph{all} other neurons across \emph{all} preceding $D = 41$ time steps. Such network is the most general for learning purposes, and at inference, pruning of the synapses may be added to gain from the sparseness of synapses on the energy budget. Moreover, the choice for the maximum delay value $D$ is justified from biological observations and similar to the value used in the original polychronisation study~\citep{Izhikevich2006}. The membrane potential $u_j(t)$ evolves as
 \begin{equation}
   u_j(t)
   = \beta \cdot u_j(t-1) \cdot (1 - s_j(t-1))
@@ -180,75 +183,79 @@ The recurrent Heterogeneous-Delay SNN (HD-SNN) consists of a population $\mathca
       \sum_{d=1}^{D} \mathbf{W}_{j, i, d} \cdot s_i(t-d) \bigr ), 
   \label{eq:lif}
 \end{equation}
-where $\beta \in (0,1)$ is the membrane decay constant ($\beta = 0.7$ in our simulations, that is, a time constant of $\tau= 1 / \ln(\frac 1 \beta) \approx 2.8$ steps), $\mathbf{W}_{j, i, d}$ is the synaptic weight from neuron $i$ to neuron $j$ at delay $d$, and $s_j(t) \in \{0,1\}$  is the spike indicator $s_j(t) = \mathds{1}[u_j(t) \geq \vartheta]$, that is, a spike is emitted when $u_j(t)$ exceeds the threshold $\vartheta = 1$. After spiking, the membrane potential that is accumulated in Equation~\ref{eq:lif} is reset to zero.
+where $\beta \in (0,1)$ is the membrane decay constant ($\beta = 0.7$ in our simulations, that is, a time constant of $\tau= 1 / \ln(\frac 1 \beta) \approx 2.8$ steps), $\mathbf{W}_{j, i, d}$ is the synaptic weight to neuron $j$ from neuron $i$ at delay $d$, and $s_j(t) \in \{0,1\}$  is the spike indicator $s_j(t) = \mathds{1}[u_j(t) \geq \vartheta]$, that is, $s_j(t)=0$ if $u_j(t) < \vartheta$ and a spike is emitted $s_j(t)=1$ when $u_j(t)$ exceeds the threshold $\vartheta$. After spiking, the membrane potential that is accumulated in Equation~\ref{eq:lif} is reset to zero.
 
-In our implementation, the spike history of all $N$ neurons over the past $D$ steps is concatenated into a flattened context vector of dimension $N \cdot D$ at each time step, so that $\mathbf{W}$ is reshaped as $\mathbf{W} \in \mathbb{R}^{N \times (N \cdot D)}$. This is equivalent to the temporal convolution that we used previously in a feedforward setting~\citep{Perrinet2023}, here extended to a fully recurrent topology. The HD-SNN thus maps onto a standard static computational graph that can be trained with surrogate gradient descent (see Figure~\ref{fig:model}, left panel).
+In our implementation, the spike history of all $N$ neurons over the past $D$ steps is concatenated into a flattened context vector of dimension $N \cdot D$ at each time step, so that $\mathbf{W}$ is reshaped as $\mathbf{\bar W} \in \mathbb{R}^{N \times (N \cdot D)}$. This is equivalent to the temporal convolution that we used previously in a feedforward setting~\citep{Perrinet2023}, here extended to a fully recurrent topology. The HD-SNN thus maps onto a standard static computational graph that can be trained with surrogate gradient descent as classical SNNs (see Figure~\ref{fig:model}, left panel).
 
 %%%-----------------------------------------------------------------
 \subsection{Synthetic dataset}
 %%%-----------------------------------------------------------------
-To assess working-memory capacity in all generality, we generated a dataset of $M = 16$ distinct target patterns $\mathbf{S}^{(\mu)} \in \{0,1\}^{N \times T}$. Following previous work~\citep{Perrinet2023}, each pattern is generated using a stochastic spiking pattern generator with both a structured and background components. Specifically, for each pattern we define a frozen pattern as $P^{(\mu)} \in \{0,1\}^{N \times T}$:
+To assess working-memory capacity in all generality, we generated a dataset of $M = 16$ distinct target patterns $\mathbf{S}^{(\mu)} \in \{0,1\}^{N \times T}$. Following previous work~\citep{Perrinet2023}, each pattern is generated using a stochastic spiking pattern generator with both a structured and background components. Specifically, for each pattern we define a \emph{frozen} pattern as $P^{(\mu)} \in \{0,1\}^{N \times T}$:
 \[
   P^{(\mu)} \sim \mathrm{Bernoulli}(p_A)
 \]
-where we set $p_A = 0.16 \times 10^{-4}$ spike per neuron per time step ($0.16\,\mathrm{Hz}$ for $1\,\mathrm{ms}$ time bins) as the average spike probability. This follows the estimation of the average spiking frequency in the human brain~\citep{Lennie2003}. 
+where we set $p_A = 0.16 \times 10^{-4}$ spike per neuron per time step ($0.16\,\mathrm{Hz}$ if we consider $1\,\mathrm{ms}$ time bins) as the average spike probability. This follows the estimation of the average spiking frequency in the human brain~\citep{Lennie2003}. 
 
-To account for the stochasticity inherent to neural activity, we further include a balanced bit flipping mechanism with probability $p_\text{flip} = 0.05$. This defines the binary mask  $M^{(\mu)} \in \{0,1\}^{N \times T}$ of bit flips as:
+To account for the stochasticity inherent to neural activity, we further include a balanced bit flipping mechanism with probability $p_\text{flip} = 0.05$. This is defined defined by the binary mask  $M^{(\mu)} \in \{0,1\}^{N \times T}$ of bit flips locations :
 \[
   M^{(\mu)} \sim \mathrm{Bernoulli}(p_\text{flip})
 \]
-The final spike pattern $S^{(\mu)} \in \{0,1\}^{N \times T}$ is then obtained by applying the bit flipping mask to the frozen pattern:
+Values are left untouched where $M^{(\mu)} = 0$ and will be drawn with probability $p_A$ where $M^{(\mu)} = 1$. Finally, the spike pattern $S^{(\mu)} \in \{0,1\}^{N \times T}$ are those of the frozen pattern $P^{(\mu)}$ except where $M^{(\mu)} = 1$ for which they are obtained by drawing with probability $p_A$. Formally, this can be expressed as:
 \begin{equation}
-  \mathbf{S}^{(\mu)} \sim \mathrm{Bernoulli}(P^{(\mu)} \cdot (1 - M^{(\mu)}) + (1 - P^{(\mu)}) \cdot M^{(\mu)})
+  % \mathbf{S}^{(\mu)} \sim \mathrm{Bernoulli}(P^{(\mu)} \cdot (1 - M^{(\mu)}) + (1 - P^{(\mu)}) \cdot M^{(\mu)})
+  \mathbf{S}^{(\mu)} \sim P^{(\mu)} \cdot (1 - M^{(\mu)}) + \mathrm{Bernoulli}(p_A) \cdot M^{(\mu)}
   \label{eq:pattern_generation}
 \end{equation}
-
-Note that the bit flipping mechanism introduces additional variability into the spike patterns, however, it does not change the average firing rate. Indeed, since the generation of $\mathbf{S}^{(\mu)}$ and $\mathbf{S}^{(\mu)}$ are independent, the expected firing rate $E(\mathbf{S}^{(\mu)})$ is equal to $p_A \cdot (1 - p_\text{flip}) + p_A \cdot p_\text{flip}= p_A$. Moreover, 
+Note that the bit flipping mechanism introduces a stochasticity into the structure of the spike patterns, however, it does not change the average firing rate. Indeed, since the generation of $\mathbf{P}^{(\mu)}$ and $\mathbf{M}^{(\mu)}$ are independent, the expected firing rate $E(\mathbf{S}^{(\mu)})$ is equal to $p_A \cdot (1 - p_\text{flip}) + p_A \cdot p_\text{flip}= p_A$. 
+%
 %%%-----------------------------------------------------------------
 \subsection{Working memory task: memory cuing}
 %%%-----------------------------------------------------------------
+%
+Given a set of target patterns as defined above, a generic working memory task consists of training the network to reproduce the target pattern that follow a short \emph{trigger} window. Formally, given $\mathbf{S}^{(\mu)}$, each contiguous window of length $D$, i.e.\ the slice $\mathbf{S}^{(\mu)}[\cdot,\, t{-}D:t{-}1]$, constitutes a unique context that may be used to predict the spiking activity $s_j(t)$ of all neurons $j$ at time $t$ (see Figure~\ref{fig:izhikevich}). The network is therefore trained to generate a sequential chain of overlapping Spiking Motifs~\citep{Perrinet2023,Kronland-Martinet2025} that faithfully reproduces the target. Memory retrieval is cued by clamping all neuron activities to the target pattern during the trigger window which corresponds to the initial $D$ time steps ($0 \le t < D$), that is, corresponding to one elementary Spiking Motif (see Figure~\ref{fig:model}, right panel); the goal of the network is then to generate the remainder of the sequence autonomously.
 
-Given a target pattern $\mathbf{S}^*$, each contiguous window of length $D$, i.e.\ the slice $\mathbf{S}^*[\cdot,\, t{-}D:t{-}1]$, constitutes a unique context that may predict the spiking activity of all neurons at time $t$. The network is therefore trained to generate a sequential chain of overlapping Spiking Motifs~\citep{Perrinet2023,Kronland-Martinet2025} that faithfully reproduces the target. Memory retrieval is cued by clamping all neuron activities to the target pattern during the trigger window which corresponds to the initial $D$ time steps ($0 \le t < D$), corresponding to one elementary Spiking Motif (see Figure~\ref{fig:model}, right panel); the network then generates the remainder of the sequence autonomously.
+As an accuracy metric, we will use the mean $F_1$ score between the predicted and target spike trains, averaged over time (in the prediction window), neurons and patterns. The $F_1$ score is the harmonic mean of precision (proportion of predicted activity that are correct) and recall (proportion of predicted activity that is successfully reproduced). Knowing a priori that average neural activity is sparse, maximising $\mathcal{L}$ simultaneously penalises over-active networks (low precision) and silent networks (low recall). 
 
-As an accuracy metric, we use the mean F1 score between the predicted and target spike trains, averaged over time (in the prediction window), neurons and patterns. The F1 score is the harmonic mean of precision (proportion of predicted activity that are correct) and recall (proportion of predicted activity that is successfully reproduced). Knowing $p_\text{flip}$ then one may first compute the precision as the ratio of expected true positives to the sum of true positives and false positives, that is, $\frac{p_A \cdot (1 - p_\text{flip} + p_A \cdot p_\text{flip})}{p_A \cdot (1 - p_\text{flip} + p_A \cdot p_\text{flip}) + p_\text{flip} \cdot (1 - p_A) \cdot p_A} = 1 - p_\text{flip} \cdot (1 - p_A)$. Then, recall is equal to precision as the average ratio of false negatives $p_A \cdot p_\text{flip}) + p_\text{flip} \cdot (1 - p_A) \cdot p_A$ is equal to that of false positives (remember that the average frequency is not changed by the balanced bit flip operation). As a result, the F1 score between the frozen and perturbed patterns equals the precision and recall and is given by:
+Applied to the synthetic patterns, knowing $p_\text{flip}$ then one may first compute the precision as the ratio of expected true positives to the sum of true positives and false positives, that is, $\frac{p_A \cdot (1 - p_\text{flip} + p_A \cdot p_\text{flip})}{p_A \cdot (1 - p_\text{flip} + p_A \cdot p_\text{flip}) + p_\text{flip} \cdot (1 - p_A) \cdot p_A} = 1 - p_\text{flip} \cdot (1 - p_A)$. Then, recall is equal to precision as the average ratio of false negatives $p_A \cdot p_\text{flip}) + p_\text{flip} \cdot (1 - p_A) \cdot p_A$ is equal to that of false positives (remember that the average frequency is not changed by the balanced bit flip operation). As a result, the $F_1$ score between the frozen and perturbed patterns equals the precision and recall and is given by:
 \begin{equation}
   F_1 = 1 - p_\text{flip} \cdot (1 - p_A)
   \label{eq:f1} 
 \end{equation}
-This will provide a theoretical bound for the F1 score that can be achieved by the network, as it is impossible to recover the original frozen pattern from the perturbed one.
+This will provide a theoretical bound for the average $F_1$ score that can be achieved by the network, as it is of course impossible to recover exactly the original frozen pattern (when $p_\text{flip}=0$) from a perturbed one  (when $p_\text{flip}>0$).
 
 %%%-----------------------------------------------------------------
 \subsection{Analytical weight initialisation}
 %%%-----------------------------------------------------------------
 \label{sec:init}
-Before training, the weight tensor $\mathbf{W}$ can be initialised analytically by treating the task as a linear regression problem. For each target pattern $\mathbf{S}^{*(\mu)} \in \{0,1\}^{N \times T}$, the context window at time $t$ is the flattened vector $\mathbf{c}^{(\mu)}(t) \in \{0,1\}^{N \cdot D}$ containing the spike history of all neurons over steps $t-D$ to $t-1$. Stacking all $K = M \cdot (T-D)$ context--output pairs across patterns and time steps yields
+From Equation~\ref{eq:lif}, by normaizing the potential to arbitrary units, we wish the membrane potential to reach a sub-threshold value close to one whenever a spiking motif from a target pattern occurs. Before training, the weight tensor $\mathbf{W}$ can be initialised analytically by treating this task as a linear regression problem. For each target pattern $\mathbf{S}^{(\mu)} \in \{0,1\}^{N \times T}$, the context window at time $t$ is the flattened vector $\mathbf{c}^{(\mu)}(t) \in \{0,1\}^{N \cdot D}$ containing the spike history of all neurons over steps $t-D$ to $t-1$ and the corresponding desired output $\mathbf{I}(t) \in \{0,1\}^N$. Stacking all $K = M \cdot (T-D)$ context--output pairs across patterns and time steps yields
 \[
   \mathbf{C} \in \{0,1\}^{(N \cdot D) \times K},
   \qquad
   \mathbf{I}^* \in \mathbb{R}^{N \times K},
 \]
-and the initialisation problem is $\mathbf{W}\,\mathbf{C} \approx \mathbf{I}^*$.
+and the initialisation problem becomes $\mathbf{W}\,\mathbf{C} \approx \mathbf{I}$.
 
-The choice of regression target $\mathbf{I}^*$ requires care. A naive choice is the binary spike matrix $\mathbf{S}^*$ itself, which would ask the network to produce a current equal to the target spike at each step. However, the synaptic current $I_j(t) = \sum_{i,d} \mathbf{W}_{j,i,d} \cdot s_i(t-d)$ is not compared directly to $s^*(t)$: it is first \emph{filtered} by the membrane, which acts as a causal first-order IIR lowpass with transfer function $H(z) = 1/(1 - \beta \cdot z^{-1})$ and impulse response $h(t) = \beta^t$.
-
-The correct target is obtained by deconvolution. We wish the membrane to reach a sub-threshold value $\vartheta_0 = 0.8 < \vartheta = 1$ at each target spike time $t^*$, reserving a safety margin $\delta = \vartheta - \vartheta_0 = 0.2$. This margin prevents spurious firings from partial contexts and, crucially, places the membrane in the regime where the surrogate gradient is near its maximum, making the first gradient step maximally informative (see Appendix~\ref{app:margin} for the full derivation and its relationship to capacity). The inverse filter of $H(z)$ is $H^{-1}(z) = 1 - \beta \cdot z^{-1}$. Applied to a target trajectory that reaches $\vartheta_0$ at $t^*$ and resets immediately, the optimal input current is therefore
+The choice of regression output $\mathbf{I}$ requires care. A naive choice is the binary spike matrix $\mathbf{S}$ itself, which would amount to ask the network to produce a current equal to the target spike at each step. However, the synaptic current $I_j(t) = \sum_{i,d} \mathbf{W}_{j,i,d} \cdot s_i(t-d)$ is not compared directly to $s(t)$: it is first \emph{filtered} by the membrane, which acts as a causal first-order IIR lowpass with transfer function $H(z) = 1/(1 - \beta \cdot z^{-1})$ and impulse response $h(t) = \beta^t$. The correct output is therefore obtained by deconvolution.  The inverse filter of $H(z)$ is $H^{-1}(z) = 1 - \beta \cdot z^{-1}$. Applied to a target trajectory that reaches $1$ at $t$ and resets immediately, the optimal input current is therefore
 \begin{equation}
-  I^*_j(t) \;=\; \vartheta_0 \cdot \bigl(s^*_j(t) - \beta \cdot s^*_j(t-1)\bigr).
+  I_j(t) \;=\; s_j(t) - \beta \cdot s_j(t-1).
   \label{eq:deconv_target}
 \end{equation}
-This is a \emph{biphasic} waveform: $+\vartheta_0$ at each target spike time $t^*$ and $-\beta \cdot \vartheta_0$ exactly one step later, cancelling the residual membrane charge left by the leak. The factor $\vartheta_0$ scales the waveform so that a perfect context produces $u_j(t^*) = \vartheta_0 = 0.8$, strictly below $\vartheta = 1$. For $\beta \to 0$ the biphasic correction collapses to a scaled impulse $\vartheta_0 \cdot s^*(t)$; for $\beta = 0.7$ the negative lobe $-\beta \vartheta_0 = -0.49$ is substantial and significantly reduces spurious early spikes.
+This is a \emph{biphasic} waveform: $1$ at each target spike time $t$ and $1-\beta$ exactly one step later, cancelling the residual membrane charge left by the leak. For $\beta \to 0$ the biphasic correction collapses to a scaled impulse; for $\beta = 0.7$ the negative lobe is substantial and significantly reduces spurious spikes.
  
-Since the system is strongly underdetermined ($K \ll ND$), the minimum-$\ell_2$-norm solution is the Moore--Penrose pseudo-inverse $\mathbf{W}^* = \mathbf{I}^* \cdot \mathbf{C}^+$. With sparse Bernoulli activity at rate $p_A = 10^{-3}$, consecutive context windows are nearly orthogonal, so the Gram matrix satisfies $\mathbf{C}\mathbf{C}^\top \approx N \cdot D \cdot p_A \cdot \mathbf{I}$, giving the closed-form initialisation
+Since the system is strongly underdetermined ($K \ll ND$), the minimum-$\ell_2$-norm solution is the Moore--Penrose pseudo-inverse $\mathbf{W}^* = \mathbf{I}^* \cdot \mathbf{C}^+$. With sparse neural activity at rate $p_A = .16\cdot 10^{-3}$, consecutive context windows are nearly orthogonal, so the Gram matrix satisfies $\mathbf{C}\mathbf{C}^\top \approx N \cdot D \cdot p_A \cdot \mathbf{I}$, giving the closed-form initialisation
 \begin{equation}
   w_{i, j, d}
-  = \frac{\vartheta_0}{N \cdot D \cdot p_A \cdot M}
+  = \frac{1}{N \cdot D \cdot p_A \cdot M}
     \sum_{\mu=1}^{M}\sum_{t=D+1}^{T}
     s_i^{*(\mu)}(t-d)
     \cdot
     \bigl(s_j^{*(\mu)}(t) - \beta \cdot s_j^{*(\mu)}(t-1)\bigr).
   \label{eq:init}
 \end{equation}
-Each weight $w_{i, j, d}$ is proportional to the cross-correlation between the deconvolved spike train of neuron $j$ (scaled by $\vartheta_0 = 0.8$) and the raw spike train of neuron $i$ at delay $d$, averaged over all $M$ patterns. The $\vartheta_0$ factor ensures that a perfect context produces $u_j(t^*) = \vartheta_0$, leaving a margin $\delta = 0.2$ below the threshold. This mirrors spike-timing-dependent plasticity (STDP)~\citep{Izhikevich2006} and classical Hebbian learning~\citep{Perrinet2002}, with the additional $-\beta$ correction accounting for the membrane leak (full analysis in Appendix~\ref{app:margin}). At inference time the network receives its own generated context rather than the ground truth, so errors can accumulate over time --- the primary source of difficulty analysed in Section~\ref{sec:results}.
+Each weight $w_{i, j, d}$ is proportional to the cross-correlation between the deconvolved spike train of neuron $j$ (scaled by $\vartheta_0 = 0.8$) and the raw spike train of neuron $i$ at delay $d$, averaged over all $M$ patterns. 
+
+ We will set the threshold at $\vartheta = 0.8$ at each target spike time $t$, reserving a safety margin $\delta = 1 - \vartheta = 0.2$. This margin prevents spurious firings from partial contexts and, crucially, places the membrane in the regime where the surrogate gradient is near its maximum, making the first gradient step maximally informative (see Appendix~\ref{app:margin} for the full derivation and its relationship to capacity)
+ The $\vartheta_0$ factor ensures that a perfect context produces $u_j(t^*) = \vartheta_0$, leaving a margin $\delta = 0.2$ below the threshold. This mirrors spike-timing-dependent plasticity (STDP)~\citep{Izhikevich2006} and classical Hebbian learning~\citep{Perrinet2002}, with the additional $-\beta$ correction accounting for the membrane leak (full analysis in Appendix~\ref{app:margin}). At inference time the network receives its own generated context rather than the ground truth, so errors can accumulate over time --- the primary source of difficulty analysed in Section~\ref{sec:results}.
 %%%-----------------------------------------------------------------
 \subsection{Training}
 %%%-----------------------------------------------------------------
@@ -263,7 +270,7 @@ Each weight $w_{i, j, d}$ is proportional to the cross-correlation between the d
   }\label{fig:model}
 \end{figure}
 %%%-----------------------------------------------------------------
-The loss is defined as $\mathcal{L} = 1 - F_1$, such that minizing this loss (with a maximum of $1$ and minimum of $0$) maximises the mean F1 score across all $M$ target patterns. Knowing a priori that activity is sparse, minimising $\mathcal{L}$ simultaneously penalises over-active networks (low precision) and silent networks (low recall). Learning is carried out with surrogate-gradient BPTT~\citep{Neftci2019a}, using a fast-sigmoid surrogate with sharpness parameter $\alpha = 15$. Weights are optimised with AdamW (learning rate $\eta = 10^{-3}$, momentum $\mu = 0.99$, weight decay $\lambda = 0$). Dropout regularization with probability $0.37$ is applied. To mitigate overfitting and stabilise delay learning, the learning rate is annealed with a cosine schedule with warmup, as used for instance in~\citep{Hammouamri2023}. The validation loss is monitored for detecting overfitting.
+The loss is defined as $\mathcal{L} = 1 - F_1$, such that minizing this loss (with a maximum of $1$ and minimum of $0$) maximises the mean $F_1$ score across all $M$ target patterns. Learning is carried out with surrogate-gradient BPTT~\citep{Neftci2019a}, using a fast-sigmoid surrogate with sharpness parameter $\alpha = 15$. Weights are optimised with AdamW (learning rate $\eta = 10^{-3}$, momentum $\mu = 0.99$, weight decay $\lambda = 0$). Dropout regularization with probability $0.37$ is applied. To mitigate overfitting and stabilise delay learning, the learning rate is annealed with a cosine schedule with warmup, as used for instance in~\citep{Hammouamri2023}. The validation loss is monitored for detecting overfitting.
 
 The gradient-based learning in our recurrent HD-SNN shares fundamental principles with biological STDP, despite operating at different scales. Both mechanisms exploit temporal correlations in spike timing to adjust synaptic strengths. However, while STDP implements local pairwise updates based on individual spike timings, our approach performs global optimisation that effectively learns the collective interaction of multiple delayed spike trains across the entire network. The analytical initialisation (see Equation~\ref{eq:init}) reveals this connection most clearly: it implements a Hebbian-like rule that is mathematically equivalent to averaging STDP updates across all stored patterns, suggesting that gradient descent in this context can be viewed as a principled, globally optimal implementation of temporally structured synaptic plasticity.
 
@@ -276,7 +283,7 @@ Our implementation is available at \url{https://github.com/laurentperrinet/MNESI
 \subsection{Training dynamics and results}
 %%%----------------------------------------------------------------- 
 %
-Training the recurrent HD-SNN with surrogate-gradient BPTT~\citep{Neftci2019a} consistently maximised the mean F1 score across all $M=16$ target patterns to a perfect score of $1.0$, with $N=1024$ neurons, $D=41$ delays, $T=1000$ time steps, $p_A=10^{-3}$, and $\beta=0.7$ (time constant $\tau \approx 2.8\,\mathrm{ms}$). Without the analytical initialisation, two characteristic failure modes arise during early training: episodes of complete silence, in which the network emits no spikes, and over-activation, in which nearly all neurons fire at every time step. Both are well-known pathological attractors of recurrent SNNs~\citep{Izhikevich2006}. The F1 score is the harmonic mean of precision and recall, and maximising it therefore penalises both failure modes symmetrically: low precision corresponds to an over-active network and low recall to a silent one. The cosine learning-rate schedule~\citep{Hammouamri2023} helped guide the network away from these extremes towards a balanced, sparse-firing regime. 
+Training the recurrent HD-SNN with surrogate-gradient BPTT~\citep{Neftci2019a} consistently maximised the mean $F_1$ score across all $M=16$ target patterns to a perfect score of $1.0$, with $N=1024$ neurons, $D=41$ delays, $T=1000$ time steps, $p_A=10^{-3}$, and $\beta=0.7$ (time constant $\tau \approx 2.8\,\mathrm{ms}$). Without the analytical initialisation, two characteristic failure modes arise during early training: episodes of complete silence, in which the network emits no spikes, and over-activation, in which nearly all neurons fire at every time step. Both are well-known pathological attractors of recurrent SNNs~\citep{Izhikevich2006}. The $F_1$ score is the harmonic mean of precision and recall, and maximising it therefore penalises both failure modes symmetrically: low precision corresponds to an over-active network and low recall to a silent one. The cosine learning-rate schedule~\citep{Hammouamri2023} helped guide the network away from these extremes towards a balanced, sparse-firing regime. 
 
 Remarkably, the analytical weight initialisation alone (Eq.~\ref{eq:init}) already achieves $F_1 = 1.0$ before any gradient step, demonstrating that the closed-form Hebbian solution is sufficient for perfect recall on this benchmark. The Gram-matrix approximation $\mathbf{C}\mathbf{C}^\top \approx N \cdot D \cdot p_A \cdot \mathbf{I}$ reduces the pseudo-inverse to a simple cross-correlation, yielding a ${\approx}5\times$ speed-up with identical accuracy; this approximation is used throughout. Gradient training serves primarily to improve robustness: errors arise when the trigger window is corrupted (Section~\ref{sec:robustness}), and learning helps mitigate their accumulation.
 
@@ -293,7 +300,7 @@ Remarkably, the analytical weight initialisation alone (Eq.~\ref{eq:init}) alrea
 \subsection{Effect of hyperparameters}
 %%%-----------------------------------------------------------------
 % 25_MNESIS_optuna.ipynb
-We performed a systematic sweep over the key hyperparameters and report their effect on the mean F1 score at convergence.
+We performed a systematic sweep over the key hyperparameters and report their effect on the mean $F_1$ score at convergence.
 
 \paragraph{Surrogate sharpness $\alpha$.}
 The sharpness of the surrogate gradient had the largest single effect on performance. Low values of $\alpha$ produced gradients that were too smooth to discriminate precise spike times, while excessively high values caused gradient vanishing. The value $\alpha = 10$ provided the best trade-off, consistent with findings in~\citet{Neftci2019a}.
@@ -308,14 +315,14 @@ The best recall was obtained at low target firing rates ($1\,\mathrm{Hz}$ per ne
 
 Training was not uniform in time: the network first reproduced spikes immediately following the trigger window ($0 \leq t < D$), then progressively extended correct recall towards later time steps, as shown in Figure~\ref{fig:target}. This behaviour is a direct consequence of the sequential structure of the task: because each context window $[t-D,\, t-1]$ uniquely predicts the activity at time $t$, errors at early time steps propagate into all subsequent predictions, making temporal proximity to the trigger window the primary driver of learning progress.
 
-To evaluate the network's ability to retrieve and distinguish multiple stored patterns in sequence, we concatenated all $M=16$ patterns into a single long raster, each trial flanked by $N_\mathrm{pretime}=50$ steps of spontaneous background activity at rate $p_A$ before and after the stimulus (Figure~\ref{fig:retrieval}). Each pattern was triggered by its individual trigger window, and retrieval was evaluated by a sliding-window F1 score over time. The F1 score rose sharply at the onset of each trigger window, remained high throughout each pattern's duration, and dropped back to the background level during the inter-trial intervals, confirming that the network correctly associates each trigger window with its corresponding stored pattern without cross-interference between the $M=16$ stored memories.
+To evaluate the network's ability to retrieve and distinguish multiple stored patterns in sequence, we concatenated all $M=16$ patterns into a single long raster, each trial flanked by $N_\mathrm{pretime}=50$ steps of spontaneous background activity at rate $p_A$ before and after the stimulus (Figure~\ref{fig:retrieval}). Each pattern was triggered by its individual trigger window, and retrieval was evaluated by a sliding-window $F_1$ score over time. The $F_1$ score rose sharply at the onset of each trigger window, remained high throughout each pattern's duration, and dropped back to the background level during the inter-trial intervals, confirming that the network correctly associates each trigger window with its corresponding stored pattern without cross-interference between the $M=16$ stored memories.
 
 %%%----------------------------------------------------------------- 
 \begin{figure}[!ht]
 \begin{center}
 \includegraphics[width=\textwidth]{retrieval.pdf}
 \end{center}
-\caption{Sequential retrieval of $M=16$ stored patterns. The sliding-window F1 score (blue) is shown as a function of time, together with the onset indicator of each trigger window (green dashes) and the corresponding pattern mask (red dashes). The F1 score rises sharply at each trigger-window onset and remains high for the full pattern duration ($T=1000$ steps), then returns to baseline during the inter-trial intervals, demonstrating selective retrieval of all stored memories in sequence without cross-interference.}\label{fig:retrieval}
+\caption{Sequential retrieval of the $M=16$ stored patterns. The sliding-window $F_1$ score (blue) is shown as a function of time, together with the onset indicator of each trigger window (green dashes) and the corresponding pattern mask (red dashes). The $F_1$ score rises sharply at each trigger-window onset and remains high for the full pattern duration ($T=1000$ steps $\sim 1$ second), then returns to baseline during the inter-trial intervals, demonstrating selective retrieval of all stored memories in sequence without cross-interference.}\label{fig:retrieval}
 \end{figure}
 %%%-----------------------------------------------------------------
 %
@@ -327,15 +334,15 @@ A hallmark of biological working memory is graceful degradation: recall should r
 
 \paragraph{Robustness to spike noise (Figure~\ref{fig:noise}, left).}
 % 14_MNESIS_testing-noise.ipynb
-We corrupted the trigger window by independently flipping each spike with probability $p_\mathrm{flip} \in [0, 1]$ (bit-flip noise). At $p_\mathrm{flip} = 0.25$, the network still achieved precision~$= 1.000$, recall~$= 0.937$, and $F_1 = 0.967$, demonstrating high tolerance to noise in the trigger window. The F1 score decreases monotonically as $p_\mathrm{flip}$ increases, reaching chance level only near $p_\mathrm{flip} = 0.5$ where the trigger window is entirely randomised. This behaviour is consistent with the network operating as an attractor: small perturbations of the initial state are corrected by the recurrent dynamics, which converge back to the stored pattern.
+We corrupted the trigger window by independently flipping each spike with probability $p_\mathrm{flip} \in [0, 1]$ (bit-flip noise). At $p_\mathrm{flip} = 0.25$, the network still achieved precision~$= 1.000$, recall~$= 0.937$, and $F_1 = 0.967$, demonstrating high tolerance to noise in the trigger window. The $F_1$ score decreases monotonically as $p_\mathrm{flip}$ increases, reaching chance level only near $p_\mathrm{flip} = 0.5$ where the trigger window is entirely randomised. This behaviour is consistent with the network operating as an attractor: small perturbations of the initial state are corrected by the recurrent dynamics, which converge back to the stored pattern.
 
 \paragraph{Robustness to trigger-window duration (Figure~\ref{fig:noise}, middle).}
 % 15_MNESIS_testing-trigger-duration.ipynb
-We varied the duration of the trigger window from $0$ to $D-1 = 40$ steps, scanning from no cue at all to a trigger that is one step short of the full motif. At $75\%$ of the full trigger duration ($\approx 30$ steps out of $D = 41$), the network achieved precision~$= 1.000$, recall~$= 0.757$, and $F_1 = 0.862$. The F1 score increases monotonically with trigger duration, rising steeply once the trigger exceeds roughly $D/2$, consistent with the requirement that the context window must contain enough active synapses to uniquely identify the stored pattern above the interference floor.
+We varied the duration of the trigger window from $0$ to $D-1 = 40$ steps, scanning from no cue at all to a trigger that is one step short of the full motif. At $75\%$ of the full trigger duration ($\approx 30$ steps out of $D = 41$), the network achieved precision~$= 1.000$, recall~$= 0.757$, and $F_1 = 0.862$. The $F_1$ score increases monotonically with trigger duration, rising steeply once the trigger exceeds roughly $D/2$, consistent with the requirement that the context window must contain enough active synapses to uniquely identify the stored pattern above the interference floor.
 
 \paragraph{Robustness to partial neuron coverage (Figure~\ref{fig:noise}, right).}
 % 16_MNESIS_testing-trigger-fraction.ipynb
-We varied the number of neurons whose activity was silenced during the trigger window, from $0$ (full trigger) to $N = 1024$ (no trigger). With $N/8 = 128$ neurons silenced --- meaning $87.5\%$ of the population remained active --- the network still achieved perfect recall ($F_1 = 1.000$). The F1 score degrades smoothly as more neurons are silenced and drops sharply only when the majority of the trigger population is inactive, again consistent with an attractor interpretation in which a sufficient fraction of the pattern suffices to pull the network dynamics towards the stored memory.
+We varied the number of neurons whose activity was silenced during the trigger window, from $0$ (full trigger) to $N = 1024$ (no trigger). With $N/8 = 128$ neurons silenced --- meaning $87.5\%$ of the population remained active --- the network still achieved perfect recall ($F_1 = 1.000$). The $F_1$ score degrades smoothly as more neurons are silenced and drops sharply only when the majority of the trigger population is inactive, again consistent with an attractor interpretation in which a sufficient fraction of the pattern suffices to pull the network dynamics towards the stored memory.
 %
 %%%----------------------------------------------------------------- 
 \begin{figure}[!t]
@@ -384,9 +391,9 @@ Taken together, the three scans quantitatively validate the theoretical framewor
 %%%-----------------------------------------------------------------
 %  this section reflects what is computed in 30_MNESIS_learn-periodic.ipynb
 
-%%%-----------------------------------------------------------------
-\subsection{Retrieval of traveling wave patterns}
-%%%-----------------------------------------------------------------
+% %%%-----------------------------------------------------------------
+% \subsection{Retrieval of traveling wave patterns}
+% %%%-----------------------------------------------------------------
 %  this section reflects what is computed in 32_MNESIS_learn-travelling-waves.ipynb
 
 
