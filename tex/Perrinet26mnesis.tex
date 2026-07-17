@@ -4,10 +4,29 @@
 %!BIB TS-program = bibtex
 % -*- coding: UTF-8; -*-
 % vim: set fenc=utf-8
-%-----------------------
-%
-\documentclass[runningheads]{llncs} % , citeauthoryear
+\documentclass{scrartcl}
+\usepackage{fontspec}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+% \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+% \usepackage{siunitx}
+% \sisetup{output-exponent-marker=\ensuremath{\mathrm{e}}}
+% \newcommand{\ms}{\si{\milli\second}}%
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{adjustbox}
+\usepackage{dsfont}
+\usepackage{url}
 %
 \usepackage[%
   square,        % for square brackets
@@ -18,73 +37,32 @@
                  % are compressed if possible (as 3-6, 15);
 ]{natbib}
 % In the bibliography, references have to be formatted as 1., 2., ... not [1], [2], ...
-\renewcommand{\bibnumfmt}[1]{#1.}
-\renewcommand{\bibsection}{\section*{References}} % requried for natbib to have "References" printed and as section*, not chapter*
+% \renewcommand{\bibnumfmt}[1]{#1.}
+% \renewcommand{\bibsection}{\section*{References}} % requried for natbib to have "References" printed and as section*, not chapter*
 %
 %
-\usepackage{graphicx}
-\usepackage{amsmath}
-%
-\usepackage[utf8]{inputenc} % allow utf-8 input
-\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
-\usepackage{booktabs}       % professional-quality tables
-\usepackage{amsfonts}       % blackboard math symbols
-\usepackage{nicefrac}       % compact symbols for 1/2, etc.
-\usepackage{microtype}      % microtypography
-\usepackage{xcolor}         % colors
-% \usepackage{siunitx}
-% \sisetup{output-exponent-marker=\ensuremath{\mathrm{e}}}
-% \newcommand{\ms}{\si{\milli\second}}%
-\usepackage{amssymb} % Required for \lesssim
-\graphicspath{{../figures/}}%
-\usepackage{dsfont}
+\graphicspath{{../figures/}}
 
-\usepackage{adjustbox}
+\title{
+Working Memory with Polychronous Chains
+}
+\author{
+  Laurent U Perrinet \\
+  \texttt{laurent.perrinet@univ-amu.fr} \\
+  Institut de Neurosciences de la Timone (UMR7289) \\
+  Aix Marseille Univ, CNRS \\
+  27 Bd Moulin, 13005 Marseille, France \\
+  \url{https://laurentperrinet.github.io/publication/perrinet-26}
+}
+\date{\today}
 
 \begin{document}
-%
-\title{
-%ICANN Paper 729
-% Working Memory in Recurrent Spiking Neural Networks With Heterogeneous Synaptic Delays
-%
-% post-ICANN
-Working Memory
-with
-Polychronous Chains
-}
-%
-\author{Laurent U Perrinet\orcidID{0000-0002-9536-010X}}
-%
-\authorrunning{Laurent U Perrinet}
-%
-%\titlerunning{Abbreviated paper title}
-% If the paper title is too long for the running head, you can set
-% an abbreviated paper title here
-\titlerunning{Working Memory in Spiking Neural Networks}
-% First names are abbreviated in the running head.
-% If there are more than two authors, 'et al.' is used.
-%
-\institute{Institut de Neurosciences de la Timone (UMR7289) \\
-  Aix Marseille Univ, CNRS\\
-  27 Bd Moulin, 13005 Marseille, France \\
-\url{https://laurentperrinet.github.io/publication/perrinet-26-icann/} 
-\email{laurent.perrinet@univ-amu.fr}
-}
-%
-\maketitle              % typeset the header of the contribution
-%
-%
-% Weaknesses:
-% * Test data too simple: Only fake patterns, not real ones like SHD or video.
-% * Unknown limits: Tests just 8 patterns—how many more can it hold?
-% * Too many parameters: 10M weights need slimming down.
-% * No comparisons: Doesn't test against normal spiking nets or other memory methods
-%
+\maketitle
+
 \begin{abstract}
 Working memory --- the ability to store and recall precise temporal patterns of neural activity --- remains an open challenge for spiking neural networks (SNNs). We propose a recurrent SNN of $N=1024$ neurons in which each synapse is equipped with $D = 41$ heterogeneous delays, parameterised as a weight tensor $\mathbf{W} \in \mathbb{R}^{N \times N \times D}$ and trained end-to-end with surrogate-gradient backpropagation through time. Each stored pattern is represented as a sequential chain of overlapping Spiking Motifs: contiguous context windows of length $D$ that uniquely predict the activity at the next time step. A closed-form Hebbian initialisation, derived by deconvolving the LIF membrane response and targeting a sub-threshold membrane potential value superior to the threshold $\vartheta$, achieves an accuracy as measured by the $F_1$-score relative close to that expected when noise is present and before any gradient step on a benchmark of $M=16$ patterns of duration $T=1000\,\mathrm{ms}$. With learning, the network tolerates up to $25\%$ bit-flip noise, and reaches $F_1$ scrores closer to the value expected from the noise level. These results demonstrate attractor-like retrieval dynamics consistent with hippocampal pattern completion. These results show that heterogeneous synaptic delays are an efficient and scalable substrate for working memory in SNNs, with direct implications for neuromorphic edge deployment.
-%
-\keywords{Spiking Neural Networks  \and Heterogeneous delays \and Working memory.}
 \end{abstract}
+\noindent\textbf{Keywords:} Spiking Neural Networks, Polychronization; Heterogeneous delays, Working memory.
 
 
 \section{Introduction}
@@ -128,7 +106,7 @@ The present work extends the chain-of-motifs framework of~\citet{Kronland-Martin
 
 In a previous work, we have demonstrated that a feedforward HD-SNN can learn to detect Spiking Motifs~\citep{Perrinet2023}. However, this architecture is limited to motifs of length $D$, the maximum synaptic delay. To store and recall longer sequences, it is possible to extend this architecture to a fully recurrent topology, where each neuron receives inputs from all other neurons across all delays. Our core concept is to retrieve a memory progressively, in which each motif of length $D$ would allow to predict the next spikes in the memory to retrieve. This allows the network to generate a chain of overlapping Spiking Motifs, where each motif provides the context for predicting the next spikes in the sequence (see Figure~\ref{fig:izhikevich}).
 
-In practice, we will study a recurrent Heterogeneous-Delay SNN (HD-SNN) which consists of a population $\mathcal{A}$ of $N = 1024$ leaky integrate-and-fire (LIF) neurons implemented in {\sc snnTorch}~\citep{Eshraghian2023} and simulated over $T = 1000$ steps of $1\,\mathrm{ms}$ each (total duration: $1\,\mathrm{s}$). Extending the feedforward Spiking Motif Detector~\citep{Perrinet2023}, our architecture will include full recurrence: each neuron $j \in \mathcal{A}$  integrates inputs from \emph{all} other neurons across \emph{all} preceding $D = 41$ time steps. Such network is the most general for learning purposes, and at inference, pruning of the synapses may be added to gain from the sparseness of synapses on the energy budget. Moreover, the choice for the maximum delay value $D$ is justified from biological observations and similar to the value used in the original polychronisation study~\citep{Izhikevich2006}. The membrane potential $u_j(t)$ evolves as
+In practice, we will study a recurrent Heterogeneous-Delay SNN (HD-SNN) which consists of a population $\mathcal{A}$ of $N = 1024$ leaky integrate-and-fire (LIF) neurons implemented in \texttt{snnTorch}~\citep{Eshraghian2023} and simulated over $T = 1000$ steps of $1\,\mathrm{ms}$ each (total duration: $1\,\mathrm{s}$). Extending the feedforward Spiking Motif Detector~\citep{Perrinet2023}, our architecture will include full recurrence: each neuron $j \in \mathcal{A}$  integrates inputs from \emph{all} other neurons across \emph{all} preceding $D = 41$ time steps. Such network is the most general for learning purposes, and at inference, pruning of the synapses may be added to gain from the sparseness of synapses on the energy budget. Moreover, the choice for the maximum delay value $D$ is justified from biological observations and similar to the value used in the original polychronisation study~\citep{Izhikevich2006}. The membrane potential $u_j(t)$ evolves as
 \begin{equation}
   u_j(t)
   = \beta \cdot u_j(t-1) \cdot (1 - s_j(t-1))
@@ -455,7 +433,7 @@ $\mathbf{W} \in \mathbb{R}^{N \times N \times D}$, with
 \section{Sub-threshold initialisation target, surrogate gradient sensitivity, and capacity}
 \label{app:margin}
 
-\subsection{Why $\vartheta_0 = 0.8$: surrogate gradient sensitivity}
+\subsection{Surrogate gradient sensitivity}
 
 The weight initialisation (Eq.~\ref{eq:init}) is designed so that a perfect context $\mathbf{c}(t) = \mathbf{c}^*(t)$ produces $u_j(t^*) = \vartheta_0 = 0.8$, strictly below the firing threshold $\vartheta = 1$. The safety margin $\delta = 0.2$ has two complementary justifications.
 
@@ -488,11 +466,6 @@ Since $M^*_\delta \gg M^*$, the binding constraint is always the parameter count
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliographystyle{plainnat}
-% Use natbib compatbile splncsnat style.
-% It does provide all features of splncs03, but is developed in a clean way.
-% Source: http://phaseportrait.blogspot.de/2011/02/natbib-compatible-bibtex-style-bst-file.html
-% now at https://raw.githubusercontent.com/tpavlic/splncs04nat/refs/heads/master/splncs04nat.bst
-% \bibliographystyle{splncs04}
 \bibliography{mnesis}
 % \printbibliography
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
