@@ -114,7 +114,7 @@ In practice, we will study a recurrent Heterogeneous-Delay SNN (HD-SNN) which co
       \sum_{d=1}^{D} \mathbf{W}_{j, i, d} \cdot s_i(t-d) \bigr ), 
   \label{eq:lif}
 \end{equation}
-where $\beta \in (0,1)$ is the membrane decay constant ($\beta = 0.7$ in our simulations, that is, a time constant of $\tau= 1 / \ln(\frac 1 \beta) \approx 2.8$ steps), $\mathbf{W}_{j, i, d}$ is the synaptic weight to neuron $j$ from neuron $i$ at delay $d$, and $s_j(t) \in \{0,1\}$  is the spike indicator $s_j(t) = \mathds{1}[u_j(t) \geq \vartheta]$, that is, $s_j(t)=0$ if $u_j(t) < \vartheta$ and a spike is emitted $s_j(t)=1$ when $u_j(t)$ exceeds the threshold $\vartheta$. After spiking, the membrane potential that is accumulated in Equation~\ref{eq:lif} is reset to zero.
+where $\beta \in (0,1)$ is the membrane decay constant ($\beta = 0.8$ in our simulations, that is, a time constant of $\tau= 1 / \ln(\frac 1 \beta) \approx 4.5$ steps), $\mathbf{W}_{j, i, d}$ is the synaptic weight to neuron $j$ from neuron $i$ at delay $d$, and $s_j(t) \in \{0,1\}$  is the spike indicator $s_j(t) = \mathds{1}[u_j(t) \geq \vartheta]$, that is, $s_j(t)=0$ if $u_j(t) < \vartheta$ and a spike is emitted $s_j(t)=1$ when $u_j(t)$ exceeds the threshold $\vartheta$. After spiking, the membrane potential that is accumulated in Equation~\ref{eq:lif} is reset to zero.
 
 In our implementation, the spike history of all $N$ neurons over the past $D$ steps is concatenated into a flattened context vector of dimension $N \cdot D$ at each time step, so that $\mathbf{W}$ is reshaped as $\mathbf{\bar W} \in \mathbb{R}^{N \times (N \cdot D)}$. This is equivalent to the temporal convolution that we used previously in a feedforward setting~\citep{Perrinet2023}, here extended to a fully recurrent topology. The HD-SNN thus maps onto a standard static computational graph that can be trained with surrogate gradient descent as classical SNNs (see Figure~\ref{fig:model}, left panel).
 
@@ -123,7 +123,7 @@ In our implementation, the spike history of all $N$ neurons over the past $D$ st
 %%%-----------------------------------------------------------------
 To assess working-memory capacity in all generality, we generated a dataset of $M = 16$ distinct target patterns $\mathbf{S}^{(\mu)} \in \{0,1\}^{N \times T}$. Following previous work~\citep{Perrinet2023}, each pattern is generated using a stochastic spiking pattern generator with both a structured and background components. Specifically, for each pattern we define a \emph{frozen} pattern as $P^{(\mu)} \in \{0,1\}^{N \times T}$ with $
   P^{(\mu)} \sim \mathrm{Bernoulli}(p_A)$ 
-where we set $p_A = 0.16 \times 10^{-4}$ spike per neuron per time step ($0.16\,\mathrm{Hz}$ if we consider $1\,\mathrm{ms}$ time bins) as the average spike probability. This follows the estimation of the average spiking frequency in the human brain~\citep{Lennie2003}. 
+where we set $p_A = 1.6 \times 10^{-4}$ spike per neuron per time step ($0.16\,\mathrm{Hz}$ if we consider $1\,\mathrm{ms}$ time bins) as the average spike probability. This follows the estimation of the average spiking frequency in the human brain~\citep{Lennie2003}. 
 
 To account for the stochasticity inherent to neural activity, we further include a balanced bit flipping mechanism with probability $p_\text{flip} = 0.05$. This is defined defined by the binary mask  $M^{(\mu)} \in \{0,1\}^{N \times T}$ of bit flips locations :
 $
@@ -169,7 +169,7 @@ The choice of regression output $\mathbf{I}$ requires care. A naive choice is th
   I_j(t) \;=\; s_j(t) - \beta \cdot s_j(t-1).
   \label{eq:deconv_target}
 \end{equation}
-This is a \emph{biphasic} waveform: $1$ at each target spike time $t$ and $1-\beta$ exactly one step later, cancelling the residual membrane charge left by the leak. For $\beta \to 0$ the biphasic correction collapses to a scaled impulse; for $\beta = 0.7$ the negative lobe is substantial and significantly reduces spurious spikes.
+This is a \emph{biphasic} waveform: $1$ at each target spike time $t$ and $1-\beta$ exactly one step later, cancelling the residual membrane charge left by the leak. For $\beta \to 0$ the biphasic correction collapses to a scaled impulse; for $\beta = 0.8$ the negative lobe is substantial and significantly reduces spurious spikes.
  
 Since the system is strongly underdetermined ($K \ll ND$), the minimum-$\ell_2$-norm solution is the Moore--Penrose pseudo-inverse $\mathbf{W}^* = \mathbf{I}^* \cdot \mathbf{C}^+$. With sparse neural activity at rate $p_A = .16\cdot 10^{-3}$, consecutive context windows are nearly orthogonal, so the Gram matrix satisfies $\mathbf{C}\mathbf{C}^\top \approx N \cdot D \cdot p_A \cdot \mathbf{I}$, giving the closed-form initialisation
 \begin{equation}
@@ -199,11 +199,11 @@ Each weight $w_{i, j, d}$ is proportional to the cross-correlation between the d
   }\label{fig:model}
 \end{figure}
 %%%-----------------------------------------------------------------
-The loss is defined as $\mathcal{L} = 1 - F_1$, such that minizing this loss (with a maximum of $1$ and minimum of $0$) maximises the mean $F_1$ score across all $M$ target patterns. Learning is carried out with surrogate-gradient BPTT~\citep{Neftci2019a}, using a fast-sigmoid surrogate with sharpness parameter $\alpha = 15$. Weights are optimised with AdamW (learning rate $\eta = 10^{-3}$, momentum $\mu = 0.99$, weight decay $\lambda = 0$). Dropout regularization with probability $0.37$ is applied. To mitigate overfitting and stabilise delay learning, the learning rate is annealed with a cosine schedule with warmup, as used for instance in~\citep{Hammouamri2023}. The validation loss is monitored for detecting overfitting.
+The loss is defined as $\mathcal{L} = 1 - F_1$, such that minizing this loss (with a maximum of $1$ and minimum of $0$) maximises the mean $F_1$ score across all $M$ target patterns. Learning is carried out with surrogate-gradient BPTT~\citep{Neftci2019a}, using a fast-sigmoid surrogate with sharpness parameter $\alpha = 12$. Weights are optimised with SGD, using a cosine learning-rate schedule with warmup from a base learning rate $\eta_\mathrm{base} = 20.0 \times 10^{-3}$ to a final learning rate $\eta_\mathrm{final} = 400 \times 10^{-6}$, with $16$ warmup epochs over $256$ total epochs. Dropout regularization with probability $0.10$ is applied. The validation loss is monitored for detecting overfitting.
 
 The gradient-based learning in our recurrent HD-SNN shares fundamental principles with biological STDP, despite operating at different scales. Both mechanisms exploit temporal correlations in spike timing to adjust synaptic strengths. However, while STDP implements local pairwise updates based on individual spike timings, our approach performs global optimisation that effectively learns the collective interaction of multiple delayed spike trains across the entire network. The analytical initialisation (see Equation~\ref{eq:init}) reveals this connection most clearly: it implements a Hebbian-like rule that is mathematically equivalent to averaging STDP updates across all stored patterns, suggesting that gradient descent in this context can be viewed as a principled, globally optimal implementation of temporally structured synaptic plasticity.
 
-Our implementation is available at \url{https://github.com/laurentperrinet/MNESIS}. The recurrent HD-SNN was implemented using the snnTorch~\citep{Eshraghian2023} library with custom extensions for heterogeneous delay handling. The implementation leverages PyTorch with the Metal Performance Shader (MPS) backend for accelerated computation on Apple Silicon (M3 Ultra chip featuring 32 CPU cores and 80 GPU cores, with 512\,GB of unified memory architecture) and further tested with the CUDA backend on the Jean Zay supercluster at GENCI. The MPS and CUDA backends enabled efficient training and simulation of the large recurrent networks required for working memory tasks, leveraging the parallel processing capabilities of the GPU cores while maintaining low-latency access to the substantial memory resources necessary for storing all tensors' parameters. Training typically converged within $128$ gradient steps, requiring approximately $5$ minutes of computation time per training.
+Our implementation is available at \url{https://github.com/laurentperrinet/MNESIS}. The recurrent HD-SNN was implemented using the snnTorch~\citep{Eshraghian2023} library with custom extensions for heterogeneous delay handling. The implementation leverages PyTorch with the Metal Performance Shader (MPS) backend for accelerated computation on Apple Silicon (M3 Ultra chip featuring 32 CPU cores and 80 GPU cores, with 512\,GB of unified memory architecture) and further tested with the CUDA backend on the Jean Zay supercluster at GENCI. The MPS and CUDA backends enabled efficient training and simulation of the large recurrent networks required for working memory tasks, leveraging the parallel processing capabilities of the GPU cores while maintaining low-latency access to the substantial memory resources necessary for storing all tensors' parameters. Training typically converged within $256$ gradient steps, requiring approximately $5$ minutes of computation time per training.
 %
 %%%----------------------------------------------------------------- 
 \section{Results}
@@ -213,7 +213,7 @@ Our implementation is available at \url{https://github.com/laurentperrinet/MNESI
 \subsection{Training dynamics and results}
 %%%----------------------------------------------------------------- 
 %
-Training the recurrent HD-SNN with surrogate-gradient BPTT~\citep{Neftci2019a} consistently maximised the mean $F_1$ score across all $M=16$ target patterns to a perfect score of $1.0$, with $N=1024$ neurons, $D=41$ delays, $T=1000$ time steps, $p_A=10^{-3}$, and $\beta=0.7$ (time constant $\tau \approx 2.8\,\mathrm{ms}$). Without the analytical initialisation, two characteristic failure modes arise during early training: episodes of complete silence, in which the network emits no spikes, and over-activation, in which nearly all neurons fire at every time step. Both are well-known pathological attractors of recurrent SNNs~\citep{Izhikevich2006}. The $F_1$ score is the harmonic mean of precision and recall, and maximising it therefore penalises both failure modes symmetrically: low precision corresponds to an over-active network and low recall to a silent one. The cosine learning-rate schedule~\citep{Hammouamri2023} helped guide the network away from these extremes towards a balanced, sparse-firing regime. 
+Training the recurrent HD-SNN with surrogate-gradient BPTT~\citep{Neftci2019a} consistently maximised the mean $F_1$ score across all $M=16$ target patterns to a perfect score of $1.0$, with $N=1024$ neurons, $D=41$ delays, $T=1000$ time steps, $p_A=1.6\times10^{-4}$, and $\beta=0.8$ (time constant $\tau \approx 4.5\,\mathrm{ms}$). Without the analytical initialisation, two characteristic failure modes arise during early training: episodes of complete silence, in which the network emits no spikes, and over-activation, in which nearly all neurons fire at every time step. Both are well-known pathological attractors of recurrent SNNs~\citep{Izhikevich2006}. The $F_1$ score is the harmonic mean of precision and recall, and maximising it therefore penalises both failure modes symmetrically: low precision corresponds to an over-active network and low recall to a silent one. The cosine learning-rate schedule~\citep{Hammouamri2023} helped guide the network away from these extremes towards a balanced, sparse-firing regime. 
 
 Remarkably, the analytical weight initialisation alone (Eq.~\ref{eq:init}) already achieves $F_1 = 1.0$ before any gradient step, demonstrating that the closed-form Hebbian solution is sufficient for perfect recall on this benchmark. The Gram-matrix approximation $\mathbf{C}\mathbf{C}^\top \approx N \cdot D \cdot p_A \cdot \mathbf{I}$ reduces the pseudo-inverse to a simple cross-correlation, yielding a ${\approx}5\times$ speed-up with identical accuracy; this approximation is used throughout. Gradient training serves primarily to improve robustness: errors arise when the trigger window is corrupted (Section~\ref{sec:robustness}), and learning helps mitigate their accumulation.
 
@@ -233,10 +233,10 @@ Remarkably, the analytical weight initialisation alone (Eq.~\ref{eq:init}) alrea
 We performed a systematic sweep over the key hyperparameters and report their effect on the mean $F_1$ score at convergence.
 
 \paragraph{Surrogate sharpness $\alpha$.}
-The sharpness of the surrogate gradient had the largest single effect on performance. Low values of $\alpha$ produced gradients that were too smooth to discriminate precise spike times, while excessively high values caused gradient vanishing. The value $\alpha = 10$ provided the best trade-off, consistent with findings in~\citet{Neftci2019a}.
+The sharpness of the surrogate gradient had the largest single effect on performance. Low values of $\alpha$ produced gradients that were too smooth to discriminate precise spike times, while excessively high values caused gradient vanishing. The default value used in this study is $\alpha = 12$, consistent with the robust training regime observed in our parameter scans.
 
 \paragraph{Target firing rate.}
-The best recall was obtained at low target firing rates ($1\,\mathrm{Hz}$ per neuron), confirming that sparse activity facilitates stable recurrent dynamics~\citep{Izhikevich2006,Yin2026}. Higher firing rates led to increased inter-pattern interference and degraded precision, echoing the capacity bounds reported for polychronous neuronal groups~\citep{Szatmary2010}.
+The best recall was obtained at low target firing rates (default $0.16\,\mathrm{Hz}$ per neuron), confirming that sparse activity facilitates stable recurrent dynamics~\citep{Izhikevich2006,Yin2026}. Higher firing rates led to increased inter-pattern interference and degraded precision, echoing the capacity bounds reported for polychronous neuronal groups~\citep{Szatmary2010}.
 
 %%%-----------------------------------------------------------------
 \subsection{Retrieval of multiple spike patterns}
@@ -437,18 +437,18 @@ $\mathbf{W} \in \mathbb{R}^{N \times N \times D}$, with
 The weight initialisation (Eq.~\ref{eq:init}) is designed so that a perfect context $\mathbf{c}(t) = \mathbf{c}^*(t)$ produces $u_j(t^*) = \vartheta_0 = 0.8$, strictly below the firing threshold $\vartheta = 1$. The safety margin $\delta = 0.2$ has two complementary justifications.
 
 \paragraph{Surrogate gradient sensitivity.}
-With the fast-sigmoid surrogate $\sigma_\alpha(x) = 1/(1 + |\alpha x|)^2$ at sharpness $\alpha = 15$, the gradient at the initialised membrane value $u_j(t^*) - \vartheta = \vartheta_0 - \vartheta = -0.2$ is
+With the fast-sigmoid surrogate $\sigma_\alpha(x) = 1/(1 + |\alpha x|)^2$ at sharpness $\alpha = 12$, the gradient at the initialised membrane value $u_j(t^*) - \vartheta = \vartheta_0 - \vartheta = -0.2$ is
 \[
-\sigma_{15}'(-0.2) = \frac{15}{(1 + 15 \times 0.2)^2} = \frac{15}{16} \approx 0.94,
+\sigma_{12}'(-0.2) = \frac{12}{(1 + 12 \times 0.2)^2} \approx 1.04,
 \]
-close to its maximum of $1$ (attained at $x=0$). Had $\vartheta_0 \ll \vartheta$, the gradient would be near zero and the first training steps would carry no useful signal. The choice $\vartheta_0 = 0.8$ therefore places the initialised network in the regime of near-maximum surrogate sensitivity.
+remaining of order unity. Had $\vartheta_0 \ll \vartheta$, the gradient would be near zero and the first training steps would carry no useful signal. The choice $\vartheta_0 = 0.8$ therefore places the initialised network in a high-sensitivity regime.
 
 \paragraph{Protection against spurious spikes.}
 At inference time the network receives its own generated context $\hat{\mathbf{c}}(t)$. The resulting membrane perturbation has zero mean and standard deviation
 \[
-\sigma_u \approx \vartheta_0 \cdot \sqrt{\frac{p_A}{N \cdot D}} \approx 0.8 \times \sqrt{\frac{10^{-3}}{1024 \times 41}} \approx 1.2 \times 10^{-3}.
+\sigma_u \approx \vartheta_0 \cdot \sqrt{\frac{p_A}{N \cdot D}} \approx 0.8 \times \sqrt{\frac{1.6\times10^{-4}}{1024 \times 41}} \approx 4.9 \times 10^{-5}.
 \]
-The probability of a spurious spike is $\Phi(-\delta/\sigma_u) = \Phi(-160) \approx 0$, so the margin $\delta = 0.2$ provides essentially complete protection against spurious firings from random context errors. Any value $\delta \gtrsim 0.01$ would suffice; the larger value $0.2$ is chosen to maximise the gradient sensitivity argument above.
+The probability of a spurious spike is $\Phi(-\delta/\sigma_u) = \Phi(-4048) \approx 0$, so the margin $\delta = 0.2$ provides essentially complete protection against spurious firings from random context errors. Any value $\delta \gtrsim 0.01$ would suffice; the larger value $0.2$ is chosen to maximise the gradient sensitivity argument above.
 
 \subsection{Relationship to capacity}
 
@@ -458,7 +458,7 @@ M^* = \frac{N^2 \cdot D}{T - D} = \frac{1024^2 \times 41}{959} \approx 44{,}830 
 \]
 A secondary, interference-limited capacity arises from the condition $\delta > \sigma_u \cdot \sqrt{M}$, giving
 \begin{equation}
-M^*_\delta = \frac{\delta^2 \cdot N \cdot D}{\vartheta_0^2 \cdot p_A} = \frac{(0.2)^2 \times 1024 \times 41}{(0.8)^2 \times 10^{-3}} \approx 2{,}624{,}000.
+M^*_\delta = \frac{\delta^2 \cdot N \cdot D}{\vartheta_0^2 \cdot p_A} = \frac{(0.2)^2 \times 1024 \times 41}{(0.8)^2 \times 1.6\times10^{-4}} \approx 16{,}400{,}000.
 \label{eq:M_cap_delta}
 \end{equation}
 Since $M^*_\delta \gg M^*$, the binding constraint is always the parameter count, not interference. The margin $\delta$ does not limit capacity; it governs only the quality of the gradient signal at initialisation.
