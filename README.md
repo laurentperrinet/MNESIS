@@ -40,7 +40,13 @@ MNESIS/
 │   ├── 15_MNESIS_testing-trigger-duration.ipynb  # Effect of trigger-window length
 │   ├── 16_MNESIS_testing-trigger-fraction.ipynb  # Effect of partial neuron coverage
 │   ├── 20_MNESIS_scanning-parameters.ipynb   # Parameter scans (D, T, p_A, ...)
-│   └── 25_MNESIS_optuna.ipynb                # Hyperparameter optimisation (Optuna)
+│   ├── 25_MNESIS_optuna.ipynb                # Hyperparameter optimisation (Optuna)
+│   ├── 30_MNESIS_learn-periodic.ipynb        # Learning and retrieval of periodic memories
+│   ├── 32_MNESIS_learn-travelling-waves.ipynb # Structured spatiotemporal travelling waves
+│   ├── 34_MNESIS_learn-Lorenz-attractor.ipynb # Chaotic trajectory encoding and recall
+│   ├── 40_MNESIS_learn-SHD.ipynb             # Spiking Heidelberg Digits experiments
+│   ├── 99_MNESIS_run-all.ipynb               # End-to-end notebook orchestrator
+│   └── requirements.txt                       # Python dependencies for notebook runs
 ├── figures/                      # Generated figures (PDF/PNG)
 ├── tex/                          # Paper source
 │   ├── Perrinet26mnesis.tex      # Main LaTeX source
@@ -49,7 +55,6 @@ MNESIS/
 │   ├── llncs.cls                 # Springer LNCS class
 │   └── splncs04.bst              # BibTeX style
 ├── cached_data/                  # Cached weights and scan results (git-ignored)
-├── requirements.txt
 ├── LICENSE
 └── README.md
 ```
@@ -61,14 +66,14 @@ MNESIS/
 ### Install dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r src/requirements.txt
 ```
 
 Core dependencies: `torch`, `snntorch`, `numpy`, `scipy`, `matplotlib`, `jupyter`.
 
 ### Run the notebooks in order
 
-The notebooks are numbered and designed to be run sequentially. Notebooks 01, 05, and 08 set up shared infrastructure (imports, parameters, generative model) and are prerequisites for all downstream notebooks. Each notebook saves its outputs (model weights, scan results) to `cached_data/` so that downstream notebooks can load them without recomputation.
+The notebooks are numbered and designed to be run sequentially. Notebooks 01, 05, and 08 set up shared infrastructure (imports, parameters, generative model) and are prerequisites for all downstream notebooks. Each notebook saves its outputs (model weights, scan results) to `cached_data/` so that downstream notebooks can load them without recomputation. Notebook 99 can orchestrate a full multi-notebook run in one place.
 
 ```bash
 cd src
@@ -87,7 +92,12 @@ jupyter notebook
 | 15 | `15_MNESIS_testing-trigger-duration.ipynb` | Truncated trigger window (0 to $D-1$ steps). Finds the minimum cue length for reliable recall; $F_1 = 0.862$ at 75% of $D$. |
 | 16 | `16_MNESIS_testing-trigger-fraction.ipynb` | Partial neuron coverage (0 to $N$ neurons silenced in trigger). Perfect recall maintained with 87.5% of neurons active. |
 | 20 | `20_MNESIS_scanning-parameters.ipynb` | Systematic one-at-a-time scans over $D$, $T$, $p_A$, $N$, $E_\mathrm{SM}$, $p_\mathrm{SM}$, etc. with $N_\mathrm{cv} = 10$ seeds. Produces the parameter-scan figures of the paper. |
-| 25 | `25_MNESIS_optuna.ipynb` | Automated hyperparameter search with [Optuna](https://optuna.org/) over learning rate, dropout, surrogate sharpness, and momentum. |
+| 25 | `25_MNESIS_optuna.ipynb` | Automated hyperparameter search with [Optuna](https://optuna.org/) over learning dynamics, thresholds, and regularisation. |
+| 30 | `30_MNESIS_learn-periodic.ipynb` | Builds periodic targets, trains periodic memories, and evaluates retrieval robustness under increasing input noise. |
+| 32 | `32_MNESIS_learn-travelling-waves.ipynb` | Introduces MotionClouds-based travelling-wave patterns and benchmarks retrieval with structured spatiotemporal motifs. |
+| 34 | `34_MNESIS_learn-Lorenz-attractor.ipynb` | Encodes Lorenz chaotic trajectories into spike codes and evaluates memory recall on non-periodic continuous dynamics. |
+| 40 | `40_MNESIS_learn-SHD.ipynb` | Integrates Spiking Heidelberg Digits data loading/preprocessing for dataset-grounded experiments. |
+| 99 | `99_MNESIS_run-all.ipynb` | Scripted orchestrator to run the full notebook pipeline with progress timestamps. |
 
 ### Cached data
 
@@ -98,8 +108,12 @@ Results are saved to `cached_data/` (excluded from git via `.gitignore`):
 | `*_init.pth` | Analytically initialised weights (pseudo-inverse or Hebbian) |
 | `*.pth` | Trained model weights after gradient steps |
 | `*_scan_*.json` | Parameter sweep results (loss, precision, recall per condition) |
+| `*_periodic-with-noise.npz` | Periodic-memory robustness curves across noise levels and time chunks |
+| `*_TW_*.json` | Travelling-wave parameter scans |
+| `*_lorenz_chaotic_*.json` | Lorenz-attractor scan and optimisation outputs |
+| `*_optuna.sqlite3` | Optuna studies for synthetic, travelling-wave, and Lorenz experiments |
 
-Delete a `.pth` or `.json` file to force recomputation; set `RECOMPUTE = True` at the top of any notebook to invalidate the full cache for that notebook.
+Delete a cached `.pth`, `.json`, `.npz`, or `.sqlite3` file to force recomputation; set `RECOMPUTE = True` at the top of any notebook to invalidate the full cache for that notebook.
 
 ---
 
@@ -147,6 +161,11 @@ The safety margin $\delta = \vartheta - \vartheta_0 = 0.2$ maximises surrogate g
 | Delay scan (NB 20) | $\mathcal{L} \approx 0.85$ at $D=3$; $\mathcal{L} \to 0$ at $D=127$ |
 | Duration scan (NB 20) | $\mathcal{L} \approx 0.004$ at $T=64$; $\mathcal{L} \approx 0.08$ at $T=2048$ |
 | Rate scan (NB 20) | Optimal at $p_A \in [10^{-4}, 10^{-3}]$; degrades for $p_A \geq 2\times10^{-3}$ |
+| Periodic memory (NB 30) | Stable periodic retrieval with dedicated robustness evaluation under progressive bit-flip noise |
+| Travelling waves (NB 32) | MotionClouds-derived structured motifs can be stored/recalled with the same HD-SNN framework |
+| Lorenz attractor (NB 34) | Extends retrieval tests to non-periodic chaotic trajectories encoded as spike events |
+| SHD integration (NB 40) | Adds real-event dataset loading and preprocessing for external benchmark experiments |
+| Full orchestrator (NB 99) | Provides a single notebook entry point for sequential multi-notebook execution |
 
 ---
 
