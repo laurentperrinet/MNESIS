@@ -121,15 +121,15 @@ In our implementation, the spike history of all $N$ neurons over the past $D$ st
 %%%-----------------------------------------------------------------
 \subsection{Synthetic dataset}
 %%%-----------------------------------------------------------------
-To assess working-memory capacity in all generality, we generated a dataset of $M = 16$ distinct target patterns $\mathbf{S}^{(\mu)} \in \{0,1\}^{N \times T}$. Following previous work~\citep{Perrinet2023}, each pattern is generated using a stochastic spiking pattern generator with both a structured and background components. Specifically, for each pattern we define a \emph{frozen} pattern as $P^{(\mu)} \in \{0,1\}^{N \times T}$ with $
+To assess working-memory capacity in all generality, we generated a dataset of $M = 16$ distinct target patterns $\mathbf{S}^{(\mu)} \in \{0,1\}^{N \times T}$. Following previous work~\citep{Perrinet2023}, each pattern is generated using a stochastic spiking pattern generator with both a structured and background component. Specifically, for each pattern we define a \emph{frozen} pattern as $P^{(\mu)} \in \{0,1\}^{N \times T}$ with $
   P^{(\mu)} \sim \mathrm{Bernoulli}(p_A)$ 
 where we set $p_A = 1.6 \times 10^{-4}$ spike per neuron per time step ($0.16\,\mathrm{Hz}$ if we consider $1\,\mathrm{ms}$ time bins) as the average spike probability. This follows the estimation of the average spiking frequency in the human brain~\citep{Lennie2003}. 
 
-To account for the stochasticity inherent to neural activity, we further include a balanced bit flipping mechanism with probability $p_\text{flip} = 0.05$. This is defined defined by the binary mask  $M^{(\mu)} \in \{0,1\}^{N \times T}$ of bit flips locations :
+To account for the stochasticity inherent to neural activity, we further include a balanced bit flipping mechanism with probability $p_\text{flip} = 0.05$. This is defined by the binary mask  $M^{(\mu)} \in \{0,1\}^{N \times T}$ of bit flips locations :
 $
   M^{(\mu)} \sim \mathrm{Bernoulli}(p_\text{flip})
   $.
-Values are left untouched where $M^{(\mu)} = 0$ and will be drawn with probability $p_A$ where $M^{(\mu)} = 1$. Finally, the spike pattern $S^{(\mu)} \in \{0,1\}^{N \times T}$ are those of the frozen pattern $P^{(\mu)}$ except where $M^{(\mu)} = 1$ for which they are obtained by drawing with probability $p_A$. Formally, this can be expressed as:
+Values are left untouched where $M^{(\mu)} = 0$ and will be drawn with probability $p_A$ where $M^{(\mu)} = 1$. Finally, the spike patterns $S^{(\mu)} \in \{0,1\}^{N \times T}$ are those of the frozen pattern $P^{(\mu)}$ except where $M^{(\mu)} = 1$ for which they are obtained by drawing with probability $p_A$. Formally, this can be expressed as:
 \begin{equation}
   % \mathbf{S}^{(\mu)} \sim \mathrm{Bernoulli}(P^{(\mu)} \cdot (1 - M^{(\mu)}) + (1 - P^{(\mu)}) \cdot M^{(\mu)})
   \mathbf{S}^{(\mu)} \sim P^{(\mu)} \cdot (1 - M^{(\mu)}) + \mathrm{Bernoulli}(p_A) \cdot M^{(\mu)}
