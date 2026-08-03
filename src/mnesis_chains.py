@@ -3,6 +3,88 @@ from mnesis_boilerplate import (
     get_scores, get_cosine_schedule_with_warmup, SpikeF1scoreLoss,
 )
 
+
+"""Spiking-pattern generators (extracted from ``08_MNESIS_generative-model.ipynb``).
+
+These classes used to live in a notebook shared in the interactive ``%run``
+workflow.  They are collected here in a plain module so that they can be
+imported programmatically (e.g. by :func:`mnesis_chains.load`) and unit-tested
+independently.
+
+The behaviour and public API are unchanged.
+"""
+
+from mnesis_boilerplate import (
+    torch, np, DEBUG, i_pattern, phi, figpath, printfig, flip_bits, Params,
+)
+
+
+class SpikingPattern:
+    """A simple (frozen) spiking pattern generator."""
+
+    def __init__(self):
+        self.desc = "A simple pattern generator"
+        self.is_periodic = False
+
+    def init(self, opt, verbose=False):
+        self.opt = opt
+        frozen_target_generator = torch.Generator()  # used once to generate the target pattern
+        frozen_target_generator.manual_seed(opt.seed)
+        p_bias = opt.p_A * torch.ones((opt.N_pattern, opt.N_neuron, opt.N_time))
+        self.frozen_target = torch.bernoulli(p_bias, generator=frozen_target_generator)
+        self.frozen_target = self.frozen_target.float()
+        self.frozen_target = self.frozen_target.to(opt.device)
+        if verbose:
+            print(f"Target pattern generated with shape {self.frozen_target.shape} and mean {self.frozen_target.mean().item():.3e}")
+
+    def __call__(self):
+        return self.frozen_target
+
+
+class StochasticSpikingPattern(SpikingPattern):
+    """A stochastic spiking pattern generator.
+
+    A stochastic pattern generator that creates variable realizations
+    of patterns while preserving average firing rates.
+
+    This class extends SpikingPattern by adding stochastic variability through
+    bit flipping operations. Each call to __call__() returns a new realization
+    of the base pattern with bits flipped independently with probability p_flip.
+    The marginal frequency is exactly preserved while the pattern structure
+    is stochastically modified.
+    """
+
+    def __init__(self):
+        """
+        A stochastic spiking pattern generator that creates variable realizations
+        of patterns while preserving average firing rates.
+
+        This class extends SpikingPattern by adding stochastic variability through
+        bit flipping operations. Each call to __call__() returns a new realization
+        of the base pattern with bits flipped independently with probability p_flip.
+        The marginal frequency is exactly preserved while the pattern structure
+        is stochastically modified.
+        """
+        super().__init__()
+        self.desc = "A stochastic pattern generator"
+
+    def __call__(self, seed=None, verbose=False):
+        """
+        Generate a stochastic realization of the spiking pattern.
+
+        Returns a new version of the base pattern where each bit has been
+        independently flipped with probability self.p_flip. The flip operation
+        preserves the marginal frequency while introducing temporal and spatial
+        variability in the pattern structure.
+
+        Returns:
+            torch.Tensor: Stochastic realization of the spiking pattern
+                         with same dimensions as base pattern
+        """
+        return flip_bits(self.frozen_target, p_flip=self.opt.p_flip, seed=seed, verbose=verbose)
+
+
+
 class HD_SNN(nn.Module):
     def __init__(self, opt, pattern_object):
         super().__init__()
@@ -164,23 +246,8 @@ class HD_SNN(nn.Module):
                 loss_val, precision, recall, f1_score = [], [], [], []
 
 def load(opt, model_filename, pattern_object=None):
-    # ``pattern_object`` must be supplied when calling this helper from a
-    # module context, because the spiking-pattern classes live in a notebook
-    # (08_mnesis_generative_model.ipynb).  When none is provided we fall back
-    # to importing the pattern generator from the standalone module form of
-    # that notebook, raising a clear error if it cannot be found.
     if pattern_object is None:
-        try:
-            from mnesis_generative_model import StochasticSpikingPattern
-            pattern_object = StochasticSpikingPattern()
-        except ImportError as e:
-            raise ImportError(
-                "load() was called without a `pattern_object` and the pattern "
-                "generator class could not be imported from "
-                "`mnesis_generative_model`. Please pass an instantiated pattern "
-                "object explicitly, e.g. "
-                "load(opt, model_filename, pattern_object=StochasticSpikingPattern())."
-            ) from e
+        pattern_object = StochasticSpikingPattern()
 
     hd = HD_SNN(opt, pattern_object=pattern_object)
     hd.net.to(hd.opt.device)
