@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import SubplotParams
 import seaborn as sns
 import pandas as pd
-
+import datetime
 # --- Configuration & Paths ---
 data_cache = Path('../cached_data')
 data_cache.mkdir(exist_ok=True)
@@ -69,23 +69,19 @@ def printfig(fig, name, fig_width, fig_height=None, exts=['pdf', 'png', 'svg'], 
             fig.savefig(filename, dpi=dpi_exp, bbox_inches=bbox, transparent=True)
 
 def flip_bits(a, p_flip, seed=None, verbose=False):
-    \"\"\"
-    Flip bits in a tensor with probability p_flip while preserving marginal frequency.
-    \"\"\"
     generator = torch.Generator(device=a.device)
     if seed is None:
         seed = generator.seed()
     else:
         generator.manual_seed(seed)
-    
     mask = torch.bernoulli(torch.ones_like(a) * p_flip, generator=generator)
     if verbose:
-        print(f\"Flipping {mask.sum().item()} bits out of {a.numel()} (p_flip={p_flip}, seed={seed}), {a.mean().item():.3e} -> {torch.where(mask == 1., 1 - a, a).mean().item():.3e}\")
+        print(f"Flipping {mask.sum().item()} bits out of {a.numel()} (p_flip={p_flip}, seed={seed}), {a.mean().item():.3e} -> {torch.where(mask == 1., 1 - a, a).mean().item():.3e}")
     flipped = torch.bernoulli(torch.ones_like(a) * a.mean(), generator=generator)
     return torch.where(mask == 1., flipped, a)
 
 def stop(): 
-    assert False, \"Temporary end of the road\"
+    assert False, "Temporary end of the road"
 
 def approx_equals(series, value, rtol=1e-6, atol=1e-12):
     try:
@@ -122,4 +118,3 @@ def get_cosine_schedule_with_warmup(optimizer, num_warmup_epochs, num_epochs, re
             cosine_decay = 0.5 * (1 + np.cos(np.pi * progress))
             return (cosine_decay + rel_final_lr) / (1 + rel_final_lr)
     return LambdaLR(optimizer, lr_lambda, last_epoch=-1)
-
