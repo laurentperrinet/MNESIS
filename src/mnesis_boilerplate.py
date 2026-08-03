@@ -1,4 +1,5 @@
 from pathlib import Path
+from dataclasses import dataclass, asdict, field
 import os
 import torch
 import torch.nn as nn
@@ -118,3 +119,61 @@ def get_cosine_schedule_with_warmup(optimizer, num_warmup_epochs, num_epochs, re
             cosine_decay = 0.5 * (1 + np.cos(np.pi * progress))
             return (cosine_decay + rel_final_lr) / (1 + rel_final_lr)
     return LambdaLR(optimizer, lr_lambda, last_epoch=-1)
+
+loss_fn = SpikeF1scoreLoss()
+
+@dataclass
+class Params:
+    """Configuration describing a run of the MNESIS spiking-neural network.
+
+    This used to be defined in the ``05_MNESIS_parameters.ipynb`` notebook. It
+    now lives in :mod:`mnesis_boilerplate` so that it can be imported directly
+    by every downstream notebook / module (``from mnesis_boilerplate import
+    Params, asdict``), matching the behaviour of the original ``%run`` chain.
+    """
+    datetag: str = datetag  # noqa: TID251 - intentional default from config
+
+    N_neuron: int = 1024 // DEBUG        # number of presynaptic inputs
+    num_delay: int = 41                  # number of timesteps in SM, must be a odd number for convolutions
+    N_pattern: int = 16 // DEBUG         # number of spiking motifs
+    N_time: int = 1000 // DEBUG          # number of timebins for the WM patterns
+    N_pretime: int = 50                  # number of timebins for spontaneous activity before and after the stimulus
+    p_A: float = 0.00016                 # prior probability of firing for postsynaptic raster plot (spike per timebin)
+    p_flip: float = 0.01                 # the default probability of flipping a bit in the stochastic pattern generator
+    seed: int = 2018                     # seed
+    device = device
+
+    # network
+    lif_beta: float = 0.8
+    lif_threshold: float = 0.80
+    learn_beta: bool = False
+    learn_threshold: bool = False
+    do_pinv: bool = True
+    do_deconv: bool = True
+
+    # learning
+    num_epochs: int = 256 // DEBUG
+    num_warmup_epochs: int = 16          # 2**4
+    base_lr: float = 20.0e-3
+    final_lr: float = 400.e-6
+    delta1: float = 20.e-3
+    delta2: float = 20.e-6
+    dropout: float = 0.10
+    alpha_surrogate: float = 12.0
+    surrogate_name: str = "FastSigmoid"
+    loss_name: str = "SpikeF1scoreLoss"  # 'MSELoss' #'L1Loss'
+    reset_mechanism: str = "subtract"    # "zero"
+    optimizer: str = "sgd"              # 'adamw' #adam
+
+    # figures
+    verbose: bool = False                # Displays more verbose output.
+    fig_width: float = 15                # width of figure
+    fig_height: float = 9                # width of figure
+    phi: float = 1.61803                 # beauty is gold
+    N_time_show: int = 512               # number of time points to show in plots
+    N_neuron_show: int = 200             # number of SM to show in plots
+    N_scan: int = 35 // DEBUG + 1        # number of values to scan
+
+    def __post_init__(self):
+        torch.manual_seed(self.seed)
+        np.random.seed(self.seed)

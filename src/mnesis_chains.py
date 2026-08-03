@@ -1,4 +1,7 @@
-from 01_MNESIS_boilerplate import *
+from mnesis_boilerplate import (
+    torch, np, nn, OrderedDict, surrogate, snn, snn_utils,
+    get_scores, get_cosine_schedule_with_warmup, SpikeF1scoreLoss,
+)
 
 class HD_SNN(nn.Module):
     def __init__(self, opt, pattern_object):
@@ -110,7 +113,7 @@ class HD_SNN(nn.Module):
         elif self.opt.loss_name == 'MSELoss':
             loss_fn = nn.MSELoss()
 
-        self.net = self.net.to(device)
+        self.net = self.net.to(self.opt.device)
         optimizer_dict = dict(lr=self.opt.base_lr)
         if self.opt.optimizer=='adam': 
             optimizer = torch.optim.Adam(self.net.parameters(), betas=(1-self.opt.delta1, 1-self.opt.delta2), **optimizer_dict)
@@ -161,14 +164,24 @@ class HD_SNN(nn.Module):
                 loss_val, precision, recall, f1_score = [], [], [], []
 
 def load(opt, model_filename, pattern_object=None):
-    # In notebooks, StochasticSpikingPattern is usually available.
+    # ``pattern_object`` must be supplied when calling this helper from a
+    # module context, because the spiking-pattern classes live in a notebook
+    # (08_mnesis_generative_model.ipynb).  When none is provided we fall back
+    # to importing the pattern generator from the standalone module form of
+    # that notebook, raising a clear error if it cannot be found.
     if pattern_object is None:
         try:
-            # Use a dynamic import or generic pattern if the class is not found
             from mnesis_generative_model import StochasticSpikingPattern
-        except ImportError:
-            pass
-            
+            pattern_object = StochasticSpikingPattern()
+        except ImportError as e:
+            raise ImportError(
+                "load() was called without a `pattern_object` and the pattern "
+                "generator class could not be imported from "
+                "`mnesis_generative_model`. Please pass an instantiated pattern "
+                "object explicitly, e.g. "
+                "load(opt, model_filename, pattern_object=StochasticSpikingPattern())."
+            ) from e
+
     hd = HD_SNN(opt, pattern_object=pattern_object)
     hd.net.to(hd.opt.device)
     model_state_dict = torch.load(model_filename, map_location=torch.device(hd.opt.device))
