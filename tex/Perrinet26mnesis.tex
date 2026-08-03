@@ -61,6 +61,34 @@ Working Memory with Polychronous Chains
 
 \begin{document}
 \maketitle
+
+\begin{abstract}
+Working memory --- the ability to store and recall precise temporal patterns of
+neural activity --- remains an open challenge for spiking neural networks (SNNs).
+We propose a recurrent SNN of $N=1024$ neurons in which each synapse is equipped
+with $D = 41$ heterogeneous delays, parameterised as a weight tensor
+$\mathbf{W} \in \mathbb{R}^{N \times N \times D}$ and trained end-to-end with
+surrogate-gradient backpropagation through time. Each stored pattern is
+represented as a sequential chain of overlapping Spiking Motifs: contiguous
+context windows of length $D$ that uniquely predict the activity at the next time
+step. A closed-form Hebbian initialisation, derived by deconvolving the LIF
+membrane response and targeting a sub-threshold membrane potential value superior
+to the threshold $\vartheta$, achieves an accuracy as measured by the $F_1$-score
+relative close to that expected when noise is present and before any gradient
+step on a benchmark of $M=16$ patterns of duration $T=1000\,\mathrm{ms}$. With
+learning, the network tolerates up to $25\%$ bit-flip noise, and reaches $F_1$
+scrores closer to the value expected from the noise level. These results
+demonstrate attractor-like retrieval dynamics consistent with hippocampal pattern
+completion. These results show that heterogeneous synaptic delays are an
+efficient and scalable substrate for working memory in SNNs, with direct
+implications for neuromorphic edge deployment.
+\end{abstract}
+\noindent\textbf{Keywords:} Spiking Neural Networks, Polychronization; Heterogeneous delays, Working memory.
+
+\section{Introduction}
+%----------------------------%
+% review biol cyb : The authors' strategy of subdividing a long motif into a series of shorter ones and then connecting a series of subnetworks to detect the long motif reminds this referee of the architecture of the original McCulloch-Pitts network (McCulloch, Warren S., and Walter Pitts. "A logical calculus of the ideas immanent in nervous activity." The bulletin of mathematical biophysics 5.4 (1943): 115-133.) Is there a natural way to interpret the authors' construction (which is in a continuous time neural network model) as a continuous time version of an analogous McCulloch-Pitts (hence, discrete time) model?
+%----------------------------%
 \begin{figure}%[t]
   % \includegraphics[width=\linewidth]{izhikevich_rec.pdf}%
   \begin{adjustbox}{width=\linewidth}
@@ -337,7 +365,6 @@ Each weight $w_{i, j, d}$ is proportional to the cross-correlation between the d
     line cap=round,
     line join=round,
     font=\sffamily,
-    box/.style={rounded corners=2pt, draw=#1, fill=#1!12, line width=0.9pt, minimum width=2.1cm, minimum height=0.9cm, inner sep=1pt},
     rect/.style={draw=#1, fill=#1!10, line width=0.9pt, rounded corners=2.5pt, minimum width=2.1cm, minimum height=0.9cm, inner sep=1pt},
     spike/.style={draw=black, line width=1.05pt, -{Stealth[length=2.8mm,width=2.2mm]}},
     beta/.style={draw=cyan!60!black, line width=1.2pt, -{Stealth[length=2.5mm,width=2.0mm]}},
