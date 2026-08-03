@@ -63,25 +63,7 @@ Working Memory with Polychronous Chains
 \maketitle
 
 \begin{abstract}
-Working memory --- the ability to store and recall precise temporal patterns of
-neural activity --- remains an open challenge for spiking neural networks (SNNs).
-We propose a recurrent SNN of $N=1024$ neurons in which each synapse is equipped
-with $D = 41$ heterogeneous delays, parameterised as a weight tensor
-$\mathbf{W} \in \mathbb{R}^{N \times N \times D}$ and trained end-to-end with
-surrogate-gradient backpropagation through time. Each stored pattern is
-represented as a sequential chain of overlapping Spiking Motifs: contiguous
-context windows of length $D$ that uniquely predict the activity at the next time
-step. A closed-form Hebbian initialisation, derived by deconvolving the LIF
-membrane response and targeting a sub-threshold membrane potential value superior
-to the threshold $\vartheta$, achieves an accuracy as measured by the $F_1$-score
-relative close to that expected when noise is present and before any gradient
-step on a benchmark of $M=16$ patterns of duration $T=1000\,\mathrm{ms}$. With
-learning, the network tolerates up to $25\%$ bit-flip noise, and reaches $F_1$
-scrores closer to the value expected from the noise level. These results
-demonstrate attractor-like retrieval dynamics consistent with hippocampal pattern
-completion. These results show that heterogeneous synaptic delays are an
-efficient and scalable substrate for working memory in SNNs, with direct
-implications for neuromorphic edge deployment.
+Working memory --- the ability to store and recall precise temporal patterns of neural activity --- remains an open challenge for spiking neural networks (SNNs). We propose a recurrent SNN of $N=1024$ neurons in which each synapse is equipped with $D = 41$ heterogeneous delays, parameterised as a weight tensor $\mathbf{W} \in \mathbb{R}^{N \times N \times D}$ and trained end-to-end with surrogate-gradient backpropagation through time. Each stored pattern is represented as a sequential chain of overlapping Spiking Motifs: contiguous context windows of length $D$ that uniquely predict the activity at the next time step. A closed-form Hebbian initialisation, derived by deconvolving the LIF membrane response and targeting a sub-threshold membrane potential value superior to the threshold $\vartheta$, achieves an accuracy as measured by the $F_1$-score relative close to that expected when noise is present and before any gradient step on a benchmark of $M=16$ patterns of duration $T=1000\,\mathrm{ms}$. With learning, the network tolerates up to $25\%$ bit-flip noise, and reaches $F_1$ scrores closer to the value expected from the noise level. These results demonstrate attractor-like retrieval dynamics consistent with hippocampal pattern completion. These results show that heterogeneous synaptic delays are an efficient and scalable substrate for working memory in SNNs, with direct implications for neuromorphic edge deployment.
 \end{abstract}
 \noindent\textbf{Keywords:} Spiking Neural Networks, Polychronization; Heterogeneous delays, Working memory.
 
@@ -93,8 +75,8 @@ implications for neuromorphic edge deployment.
   % \includegraphics[width=\linewidth]{izhikevich_rec.pdf}%
   \begin{adjustbox}{width=\linewidth}
   \begin{tikzpicture}[
-    x=1cm,
-    y=1cm,
+    x=1.2cm,
+    y=1.2cm,
     >=Stealth,
     line cap=round,
     line join=round,
@@ -106,7 +88,7 @@ implications for neuromorphic edge deployment.
     greenlink/.style={draw=green!40!black, line width=1.7pt},
     spike/.style={line width=3.3pt, draw=#1},
   ]
-
+ 
   \def\xLeftPanelLabel{-0.15}
   \def\xPostLabel{4.15}
   \def\xRightShift{7.4}
@@ -126,27 +108,33 @@ implications for neuromorphic edge deployment.
   \def\greenTargetY{\redSpikeFootY}
   \pgfmathsetmacro{\brownTargetX}{\redSpikeX}
   \pgfmathsetmacro{\greenTargetX}{\greenSpikeX}
-
+ 
+  % Orange trigger spikes parameters
+  \def\oxOne{0.90} \def\oyFootOne{0.15} \def\oyTopOne{0.74}
+  \def\oxTwo{2.95} \def\oyFootTwo{1.15} \def\oyTopTwo{1.98}
+  \def\oxThree{4.85} \def\oyFootThree{2.02} \def\oyTopThree{2.83}
+  \def\oxFour{7.95} \def\oyFootFour{3.02} \def\oyTopFour{3.84}
+ 
   % Left panel
   \node[anchor=south west, font=\itshape\Large] at (\xLeftPanelLabel,4.55) {pre};
   \node[anchor=south west, font=\itshape\Large] at (\xPostLabel,4.55) {post};
-
+ 
   \coordinate (a1) at (0,4);
   \coordinate (a2) at (0,3);
   \coordinate (a3) at (0,2);
   \coordinate (a4) at (0,1);
   \coordinate (a5) at (0,0);
-
+ 
   \coordinate (b1) at (4.55,4);
   \coordinate (b2) at (4.55,3);
   \coordinate (b3) at (4.55,2);
   \coordinate (b4) at (4.55,1);
   \coordinate (b5) at (4.55,0);
-
+ 
   \foreach \n in {1,...,5} {
     \draw[densely dotted, green!50!black] (a\n) -- (b\n);
   }
-
+ 
   \draw[brownlink] (a2) -- node[midway, sloped, above, fill=white, inner sep=1pt,
   font=\small] {4 ms} (b1);
   \draw[brownlink] (a3) -- node[midway, sloped, above, fill=white, inner sep=1pt,
@@ -155,7 +143,7 @@ implications for neuromorphic edge deployment.
   font=\small] {6 ms} (b1);
   \draw[brownlink] (a5) -- node[midway, sloped, above, fill=white, inner sep=1pt,
   font=\small] {3 ms} (b1);
-
+ 
   \draw[greenlink] (a2) -- node[midway, sloped, below, fill=white, inner sep=1pt,
   font=\small] {1 ms} (b5);
   \draw[greenlink] (a3) -- node[midway, sloped, below, fill=white, inner sep=1pt,
@@ -164,90 +152,74 @@ implications for neuromorphic edge deployment.
   font=\small] {3 ms} (b5);
   \draw[greenlink] (a5) -- node[midway, sloped, above, fill=white, inner sep=1pt,
   font=\small] {8 ms} (b5);
-
+ 
   \foreach \i/\p in {1/a1,2/a2,3/a3,4/a4,5/a5} {
     \node[neuron] at (\p) {$a_{\i}$};
   }
   \foreach \i/\p in {1/b1,2/b2,3/b3,4/b4,5/b5} {
     \node[neuron] at (\p) {$b_{\i}$};
   }
-
+ 
   % Right panel
   \begin{scope}[xshift=7.4cm]
     \coordinate (R0) at (0,0);
     \coordinate (R1) at (12.0,0);
     \coordinate (top) at (0,4.8);
-
+ 
     \draw[panelbox, draw=green!45!black, opacity=.35] (0.15,0.2) rectangle (10.15,
-4.8);
+S4.8);
     \draw[panelbox, draw=black!35!red, opacity=.35] (2.0,0.2) rectangle (11.3,4.9)
 ;
-
+ 
     \foreach \y in {0,1,2,3,4} {
       \draw[layer] (0,\y) -- (11.8,\y);
     }
-
+ 
     % Orange trigger spikes
-    \draw[orange!90!black, line width=3.5pt] (0.90,0.15) -- (0.90,0.74);
-    \draw[orange!90!black, line width=3.5pt] (2.95,1.15) -- (2.95,1.98);
-    \draw[orange!90!black, line width=3.5pt] (4.85,2.02) -- (4.85,2.83);
-    \draw[orange!90!black, line width=3.5pt] (7.95,3.02) -- (7.95,3.84);
-
+    \draw[orange!90!black, line width=3.5pt] (\oxOne,\oyFootOne) -- (\oxOne,\oyTopOne);
+    \draw[orange!90!black, line width=3.5pt] (\oxTwo,\oyFootTwo) -- (\oxTwo,\oyTopTwo);
+    \draw[orange!90!black, line width=3.5pt] (\oxThree,\oyFootThree) -- (\oxThree,\oyTopThree);
+    \draw[orange!90!black, line width=3.5pt] (\oxFour,\oyFootFour) -- (\oxFour,\oyTopFour);
+ 
     % Green propagated spikes
-    \draw[green!45!black, line width=3.5pt] (8.90,0.18) -- (8.90,0.82);
-
+    \draw[green!45!black, line width=3.5pt] (\greenSpikeX,\greenSpikeFootY) -- (\greenSpikeX,\greenSpikeTopY);
+ 
     % Red output spike
-    \draw[red!90!black, line width=4.4pt] (10.85,4.06) -- (10.85,4.98);
-
-    % Brown branches to the final spike
-    \draw[brownlink] (0.90,0.74) -- (10.85,4.65);
-    \draw[brownlink] (2.95,1.98) -- (10.85,4.65);
-    \draw[brownlink] (4.85,2.83) -- (10.85,4.65);
-    \draw[brownlink] (7.95,3.84) -- (10.85,4.65);
-
+    \draw[red!90!black, line width=4.4pt] (\redSpikeX,\redSpikeFootY) -- (\redSpikeX,\redSpikeTopY);
+ 
+    % Brown branches to the final spike (stems from foot)
+    \draw[brownlink] (\oxOne,\oyFootOne) -- (\redSpikeX,4.65);
+    \draw[brownlink] (\oxTwo,\oyFootTwo) -- (\redSpikeX,4.65);
+    \draw[brownlink] (\oxThree,\oyFootThree) -- (\redSpikeX,4.65);
+    \draw[brownlink] (\oxFour,\oyFootFour) -- (\redSpikeX,4.65);
+ 
     % Green branches converging on the lower output spike
-    \draw[greenlink] (0.90,0.35) -- (8.90,0.34);
-    \draw[greenlink] (2.95,1.10) -- (8.90,0.42);
-    \draw[greenlink] (4.85,2.02) -- (8.90,0.47);
-    \draw[greenlink] (7.95,3.02) -- (8.90,0.58);
-    \draw[greenlink] (8.90,0.58) -- (10.85,4.35);
-
+    \draw[greenlink] (\oxOne,\oyFootOne) -- (\greenSpikeX,\greenSpikeFootY);
+    \draw[greenlink] (\oxTwo,\oyFootTwo) -- (\greenSpikeX,\greenSpikeFootY);
+    \draw[greenlink] (\oxThree,\oyFootThree) -- (\greenSpikeX,\greenSpikeFootY);
+    \draw[greenlink] (\oxFour,\oyFootFour) -- (\greenSpikeX,\greenSpikeFootY);
+    \draw[greenlink] (\greenSpikeX,\greenSpikeTopY) -- (\redSpikeX,4.35);
+ 
     % D marker and time axis
-    \draw[<->, line width=1.1pt] (0.0,-0.16) -- node[below, font=\Large] {$D = 41\,\mathrm{ms}$} (8.9,-0.16);
+    \draw[<->, line width=1.1pt] (0.0,-0.16) -- node[below, font=\Large] {$D = 41\,\mathrm{ms}$} (\greenSpikeX,-0.16);
     \draw[->, line width=1.3pt] (0.0,-0.65) -- (12.4,-0.65) node[below, font=\Large] {time (ms)};
-
+ 
   \end{scope}
   \end{tikzpicture}
   \end{adjustbox}
+
   \caption{%
     \textbf{Working memory as a chained sequential spike prediction via heteroge
 neous delays.}
     %
-    \emph{Left:} A recurrent HD-SNN of five neurons numbered $1$--$5$, connected
- by two subsets of recurrent connections that define two Spiking Motifs from the
- pre-synaptic side (neurons $a$) to the post-synaptic side (neurons $b$): dark-r
-ed connections from $a_2$, $a_3$, $a_4$, and $a_5$ target $b_1$ with delays $4$,
- $9$, $6$, $3$\,ms; green connections from $a_1$, $a_2$, $a_3$, $a_4$ target $b_
-5$ with delays $1$, $6$, $3$, $8$\,ms. %
-    \emph{Right:} Raster plot illustrating how the network predicts successive s
-pikes from a past context window.
+    \emph{Left:} A recurrent HD-SNN of five neurons numbered $1$--$5$, connected by two subsets of recurrent connections that define two Spiking Motifs from the pre-synaptic side (neurons $a$) to the post-synaptic side (neurons $b$): dark-r ed connections from $a_2$, $a_3$, $a_4$, and $a_5$ target $b_1$ with delays $4$, $9$, $6$, $3$\,ms; green connections from $a_1$, $a_2$, $a_3$, $a_4$ target $b_ 5$ with delays $1$, $6$, $3$, $8$\,ms. %
+    \emph{Right:} Raster plot illustrating how the network predicts successive s pikes from a past context window.
     %
-    \emph{Step~1 --- first prediction (green dashed box):} the orange input spik
-es emitted at staggered times by $a_2$--$a_5$ within the first context window (d
-ashed green box) constitute a heterogeneous Spiking Motif. The green delays are
-tuned so that all four spikes converge \emph{synchronously} at $b_5$, crossing t
-he firing threshold and producing the green output spike at a precise time. 
+    \emph{Step~1 --- first prediction (green dashed box):} the orange input spik es emitted at staggered times by $a_2$--$a_5$ within the first context window (dashed green box) constitute a heterogeneous Spiking Motif. The green delays are tuned so that all four spikes converge \emph{synchronously} at $b_5$, crossing the firing threshold and producing the green output spike at a precise time. 
     %
-    \emph{Step~2 --- second prediction (dark-red dashed box):} the green spike o
-f $a_5$ re-enters the network as a new input and, together with the spikes now v
-isible in the shifted context window (dark-red dashed box), is routed through th
-e dark-red delays in order to converge synchronously on $b_1$, generating a new
-output spike.
+    \emph{Step~2 --- second prediction (dark-red dashed box):} the green spike o f $a_5$ re-enters the network as a new input and, together with the spikes now visible in the shifted context window (dark-red dashed box), is routed through the dark-red delays in order to converge synchronously on $b_1$, generating a new output spike.
     %
-    Because output spikes re-enter the same population, detecting one Spiking Mo
-tif provides the context for predicting the next spike in the sequence, implemen
-ting working memory as a chain of temporal predictions grounded in the preceding
- context window.
+    Because output spikes re-enter the same population, detecting one Spiking Motif provides the context for predicting the next spike in the sequence, implementing working memory as a chain of temporal predictions grounded in the preceding context window.
   }
   \label{fig:izhikevich}
 \end{figure}
@@ -370,70 +342,70 @@ Each weight $w_{i, j, d}$ is proportional to the cross-correlation between the d
     beta/.style={draw=cyan!60!black, line width=1.2pt, -{Stealth[length=2.5mm,width=2.0mm]}},
     weights/.style={draw=blue!80!black, line width=1.3pt, -{Stealth[length=2.6mm,width=2.0mm]}},
     thr/.style={draw=orange!55!brown!85!black, line width=1.3pt, -{Stealth[length=2.6mm,width=2.0mm]}},
+    labelbeta/.style={above, font=\large, text=cyan!60!black, midway},
+    labelweights/.style={above, font=\large, text=blue!80!black, pos=0.50},
+    labelthr/.style={above, sloped, font=\large, text=orange!55!brown!85!black, midway},
   ]
-
+ 
   \def\colSep{3.55}
   \def\xY{-2.05}
   \def\iY{-0.55}
   \def\uY{0.95}
   \def\sY{2.45}
+  \newcommand{\colpos}[2]{({\colSep*#1,#2})}
   \def\tLabelY{-3.0}
   \def\ellipsisX{10.95}
   \def\blueRise{0.95}
   \def\blueRun{1.15}
-
+ 
   % Positions for the three time steps
-  \foreach \i [evaluate=\i as \x using \i*\colSep] in {0,1,2} {
-    \coordinate (x\i) at (\x,\xY);
-    \coordinate (in\i) at (\x,\iY);
-    \coordinate (u\i) at (\x,\uY);
-    \coordinate (s\i) at (\x,\sY);
-  }
-
+  % (Removed manual coordinate definitions)
+ 
   % Dotted recurrent shell over U and S layers
   \path[draw=black, dashed, line width=1.15pt, rounded corners=0.58cm, fill=black!4, fill opacity=0.20] (-1.15,-0.05) rectangle (7.75,3.15);
-
+ 
   % Layer nodes
   \foreach \i in {0,1,2} {
-    \node[rect=blue!55!black] at (x\i) {X[\i]};
-    \node[rect=cyan!60!black] at (in\i) {$I_{\mathrm{in}}[\i]$};
-    \node[rect=orange!70!brown!85!black] at (s\i) {S[\i]};
-    \node[rect=red!55!black] at (u\i) {U[\i]};
+    \node[rect=blue!55!black] at (\colSep*\i, \xY) {X[\i]};
+    \node[rect=cyan!60!black] at (\colSep*\i, \iY) {$I_{\mathrm{in}}[\i]$};
+    \node[rect=orange!70!brown!85!black] at (\colSep*\i, \sY) {S[\i]};
+    \node[rect=red!55!black] at (\colSep*\i, \uY) {U[\i]};
   }
-
+ 
   % Vertical input chain
   \foreach \i in {0,1,2} {
-    \draw[spike] (x\i.north) -- node[midway, right=2pt, font=\large] {$W_0$} (in\i.south);
-    \draw[spike] (in\i.north) -- (u\i.south);
-    \draw[spike] (u\i.north) -- (s\i.south);
-    \draw[spike] (s\i.north) -- ++(0,0.6);
+    \draw[spike] (\colSep*\i, \xY) -- node[midway, right=2pt, font=\large] {$W_0$} (\colSep*\i, \iY);
+    \draw[spike] (\colSep*\i, \iY) -- (\colSep*\i, \uY);
+    \draw[spike] (\colSep*\i, \uY) -- (\colSep*\i, \sY);
+    \draw[spike] (\colSep*\i, \sY) -- ++(0,0.6);
   }
-
+ 
   % Recurrent beta and threshold branches
   \foreach \i [evaluate=\i as \j using int(\i+1)] in {0,1} {
-    \draw[beta] (u\i.east) -- node[above, font=\large, text=cyan!60!black, midway] {$\beta$} (u\j.west);
-    \draw[thr] (s\i.east) -- node[above, sloped, font=\large, text=orange!55!brown!85!black, midway] {$-U_{\mathrm{thr}}$} (u\j.west);
+    \draw[beta] (\colSep*\i, \uY) -- node[labelbeta] {$\beta$} (\colSep*\j, \uY);
+    \draw[thr] (\colSep*\i, \sY) -- node[labelthr] {$-U_{\mathrm{thr}}$} (\colSep*\j, \uY);
   }
-
+ 
   % Input weights between successive columns
-  \draw[weights] (-1.55,-1.25) -- node[above, font=\large, text=blue!80!black, pos=0.50] {$W_{-1}$} (in0.west);
-  \draw[weights, shorten <=1.5pt, shorten >=1.5pt] (x0.east) -- node[above, font=\large, text=blue!80!black, pos=0.50] {$W_{-1}$} (in1.west);
-  \draw[weights, shorten <=1.5pt, shorten >=1.5pt] (x1.east) -- node[above, font=\large, text=blue!80!black, pos=0.50] {$W_{-1}$} (in2.west);
-  \draw[weights] (x2.east) -- ++(\blueRun,\blueRise);
-
+  \draw[weights] (-1.55,-1.25) -- node[labelweights] {$W_{-1}$} (0, \iY);
+  \draw[weights, shorten <=1.5pt, shorten >=1.5pt] (\colSep*0, \xY) -- node[labelweights] {$W_{-1}$} (\colSep*1, \iY);
+  \draw[weights, shorten <=1.5pt, shorten >=1.5pt] (\colSep*1, \xY) -- node[labelweights] {$W_{-1}$} (\colSep*2, \iY);
+  \draw[weights] (\colSep*2, \xY) -- ++(\blueRun,\blueRise);
+ 
   % Time labels
   \node[font=\Large] at (0,\tLabelY) {$t = 0$};
   \node[font=\Large] at (\colSep,\tLabelY) {$t = 1$};
   \node[font=\Large] at (2*\colSep,\tLabelY) {$t = 2$};
   \node[font=\Large] at (\ellipsisX,0.0) {$\cdots$};
   \node[font=\Large] at (\ellipsisX,1.0) {$\cdots$};
-
+ 
   % Top arrows and labels
   \node[font=\Large] at (\ellipsisX,2.85) {$\cdots$};
-
+ 
   % Clip-friendly top border for the dashed envelope
   \path[use as bounding box] (-1.7,-3.35) rectangle (9.8,3.55);
   \end{tikzpicture}%
+
   }
     \hfill
     \adjustbox{valign=t}{\includegraphics[width=0.52\textwidth]{pattern.pdf}}
