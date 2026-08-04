@@ -22,6 +22,24 @@ DEBUG = 1 # production
 if DEBUG > 1:
     print(f'running in debug mode with DEBUG = {DEBUG}')
 
+datetag = '2026-07-11' # new run with new parameters from the camera ready
+print(f"datetag = '{datetag}'")
+
+# --- Torch Setup ---
+torch.set_float32_matmul_precision("medium")
+torch.set_default_dtype(torch.float32)
+torch.set_printoptions(precision=3, linewidth=140, sci_mode=False)
+torch.autograd.set_detect_anomaly(True)
+
+if torch.backends.mps.is_available():
+    device = torch.device('mps')
+elif torch.cuda.is_available():
+    device = torch.device('cuda')
+    print(f"CUDA: {torch.cuda.is_available()}, Device: {torch.cuda.get_device_name(0)}")
+else:
+    device = torch.device('cpu')
+print(f'Using device: {device}')
+
 
 @dataclass
 class Params:
@@ -88,24 +106,6 @@ figpath = Path('../figures')
 if os.environ.get("USER") == "uvb28bo": 
     figpath = None # Jean Zay
 
-
-datetag = '2026-07-11' # new run with new parameters from the camera ready
-print(f"datetag = '{datetag}'")
-
-# --- Torch Setup ---
-torch.set_float32_matmul_precision("medium")
-torch.set_default_dtype(torch.float32)
-torch.set_printoptions(precision=3, linewidth=140, sci_mode=False)
-torch.autograd.set_detect_anomaly(True)
-
-if torch.backends.mps.is_available():
-    device = torch.device('mps')
-elif torch.cuda.is_available():
-    device = torch.device('cuda')
-    print(f"CUDA: {torch.cuda.is_available()}, Device: {torch.cuda.get_device_name(0)}")
-else:
-    device = torch.device('cpu')
-print(f'Using device: {device}')
 
 # --- Constants ---
 phi = np.sqrt(5)/2 + 1/2
