@@ -15,7 +15,7 @@ class SpikingPattern:
     """Generate a frozen spiking pattern based on a Bernoulli process."""
 
     def __init__(self):
-        self.desc = "A simple pattern generator"
+        self.desc = "Frozen Spike pattern generator"
         self.is_periodic = False
 
     def init(self, opt, verbose=False):
@@ -55,7 +55,7 @@ class StochasticSpikingPattern(SpikingPattern):
         a "balanced bit flipping" operation. 
         """
         super().__init__()
-        self.desc = "A stochastic spike pattern generator"
+        self.desc = "Stochastic spike pattern generator"
 
     def __call__(self, seed=None, verbose=False):
         """
