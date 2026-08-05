@@ -1,21 +1,13 @@
-from mnesis_boilerplate import (
-    torch, np, nn, OrderedDict, surrogate, snn, snn_utils,
-    get_scores, get_cosine_schedule_with_warmup, SpikeF1scoreLoss,
-)
+"""Spiking-pattern generators and the HD_SNN network class for MNESIS experiments.
 
-
-"""Spiking-pattern generators (extracted from ``08_MNESIS_generative-model.ipynb``).
-
-These classes used to live in a notebook shared in the interactive ``%run``
-workflow.  They are collected here in a plain module so that they can be
-imported programmatically (e.g. by :func:`mnesis_chains.load`) and unit-tested
-independently.
-
-The behaviour and public API are unchanged.
+Provides pattern generators (`SpikingPattern`, `StochasticSpikingPattern`) 
+and the core network (`HD_SNN`) with training and inference methods.
 """
 
 from mnesis_boilerplate import (
-    torch, np, DEBUG, i_pattern, phi, figpath, printfig, flip_bits, Params,
+    torch, np, nn, OrderedDict, surrogate, snn, snn_utils,
+    get_scores, get_cosine_schedule_with_warmup, SpikeF1scoreLoss,
+    DEBUG, i_pattern, phi, figpath, printfig, flip_bits, Params,
 )
 
 
