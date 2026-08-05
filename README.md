@@ -29,24 +29,24 @@ Working memory in biological neural circuits relies on precise spike timing rath
 
 ```
 MNESIS/
-├── src/                          # All Jupyter notebooks (numbered pipeline)
-│   ├── 01_MNESIS_boilerplate.ipynb           # Imports, device setup, shared utilities
-│   ├── 05_MNESIS_parameters.ipynb            # Params dataclass, hyperparameter defaults
-│   ├── 08_MNESIS_generative-model.ipynb      # Generative model for synthetic patterns
-│   ├── 10_MNESIS_polychronous-chains.ipynb   # HD_SNN class, analytical initialisation
-│   ├── 11_MNESIS_learn-synthetic.ipynb       # Training on synthetic patterns
-│   ├── 13_MNESIS_testing-inference.ipynb     # Sequential retrieval of M patterns
-│   ├── 14_MNESIS_testing-noise.ipynb         # Robustness to bit-flip noise
-│   ├── 15_MNESIS_testing-trigger-duration.ipynb  # Effect of trigger-window length
-│   ├── 16_MNESIS_testing-trigger-fraction.ipynb  # Effect of partial neuron coverage
-│   ├── 20_MNESIS_scanning-parameters.ipynb   # Parameter scans (D, T, p_A, ...)
-│   ├── 25_MNESIS_optuna.ipynb                # Hyperparameter optimisation (Optuna)
-│   ├── 30_MNESIS_learn-periodic.ipynb        # Learning and retrieval of periodic memories
-│   ├── 32_MNESIS_learn-travelling-waves.ipynb # Structured spatiotemporal travelling waves
-│   ├── 34_MNESIS_learn-Lorenz-attractor.ipynb # Chaotic trajectory encoding and recall
-│   ├── 40_MNESIS_learn-SHD.ipynb             # Spiking Heidelberg Digits experiments
-│   ├── 99_MNESIS_run-all.ipynb               # End-to-end notebook orchestrator
-│   └── requirements.txt                       # Python dependencies for notebook runs
+├── src/                           # Source code and Jupyter notebooks
+│   ├── mnesis_boilerplate.py                 # Imports, device setup, Params dataclass, utilities
+│   ├── mnesis_chains.py                      # SpikingPattern generators, HD_SNN class, analytical init
+│   └── notebooks (numbered pipeline, run sequentially):
+│       ├── 10_MNESIS_generative-model.ipynb      # Generative model for synthetic patterns
+│       ├── 11_MNESIS_learn-synthetic.ipynb       # Training on synthetic patterns
+│       ├── 13_MNESIS_testing-inference.ipynb     # Sequential retrieval of M patterns
+│       ├── 14_MNESIS_testing-noise.ipynb         # Robustness to bit-flip noise
+│       ├── 15_MNESIS_testing-trigger-duration.ipynb   # Effect of trigger-window length
+│       ├── 16_MNESIS_testing-trigger-fraction.ipynb   # Effect of partial neuron coverage
+│       ├── 20_MNESIS_scanning-parameters.ipynb # Parameter scans (D, T, p_A, ...)
+│       ├── 25_MNESIS_optuna.ipynb               # Hyperparameter optimisation (Optuna)
+│       ├── 30_MNESIS_learn-periodic.ipynb       # Learning and retrieval of periodic memories
+│       ├── 32_MNESIS_learn-travelling-waves.ipynb # Structured spatiotemporal travelling waves
+│       ├── 34_MNESIS_learn-Lorenz-attractor.ipynb # Chaotic trajectory encoding and recall
+│       ├── 40_MNESIS_learn-SHD.ipynb            # Spiking Heidelberg Digits experiments
+│       ├── 99_MNESIS_run-all.ipynb              # End-to-end notebook orchestrator
+│       └── requirements.txt                     # Python dependencies for notebook runs
 ├── figures/                      # Generated figures (PDF/PNG)
 ├── tex/                          # Paper source
 │   ├── Perrinet26mnesis.tex      # Main LaTeX source
@@ -73,19 +73,18 @@ Core dependencies: `torch`, `snntorch`, `numpy`, `scipy`, `matplotlib`, `jupyter
 
 ### Run the notebooks in order
 
-The notebooks are numbered and designed to be run sequentially. Notebooks 01, 05, and 08 set up shared infrastructure (imports, parameters, generative model) and are prerequisites for all downstream notebooks. Each notebook saves its outputs (model weights, scan results) to `cached_data/` so that downstream notebooks can load them without recomputation. Notebook 99 can orchestrate a full multi-notebook run in one place.
+The notebooks are numbered and designed to be run sequentially. They import shared infrastructure from the Python modules `mnesis_boilerplate.py` (imports, device detection, `Params` dataclass, utilities) and `mnesis_chains.py` (`HD_SNN` class, pattern generators). Each notebook saves its outputs (model weights, scan results) to `cached_data/` so that downstream notebooks can load them without recomputation. Notebook 99 can orchestrate a full multi-notebook run in one place.
 
 ```bash
 cd src
 jupyter notebook
 ```
 
-| # | Notebook | Purpose |
+| # | Notebook / Module | Purpose |
 |---|----------|---------|
-| 01 | `01_MNESIS_boilerplate.ipynb` | Shared imports, device detection (MPS / CUDA / CPU), random-seed utilities, and helper functions reused by all downstream notebooks. Run once before anything else. |
-| 05 | `05_MNESIS_parameters.ipynb` | Defines the `Params` dataclass with all hyperparameter defaults ($N$, $D$, $T$, $M$, $\beta$, $p_A$, $p_\mathrm{SM}$, $E_\mathrm{SM}$, optimiser settings, etc.). Edit this notebook to change the global configuration. |
-| 08 | `08_MNESIS_generative-model.ipynb` | Implements the generative model for synthetic sparse patterns: draws Gaussian logit maps $\ell \sim \mathcal{N}(0, E_\mathrm{SM})$, thresholds to keep the top $p_\mathrm{SM}$ fraction, convolves with the biphasic spike shape, and samples Bernoulli spike trains at rate $p_A$. Visualises the resulting patterns. |
-| 10 | `10_MNESIS_polychronous-chains.ipynb` | Defines the `HD_SNN` class and the analytical weight initialisation: Hebbian cross-correlation with LIF deconvolution, targeting $\vartheta_0 = 0.8 < \vartheta = 1$. Corresponds to the Methods section of the paper. |
+| — | `mnesis_boilerplate.py` | Shared imports, device detection (MPS / CUDA / CPU), random-seed utilities, `Params` dataclass, and helper functions reused by all downstream notebooks. |
+| — | `mnesis_chains.py` | Defines `SpikingPattern`, `StochasticSpikingPattern`, and the `HD_SNN` class with analytical weight initialisation (Hebbian cross-correlation with LIF deconvolution, targeting $\vartheta_0 = 0.8 < \vartheta = 1$). Corresponds to the Methods section of the paper. |
+| 10 | `10_MNESIS_generative-model.ipynb` | Implements the generative model for synthetic sparse patterns: draws Gaussian logit maps $\ell \sim \mathcal{N}(0, E_\mathrm{SM})$, thresholds to keep the top $p_\mathrm{SM}$ fraction, convolves with the biphasic spike shape, and samples Bernoulli spike trains at rate $p_A$. Visualises the resulting patterns. |
 | 11 | `11_MNESIS_learn-synthetic.ipynb` | Trains the network on $M = 16$ synthetic sparse patterns. Demonstrates that the analytical init alone reaches $F_1 = 1.0$; gradient training with AdamW and cosine schedule then improves noise robustness. |
 | 13 | `13_MNESIS_testing-inference.ipynb` | Concatenates all $M = 16$ patterns in sequence with $N_\mathrm{pretime} = 50$ steps of spontaneous inter-trial activity; evaluates sliding-window $F_1$ to confirm selective, cross-interference-free retrieval. |
 | 14 | `14_MNESIS_testing-noise.ipynb` | Bit-flip noise on the trigger window ($p_\mathrm{flip} \in [0, 1]$). Quantifies attractor-like robustness; $F_1 = 0.967$ at $p_\mathrm{flip} = 0.25$. |
@@ -141,11 +140,14 @@ The safety margin $\delta = \vartheta - \vartheta_0 = 0.2$ maximises surrogate g
 
 ### Training
 
-- **Loss**: $\mathcal{L} = 1 - F_1$ (harmonic mean of precision and recall, evaluated after the trigger window)
-- **Optimiser**: AdamW, cosine schedule with linear warm-up
-- **Surrogate**: fast sigmoid, sharpness $\alpha = 15$
-- **Regularisation**: dropout $p = 0.37$, weight decay $\lambda = 0$
+- **Loss**: $\mathcal{L} = 1 - F_1$ (harmonic mean of precision and recall, evaluated after the trigger window) — `SpikeF1scoreLoss`
+- **Optimiser**: SGD by default (`sgd`), configurable via `Params.optimizer` (also supports `adam`, `adamw`, `rmsprop`, `adadelta`)
+- **Surrogate**: fast sigmoid by default, sharpness $\alpha = 12$ — configurable via `Params.surrogate_name` / `Params.alpha_surrogate`
+- **Regularisation**: dropout $p = 0.10$, weight decay $\lambda = 0$
+- **LIF dynamics**: $\beta = 0.8$, $\vartheta = 0.8$, zero-reset (`subtract`)
 - **Hardware**: Apple M3 Ultra (MPS) or NVIDIA GPU (CUDA / Jean Zay GENCI)
+
+> An AI assistant was used to improve the readability and structure of this codebase — not to create it.
 
 ---
 
