@@ -111,12 +111,12 @@ def pprint(s):
     print(s)
     print(len(s)*'=')
 
-def printfig(fig, name, fig_width, fig_height=None, exts=['pdf', 'png', 'svg'], figpath=figpath, dpi_exp=None, bbox='tight', verbose=True, do_overwrite=False):
+def printfig(fig, name='', fig_width=15, fig_height=None, exts=['pdf', 'png', 'svg'], figpath=figpath, dpi_exp=None, bbox='tight', verbose=True, do_overwrite=False):
+    if fig_height is None: fig_height = fig_width/phi
+    cm = 1/2.54  # centimeters in inches
+    fig.set_size_inches((fig_width*cm, fig_height*cm))
     if figpath is not None: 
         figpath.mkdir(exist_ok=True)
-        if fig_height is None: fig_height = fig_width/phi
-        cm = 1/2.54  # centimeters in inches
-        fig.set_size_inches((fig_width*cm, fig_height*cm))
         for ext in exts:
             filename = figpath / f'{name}.{ext}'
             if filename.exists() and not do_overwrite:
@@ -133,7 +133,7 @@ def flip_bits(a, p_flip, seed=None, verbose=False):
         generator.manual_seed(seed)
     mask = torch.bernoulli(torch.ones_like(a) * p_flip, generator=generator)
     if verbose:
-        print(f"Flipping {mask.sum().item()} bits out of {a.numel()} (p_flip={p_flip}, seed={seed}), {a.mean().item():.3e} -> {torch.where(mask == 1., 1 - a, a).mean().item():.3e}")
+        print(f"Flipping {mask.sum().item()} bits out of {a.numel()} (p_flip={p_flip}, flip seed={seed}), {a.mean().item():.3e} -> {torch.where(mask == 1., 1 - a, a).mean().item():.3e}")
     flipped = torch.bernoulli(torch.ones_like(a) * a.mean(), generator=generator)
     return torch.where(mask == 1., flipped, a)
 

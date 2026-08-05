@@ -46,7 +46,7 @@ class StochasticSpikingPattern(SpikingPattern):
     is stochastically modified.
     """
 
-    def __init__(self):
+    def __init__(self): 
         """
         A stochastic spiking pattern generator that creates variable realizations
         of patterns while preserving average firing rates.
