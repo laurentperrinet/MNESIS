@@ -118,7 +118,7 @@ def pprint(s):
     print(s)
     print(len(s)*'=')
 
-def printfig(fig, name, fig_width, fig_height=None, exts=['pdf', 'png', 'svg'], figpath=figpath, dpi_exp=None, bbox='tight', verbose=True):
+def printfig(fig, name, fig_width, fig_height=None, exts=['pdf', 'png', 'svg'], figpath=figpath, dpi_exp=None, bbox='tight', verbose=True, do_overwrite=False):
     if figpath is not None: 
         figpath.mkdir(exist_ok=True)
         if fig_height is None: fig_height = fig_width/phi
@@ -126,8 +126,11 @@ def printfig(fig, name, fig_width, fig_height=None, exts=['pdf', 'png', 'svg'], 
         fig.set_size_inches((fig_width*cm, fig_height*cm))
         for ext in exts:
             filename = figpath / f'{name}.{ext}'
-            if verbose: print(f'Saving as {filename}')
-            fig.savefig(filename, dpi=dpi_exp, bbox_inches=bbox, transparent=True)
+            if filename.exists() and not do_overwrite:
+                if verbose: print(f'File {filename} already exists. Skipping save.')
+            else:
+                if verbose: print(f'Saving as {filename}')
+                fig.savefig(filename, dpi=dpi_exp, bbox_inches=bbox, transparent=True)
 
 def flip_bits(a, p_flip, seed=None, verbose=False):
     generator = torch.Generator(device=a.device)
