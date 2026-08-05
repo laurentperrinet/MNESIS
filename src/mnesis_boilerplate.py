@@ -43,15 +43,8 @@ print(f'Using device: {device}')
 
 @dataclass
 class Params:
-    """Configuration describing a run of the MNESIS spiking-neural network.
-
-    This used to be defined in the ``05_MNESIS_parameters.ipynb`` notebook. It
-    now lives in :mod:`mnesis_boilerplate` so that it can be imported directly
-    by every downstream notebook / module (``from mnesis_boilerplate import
-    Params, asdict``), matching the behaviour of the original ``%run`` chain.
-    """
-    datetag: str = datetag  # noqa: TID251 - intentional default from config
-
+    """Hyperparameters for the MNESIS spiking-neural network experiments."""
+    datetag: str = datetag  
     N_neuron: int = 1024 // DEBUG        # number of presynaptic inputs
     num_delay: int = 41                  # number of timesteps in SM, must be a odd number for convolutions
     N_pattern: int = 16 // DEBUG         # number of spiking motifs
