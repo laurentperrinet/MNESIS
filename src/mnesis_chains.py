@@ -12,7 +12,7 @@ from mnesis_boilerplate import (
 
 
 class SpikingPattern:
-    """A simple (frozen) spiking pattern generator."""
+    """Generate a frozen spiking pattern based on a Bernoulli process."""
 
     def __init__(self):
         self.desc = "A simple pattern generator"
@@ -40,7 +40,7 @@ class StochasticSpikingPattern(SpikingPattern):
     of patterns while preserving average firing rates.
 
     This class extends SpikingPattern by adding stochastic variability through
-    bit flipping operations. Each call to __call__() returns a new realization
+    a "balanced bit flipping" operation. Each call to __call__() returns a new realization
     of the base pattern with bits flipped independently with probability p_flip.
     The marginal frequency is exactly preserved while the pattern structure
     is stochastically modified.
@@ -52,20 +52,18 @@ class StochasticSpikingPattern(SpikingPattern):
         of patterns while preserving average firing rates.
 
         This class extends SpikingPattern by adding stochastic variability through
-        bit flipping operations. Each call to __call__() returns a new realization
-        of the base pattern with bits flipped independently with probability p_flip.
-        The marginal frequency is exactly preserved while the pattern structure
-        is stochastically modified.
+        a "balanced bit flipping" operation. 
         """
         super().__init__()
-        self.desc = "A stochastic pattern generator"
+        self.desc = "A stochastic spike pattern generator"
 
     def __call__(self, seed=None, verbose=False):
         """
         Generate a stochastic realization of the spiking pattern.
 
         Returns a new version of the base pattern where each bit has been
-        independently flipped with probability self.p_flip. The flip operation
+        independently flipped with probability self.p_flip. Each call to __call__() returns a new realization
+        of the base pattern with bits flipped independently with probability p_flip. The flip operation
         preserves the marginal frequency while introducing temporal and spatial
         variability in the pattern structure.
 
@@ -74,7 +72,6 @@ class StochasticSpikingPattern(SpikingPattern):
                          with same dimensions as base pattern
         """
         return flip_bits(self.frozen_target, p_flip=self.opt.p_flip, seed=seed, verbose=verbose)
-
 
 
 class HD_SNN(nn.Module):
