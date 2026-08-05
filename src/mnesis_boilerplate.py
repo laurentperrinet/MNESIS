@@ -79,8 +79,8 @@ class Params:
 
     # figures
     verbose: bool = False                # Displays more verbose output.
-    fig_width: float = 15                # width of figure
-    fig_height: float = 9                # width of figure
+    fig_width: float = 30                # width of figure
+    fig_height: float = 15                # width of figure
     phi: float = 1.61803                 # beauty is gold
     N_time_show: int = 512               # number of time points to show in plots
     N_neuron_show: int = 200             # number of SM to show in plots
