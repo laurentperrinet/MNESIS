@@ -231,7 +231,7 @@ class HD_SNN(nn.Module):
                 f1_score.append(f1_score_.cpu())
 
             if verbose and ((i_step + 1) % log_interval == 0):
-                print(f'Train Epoch [{i_step+1:06d}/{self.opt.num_epochs:06d}]\\t| Loss = {np.mean(loss_val):.3e}\\t| precision = {np.mean(precision):.3f}\\t| recall = {np.mean(recall):.3f}\\t| f1_score = {np.mean(f1_score):.3f}\\t| ')
+                print(f'Train Epoch [{i_step+1:06d}/{self.opt.num_epochs:06d}]\t| Loss = {np.mean(loss_val):.3e}\t| precision = {np.mean(precision):.3f}\t| recall = {np.mean(recall):.3f}\t| f1_score = {np.mean(f1_score):.3f}\t| ')
                 loss_val, precision, recall, f1_score = [], [], [], []
 
 def load(opt, model_filename, pattern_object=None):
