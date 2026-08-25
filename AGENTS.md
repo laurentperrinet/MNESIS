@@ -67,6 +67,19 @@ Artifacts are cached in `cached_data/`. To recompute:
 - Delete individual `.pth`, `.json`, `.npz`, or `.sqlite3` files, or
 - Set `RECOMPUTE = True` at the top of the notebook to invalidate the full cache
 
+
+FILE-BASED LOCKING MECHANISM:
+ - Creates a `.lock` sentinel file to prevent concurrent execution of the same scan
+ - Workflow: 
+   1. If RECOMPUTE=True, delete both data and lock files to force restart
+   2. Load existing results if available
+   3. If no lock file exists, create one and start processing
+   4. For each parameter value, check if already computed; if not, run scan and append to JSON
+   5. Delete lock file when done
+ - Purpose: Prevents multiple instances from running the same scan parameter simultaneously,
+   allowing safe resumption and incremental computation without data corruption
+
+
 ---
 
 ## Params Dataclass (Live Reference)
