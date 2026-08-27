@@ -167,6 +167,10 @@ class HD_SNN(nn.Module):
             self.net.lin.weight.copy_(W_init)
             
     def get_input_spikes(self, p_A=None, N_pretime=None, N_trigger_time=None, N_time=None):
+        """
+        generate input spikes for the network, including pre-time spontaneous activity and the target pattern.
+        
+        """
         if p_A is None: p_A = self.opt.p_A 
         if N_pretime is None: N_pretime = self.opt.N_pretime
         if N_trigger_time is None: N_trigger_time = self.opt.num_delay
