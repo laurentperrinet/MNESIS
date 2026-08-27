@@ -149,6 +149,12 @@ def approx_equals(series, value, rtol=1e-6, atol=1e-12):
         return series == value
 
 def get_scores(pred, target, epsilon=1e-12):
+    """
+    
+    High precision → few false positives (FP, Predicted Positive is actually Negative)
+    High recall → few false negatives (FN, Predicted Negative is actually Positive)
+   
+    """
     TP = (pred * target).sum()
     FP = (pred * (1 - target)).sum()
     FN = ((1-pred) * target).sum()
@@ -158,6 +164,11 @@ def get_scores(pred, target, epsilon=1e-12):
     return precision, recall, f1_score
 
 def get_f1score(pred, target, epsilon=1e-12):
+    """
+    
+    The F1 score is the harmonic mean of precision and recall, is high only when both precision and recall are high.
+    
+    """
     _, _, f1_score = get_scores(pred, target, epsilon=epsilon)
     return f1_score
 
