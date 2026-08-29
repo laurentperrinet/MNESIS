@@ -45,7 +45,7 @@
   \def\sY{2.45}
   \newcommand{\colpos}[2]{({\colSep*#1,#2})}
   \def\tLabelY{-3.0}
-  \def\ellipsisX{7.95}
+  \def\ellipsisX{9.0}
   \def\blueRise{0.95}
   \def\blueRun{1.15}
  
@@ -87,11 +87,12 @@
   \node[font=\Large] at (0,\tLabelY) {$t = 0$};
   \node[font=\Large] at (\colSep,\tLabelY) {$t = 1$};
   \node[font=\Large] at (2*\colSep,\tLabelY) {$t = 2$};
-  \node[font=\Large] at (\ellipsisX,0.0) {$\cdots$};
-  \node[font=\Large] at (\ellipsisX,1.0) {$\cdots$};
- 
+  
   % Top arrows and labels
-  \node[font=\Large] at (\ellipsisX,2.85) {$\cdots$};
+  \node[font=\Large] at (\ellipsisX,-2.) {$\cdots$};
+  \node[font=\Large] at (\ellipsisX,-.5) {$\cdots$};
+  \node[font=\Large] at (\ellipsisX,1.0) {$\cdots$};
+  \node[font=\Large] at (\ellipsisX,2.5) {$\cdots$};
  
   % Clip-friendly top border for the dashed envelope
   \path[use as bounding box] (-1.7,-3.35) rectangle (9.8,3.55);
