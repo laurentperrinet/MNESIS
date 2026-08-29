@@ -1,0 +1,157 @@
+%!TeX TS-program = lualatex
+%!TeX encoding = UTF-8 Unicode
+%!TeX spellcheck = en-UK
+% -*- coding: UTF-8; -*-
+% vim: set fenc=utf-8
+%=== file: myfigure.tex ==========================================
+\documentclass[tikz,border=2pt]{standalone}   % “border” adds optional margin
+% -------------------------------------------------------------
+% 1. Packages you used in the original doc (add any that are missing)
+\usepackage{amsmath,amssymb}          % math, symbols
+\usepackage{tikz}
+\usetikzlibrary{arrows,calc,positioning,shapes,decorations.pathreplacing} % etc.
+\usepackage{pgfplots}                % if you used pgfplots
+\pgfplotsset{compat=newest}           % optional – keep the same version as before
+% -------------------------------------------------------------
+% 2. Any global TikZ settings that the picture depends on
+\tikzset{
+   % example: thin arrows everywhere
+   > = stealth,
+   % ... copy from your original preamble
+}
+% -------------------------------------------------------------
+\begin{document}
+% ------------------- START OF YOUR PICTURE --------------------
+  \begin{tikzpicture}[
+    x=1.2cm,
+    y=1.2cm,
+    line cap=round,
+    line join=round,
+    font=\sffamily,
+    neuron/.style={circle, draw=blue!70!black, line width=1.1pt, fill=blue!8, minimum size=1.05cm, inner sep=0pt},
+    panelbox/.style={rounded corners=2pt, line width=1.1pt, dash pattern=on 2.2pt off 3.2pt},
+    layer/.style={draw=blue!60!black, line width=1.2pt},
+    brownlink/.style={draw=black!60!red!75!brown, line width=1.7pt},
+    greenlink/.style={draw=green!40!black, line width=1.7pt},
+    spike/.style={line width=3.3pt, draw=#1},
+  ]
+ 
+  \def\xLeftPanelLabel{-0.15}
+  \def\xPostLabel{4.15}
+  \def\xRightShift{7.4}
+  \def\panelHeight{5.25}
+  \def\spikeTop{4.95}
+  \def\spikeBottom{0.14}
+  \def\triggerBottom{0.18}
+  \def\greenSpikeX{8.90}
+  \def\greenSpikeFootY{0.18}
+  \def\greenSpikeTopY{0.82}
+  \def\redSpikeX{10.85}
+  \def\redSpikeFootY{4.06}
+  \def\redSpikeTopY{4.95}
+  \def\spikeLift{0.56}
+  \def\axisY{-0.85}
+  \def\brownTargetY{\greenSpikeFootY}
+  \def\greenTargetY{\redSpikeFootY}
+  \pgfmathsetmacro{\brownTargetX}{\redSpikeX}
+  \pgfmathsetmacro{\greenTargetX}{\greenSpikeX}
+ 
+  % Orange trigger spikes parameters
+  \def\oxOne{0.90} \def\oyFootOne{0.15} \def\oyTopOne{0.74}
+  \def\oxTwo{2.95} \def\oyFootTwo{1.15} \def\oyTopTwo{1.98}
+  \def\oxThree{4.85} \def\oyFootThree{2.02} \def\oyTopThree{2.83}
+  \def\oxFour{7.95} \def\oyFootFour{3.02} \def\oyTopFour{3.84}
+ 
+  % Left panel
+  \node[anchor=south west, font=\itshape\Large] at (\xLeftPanelLabel,4.55) {pre};
+  \node[anchor=south west, font=\itshape\Large] at (\xPostLabel,4.55) {post};
+ 
+  \coordinate (a1) at (0,4);
+  \coordinate (a2) at (0,3);
+  \coordinate (a3) at (0,2);
+  \coordinate (a4) at (0,1);
+  \coordinate (a5) at (0,0);
+ 
+  \coordinate (b1) at (4.55,4);
+  \coordinate (b2) at (4.55,3);
+  \coordinate (b3) at (4.55,2);
+  \coordinate (b4) at (4.55,1);
+  \coordinate (b5) at (4.55,0);
+ 
+  \foreach \n in {1,...,5} {
+    \draw[densely dotted, green!50!black] (a\n) -- (b\n);
+  }
+ 
+  \draw[brownlink] (a2) -- node[midway, sloped, above, fill=white, inner sep=1pt,
+  font=\small] {4 ms} (b1);
+  \draw[brownlink] (a3) -- node[midway, sloped, above, fill=white, inner sep=1pt,
+  font=\small] {9 ms} (b1);
+  \draw[brownlink] (a4) -- node[midway, sloped, above, fill=white, inner sep=1pt,
+  font=\small] {6 ms} (b1);
+  \draw[brownlink] (a5) -- node[midway, sloped, above, fill=white, inner sep=1pt,
+  font=\small] {3 ms} (b1);
+ 
+  \draw[greenlink] (a2) -- node[midway, sloped, below, fill=white, inner sep=1pt,
+  font=\small] {1 ms} (b5);
+  \draw[greenlink] (a3) -- node[midway, sloped, below, fill=white, inner sep=1pt,
+  font=\small] {6 ms} (b5);
+  \draw[greenlink] (a4) -- node[midway, sloped, below, fill=white, inner sep=1pt,
+  font=\small] {3 ms} (b5);
+  \draw[greenlink] (a5) -- node[midway, sloped, above, fill=white, inner sep=1pt,
+  font=\small] {8 ms} (b5);
+ 
+  \foreach \i/\p in {1/a1,2/a2,3/a3,4/a4,5/a5} {
+    \node[neuron] at (\p) {$a_{\i}$};
+  }
+  \foreach \i/\p in {1/b1,2/b2,3/b3,4/b4,5/b5} {
+    \node[neuron] at (\p) {$b_{\i}$};
+  }
+ 
+  % Right panel
+  \begin{scope}[xshift=7.4cm]
+    \coordinate (R0) at (0,0);
+    \coordinate (R1) at (12.0,0);
+    \coordinate (top) at (0,4.8);
+ 
+    \draw[panelbox, draw=green!45!black, opacity=.35] (0.15,0.2) rectangle (10.15,4.8);
+    \draw[panelbox, draw=black!35!red, opacity=.35] (2.0,0.2) rectangle (11.3,4.9)
+;
+ 
+    \foreach \y in {0,1,2,3,4} {
+      \draw[layer] (0,\y) -- (11.8,\y);
+    }
+ 
+    % Orange trigger spikes
+    \draw[orange!90!black, line width=3.5pt] (\oxOne,\oyFootOne) -- (\oxOne,\oyTopOne);
+    \draw[orange!90!black, line width=3.5pt] (\oxTwo,\oyFootTwo) -- (\oxTwo,\oyTopTwo);
+    \draw[orange!90!black, line width=3.5pt] (\oxThree,\oyFootThree) -- (\oxThree,\oyTopThree);
+    \draw[orange!90!black, line width=3.5pt] (\oxFour,\oyFootFour) -- (\oxFour,\oyTopFour);
+ 
+    % Green propagated spikes
+    \draw[green!45!black, line width=3.5pt] (\greenSpikeX,\greenSpikeFootY) -- (\greenSpikeX,\greenSpikeTopY);
+ 
+    % Red output spike
+    \draw[red!90!black, line width=4.4pt] (\redSpikeX,\redSpikeFootY) -- (\redSpikeX,\redSpikeTopY);
+ 
+    % Brown branches to the final spike (stems from foot)
+    \draw[brownlink] (\oxOne,\oyFootOne) -- (\redSpikeX,4.65);
+    \draw[brownlink] (\oxTwo,\oyFootTwo) -- (\redSpikeX,4.65);
+    \draw[brownlink] (\oxThree,\oyFootThree) -- (\redSpikeX,4.65);
+    \draw[brownlink] (\oxFour,\oyFootFour) -- (\redSpikeX,4.65);
+ 
+    % Green branches converging on the lower output spike
+    \draw[greenlink] (\oxOne,\oyFootOne) -- (\greenSpikeX,\greenSpikeFootY);
+    \draw[greenlink] (\oxTwo,\oyFootTwo) -- (\greenSpikeX,\greenSpikeFootY);
+    \draw[greenlink] (\oxThree,\oyFootThree) -- (\greenSpikeX,\greenSpikeFootY);
+    \draw[greenlink] (\oxFour,\oyFootFour) -- (\greenSpikeX,\greenSpikeFootY);
+    \draw[greenlink] (\greenSpikeX,\greenSpikeTopY) -- (\redSpikeX,4.35);
+ 
+    % D marker and time axis
+    \draw[<->, line width=1.1pt] (0.0,-0.16) -- node[below, font=\Large] {$D = 41\,\mathrm{ms}$} (\greenSpikeX,-0.16);
+    \draw[->, line width=1.3pt] (0.0,-0.65) -- (12.4,-0.65) node[below, font=\Large] {time (ms)};
+ 
+  \end{scope}
+  \end{tikzpicture}
+% -------------------- END OF YOUR PICTURE -----------------
+\end{document}
+%================================================================

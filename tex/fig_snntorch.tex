@@ -1,0 +1,101 @@
+%!TeX TS-program = lualatex
+%!TeX encoding = UTF-8 Unicode
+%!TeX spellcheck = en-UK
+% -*- coding: UTF-8; -*-
+% vim: set fenc=utf-8
+%=== file: myfigure.tex ==========================================
+\documentclass[tikz,border=2pt]{standalone}   % “border” adds optional margin
+% -------------------------------------------------------------
+% 1. Packages you used in the original doc (add any that are missing)
+\usepackage{amsmath,amssymb}          % math, symbols
+\usepackage{tikz}
+\usetikzlibrary{arrows,calc,positioning,shapes,decorations.pathreplacing} % etc.
+\usepackage{pgfplots}                % if you used pgfplots
+\pgfplotsset{compat=newest}           % optional – keep the same version as before
+% -------------------------------------------------------------
+% 2. Any global TikZ settings that the picture depends on
+\tikzset{
+   % example: thin arrows everywhere
+   > = stealth,
+   % ... copy from your original preamble
+}
+% -------------------------------------------------------------
+\begin{document}
+% ------------------- START OF YOUR PICTURE --------------------
+  \begin{tikzpicture}[
+    x=1cm,
+    y=1cm,
+    line cap=round,
+    line join=round,
+    font=\sffamily,
+    rect/.style={draw=#1, fill=#1!10, line width=0.9pt, rounded corners=2.5pt, minimum width=2.1cm, minimum height=0.9cm, inner sep=1pt},
+    spike/.style={draw=black, line width=1.05pt, -{stealth[length=2.8mm,width=2.2mm]}},
+    beta/.style={draw=cyan!60!black, line width=1.2pt, -{stealth[length=2.5mm,width=2.0mm]}},
+    weights/.style={draw=blue!80!black, line width=1.3pt, -{stealth[length=2.6mm,width=2.0mm]}},
+    thr/.style={draw=orange!55!brown!85!black, line width=1.3pt, -{stealth[length=2.6mm,width=2.0mm]}},
+    labelbeta/.style={above, font=\large, text=cyan!60!black, midway},
+    labelweights/.style={above, font=\large, text=blue!80!black, pos=0.50},
+    labelthr/.style={above, sloped, font=\large, text=orange!55!brown!85!black, midway},
+  ]
+ 
+  \def\colSep{3.55}
+  \def\xY{-2.05}
+  \def\iY{-0.55}
+  \def\uY{0.95}
+  \def\sY{2.45}
+  \newcommand{\colpos}[2]{({\colSep*#1,#2})}
+  \def\tLabelY{-3.0}
+  \def\ellipsisX{7.95}
+  \def\blueRise{0.95}
+  \def\blueRun{1.15}
+ 
+  % Positions for the three time steps
+  % (Removed manual coordinate definitions)
+ 
+  % Dotted recurrent shell over U and S layers
+  \path[draw=black, dashed, line width=1.15pt, rounded corners=0.58cm, fill=black!4, fill opacity=0.20] (-1.15,-0.05) rectangle (7.75,3.15);
+ 
+  % Layer nodes
+  \foreach \i in {0,1,2} {
+    \node[rect=blue!55!black] at (\colSep*\i, \xY) {X[\i]};
+    \node[rect=cyan!60!black] at (\colSep*\i, \iY) {$I_{\mathrm{in}}[\i]$};
+    \node[rect=orange!70!brown!85!black] at (\colSep*\i, \sY) {S[\i]};
+    \node[rect=red!55!black] at (\colSep*\i, \uY) {U[\i]};
+  }
+ 
+  % Vertical input chain
+  \foreach \i in {0,1,2} {
+    \draw[spike] (\colSep*\i, \xY) -- node[midway, right=2pt, font=\large] {$W_0$} (\colSep*\i, \iY);
+    \draw[spike] (\colSep*\i, \iY) -- (\colSep*\i, \uY);
+    \draw[spike] (\colSep*\i, \uY) -- (\colSep*\i, \sY);
+    \draw[spike] (\colSep*\i, \sY) -- ++(0,0.6);
+  }
+ 
+  % Recurrent beta and threshold branches
+  \foreach \i [evaluate=\i as \j using int(\i+1)] in {0,1} {
+    \draw[beta] (\colSep*\i, \uY) -- node[labelbeta] {$\beta$} (\colSep*\j, \uY);
+    \draw[thr] (\colSep*\i, \sY) -- node[labelthr] {$-U_{\mathrm{thr}}$} (\colSep*\j, \uY);
+  }
+ 
+  % Input weights between successive columns
+  \draw[weights] (-1.55,-1.25) -- node[labelweights] {$W_{-1}$} (0, \iY);
+  \draw[weights, shorten <=1.5pt, shorten >=1.5pt] (\colSep*0, \xY) -- node[labelweights] {$W_{-1}$} (\colSep*1, \iY);
+  \draw[weights, shorten <=1.5pt, shorten >=1.5pt] (\colSep*1, \xY) -- node[labelweights] {$W_{-1}$} (\colSep*2, \iY);
+  \draw[weights] (\colSep*2, \xY) -- ++(\blueRun,\blueRise);
+ 
+  % Time labels
+  \node[font=\Large] at (0,\tLabelY) {$t = 0$};
+  \node[font=\Large] at (\colSep,\tLabelY) {$t = 1$};
+  \node[font=\Large] at (2*\colSep,\tLabelY) {$t = 2$};
+  \node[font=\Large] at (\ellipsisX,0.0) {$\cdots$};
+  \node[font=\Large] at (\ellipsisX,1.0) {$\cdots$};
+ 
+  % Top arrows and labels
+  \node[font=\Large] at (\ellipsisX,2.85) {$\cdots$};
+ 
+  % Clip-friendly top border for the dashed envelope
+  \path[use as bounding box] (-1.7,-3.35) rectangle (9.8,3.55);
+  \end{tikzpicture}%
+% -------------------- END OF YOUR PICTURE -----------------
+\end{document}
+%================================================================
