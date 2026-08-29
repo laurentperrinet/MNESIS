@@ -104,7 +104,7 @@ Defined in `mnesis_boilerplate.py`. Key fields and current defaults:
 
 ### ⚠️ Parameter Drift Warning
 
-Some default values in `mnesis_boilerplate.py` differ from the paper text and README (e.g. $\beta = 0.8$ vs 0.7, $\vartheta = 0.8$ vs 1.0). The code defaults represent the **latest camera-ready run** (`datetag = '2026-07-11'`). If reproducing paper figures, check which value was actual used.
+Some default values in `mnesis_boilerplate.py` differ from the paper text and README (e.g. $\beta = 0.8$ vs 0.7, $\vartheta = 0.8$ vs 1.0). The code defaults represent the **latest camera-ready run** (using the `datetag` corresponding to the lastest date). If reproducing paper figures, check which value was actual used.
 
 ---
 
