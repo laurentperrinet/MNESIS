@@ -1,7 +1,7 @@
-"""Spiking-pattern generators and the HD_SNN network class for MNESIS experiments.
+"""Core script for the MNSESI library.
 
-Provides pattern generators (`SpikingPattern`, `StochasticSpikingPattern`) 
-and the core network (`HD_SNN`) with training and inference methods.
+Defines Spiking-pattern generators and the HD_SNN network class for MNESIS experiments with training and inference methods.
+
 """
 
 from mnesis_boilerplate import (
@@ -102,7 +102,7 @@ class HD_SNN(nn.Module):
                         learn_beta=opt.learn_beta, learn_threshold=opt.learn_threshold, output=False,
                         reset_mechanism=opt.reset_mechanism, spike_grad=spike_grad)
 
-        self.net = nn.Sequential(OrderedDict([('lin', lin), ('dropout', dropout), ('lif', lif) ]))
+        self.net = nn.Sequential(OrderedDict([('lin', lin), ('dropout', dropout), ('lif', lif)]))
         self.net = self.net.to(opt.device)
           
     def forward_pass(self, input_spikes, reset_spikes=None):
@@ -166,9 +166,9 @@ class HD_SNN(nn.Module):
             W_init = self.get_W_init()
             self.net.lin.weight.copy_(W_init)
             
-    def get_input_spikes(self, p_A=None, N_pretime=None, N_trigger_time=None, N_time=None):
+    def get_input_spikes(self, target=None, p_A=None, N_pretime=None, N_trigger_time=None, N_time=None):
         """
-        generate input spikes for the network, including pre-time spontaneous activity and the target pattern.
+        generate the trigger input spikes for the network, including pre-time spontaneous activity and the target pattern.
         
         """
         if p_A is None: p_A = self.opt.p_A 
@@ -178,8 +178,9 @@ class HD_SNN(nn.Module):
 
         input_spikes = torch.zeros((self.opt.N_pattern, self.opt.N_neuron, N_time+2*N_pretime))
         input_spikes[:, :, :N_pretime] = torch.bernoulli(p_A * torch.ones((self.opt.N_pattern, self.opt.N_neuron, N_pretime)))
-        input_spikes[:, :, N_pretime:(N_pretime+N_trigger_time)] = self.target()[:, :, :N_trigger_time]
-
+        if target is None:
+            target = self.target()
+        input_spikes[:, :, N_pretime:(N_pretime+N_trigger_time)] = target[:, :, :N_trigger_time]
         return input_spikes.to(self.opt.device).detach()
 
     def learn_model(self, verbose=True):
@@ -212,24 +213,33 @@ class HD_SNN(nn.Module):
 
         for i_step in range(self.opt.num_epochs):
             self.net.train()
-            target = self.target()
+            # the pattern that we wish to memorize
+            target = self.target() # NOTE: we assume that the pattern generator can generate a new pattern each time it is called
+            # the input spikes that we feed to the network, which includes pre-time spontaneous activity (padding) and the target pattern just for the trigger window
+            input_spikes = self.get_input_spikes(target=target).detach()
             optimizer.zero_grad()
-            input_spikes = self.get_input_spikes().detach()
-            _, _, spikes = self.forward_pass(input_spikes)
-            loss_train = loss_fn(spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(-self.opt.N_pretime)], target[:, :, self.opt.num_delay:])
+            # the optimal output spikes that the network produces in response to the input spikes
+            _, _, output_spikes = self.forward_pass(input_spikes)
+            loss_train = loss_fn(output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(-self.opt.N_pretime)], 
+                                 target[:, :, self.opt.num_delay:])
             loss_train.backward()
             optimizer.step()
             scheduler.step()
 
             with torch.no_grad():
                 self.net.eval()
-                input_spikes = self.get_input_spikes()
-                _, _, spikes = self.forward_pass(input_spikes)
-                spikes_ = spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(-self.opt.N_pretime)]
-                target_ = target[:, :, self.opt.num_delay:]
-                loss_val_ = loss_fn(spikes_, target_)
+                # the pattern that we wish to memorize
+                target = self.target()
+                # the input spikes 
+                input_spikes = self.get_input_spikes(target=target).detach()
+                # the optimal output spikes that the network produces in response to the input spikes
+                _, _, output_spikes = self.forward_pass(input_spikes)
+                # input_spikes_trimmed = input_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(-self.opt.N_pretime)]
+                output_spikes_trimmed = output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(-self.opt.N_pretime)]
+                input_target_trimmed = target[:, :, self.opt.num_delay:]
+                loss_val_ = loss_fn(output_spikes_trimmed, input_target_trimmed)
                 loss_val.append(loss_val_.item())
-                precision_, recall_, f1_score_ = get_scores(spikes_, target_)
+                precision_, recall_, f1_score_ = get_scores(output_spikes_trimmed, input_target_trimmed)
                 precision.append(precision_.cpu()) 
                 recall.append(recall_.cpu())
                 f1_score.append(f1_score_.cpu())

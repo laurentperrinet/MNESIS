@@ -23,7 +23,7 @@ DEBUG = 1 # production
 if DEBUG > 1:
     print(f'running in debug mode with DEBUG = {DEBUG}')
 
-datetag = '2026-07-11' # new run with new parameters from the camera ready
+datetag = '2026-07-11' # run with new parameters from the camera ready
 datetag = '2026-08-06' # novel run on the revamped code
 print(f"datetag = '{datetag}'")
 
@@ -190,32 +190,3 @@ def get_cosine_schedule_with_warmup(optimizer, num_warmup_epochs, num_epochs, re
     return LambdaLR(optimizer, lr_lambda, last_epoch=-1)
 
 loss_fn = SpikeF1scoreLoss()
-
-import torch
-
-# utilities to load and save binary vectors in a compact form
-
-def save_binary_tensor(tensor, path):
-    # Ensure binary and flatten
-    bits = tensor.bool().flatten()
-    # Pad to multiple of 8
-    n = bits.numel()
-    padded_n = (n + 7) // 8 * 8
-    padded = torch.zeros(padded_n, dtype=torch.bool)
-    padded[:n] = bits
-    # Pack 8 bits into each byte
-    packed = (padded.reshape(-1, 8) * (1 << torch.arange(7, -1, -1))).sum(dim=1).to(torch.uint8)
-    # Save packed bytes + original shape
-    torch.save({'packed': packed, 'shape': tensor.shape, 'n': n}, path)
-
-def load_binary_tensor(path):
-    data = torch.load(path)
-    # Unpack bits
-    bits = (data['packed'][:, None] >> torch.arange(7, -1, -1)) & 1
-    bits = bits.flatten()[:data['n']]
-    return bits.reshape(data['shape']).to(torch.bool)
-
-
-
-
-
