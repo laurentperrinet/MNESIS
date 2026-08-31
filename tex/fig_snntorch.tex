@@ -9,7 +9,7 @@
 % 1. Packages you used in the original doc (add any that are missing)
 \usepackage{amsmath,amssymb}          % math, symbols
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta,calc,positioning,shapes,decorations.pathreplacing} % etc.
+\usetikzlibrary{arrows.meta,calc,positioning,shapes,decorations.pathreplacing,fit,backgrounds} % etc.
 \usepackage{pgfplots}                % if you used pgfplots
 \pgfplotsset{compat=newest}           % optional – keep the same version as before
 % -------------------------------------------------------------
@@ -45,43 +45,47 @@
   \def\sY{2.45}
   \newcommand{\colpos}[2]{({\colSep*#1,#2})}
   \def\tLabelY{-3.0}
-  \def\ellipsisX{9.0}
+  \def\ellipsisX{9.20}
   \def\blueRise{0.95}
   \def\blueRun{1.15}
  
   % Positions for the three time steps
   % (Removed manual coordinate definitions)
  
-  % Dotted recurrent shell over U and S layers
-  \path[draw=black, dashed, line width=1.15pt, rounded corners=0.58cm, fill=black!4, fill opacity=0.20] (-1.15,-0.05) rectangle (7.75,3.15);
- 
-  % Layer nodes
-  \foreach \i in {0,1,2} {
-    \node[rect=blue!55!black] at (\colSep*\i, \xY) {X[\i]};
-    \node[rect=cyan!60!black] at (\colSep*\i, \iY) {$I_{\mathrm{in}}[\i]$};
-    \node[rect=orange!70!brown!85!black] at (\colSep*\i, \sY) {S[\i]};
-    \node[rect=red!55!black] at (\colSep*\i, \uY) {U[\i]};
-  }
- 
-  % Vertical input chain
-  \foreach \i in {0,1,2} {
-    \draw[spike] (\colSep*\i, \xY) -- node[midway, right=2pt, font=\large] {$W_0$} (\colSep*\i, \iY);
-    \draw[spike] (\colSep*\i, \iY) -- (\colSep*\i, \uY);
-    \draw[spike] (\colSep*\i, \uY) -- (\colSep*\i, \sY);
-    \draw[spike] (\colSep*\i, \sY) -- ++(0,0.6);
-  }
- 
-  % Recurrent beta and threshold branches
-  \foreach \i [evaluate=\i as \j using int(\i+1)] in {0,1} {
-    \draw[beta] (\colSep*\i, \uY) -- node[labelbeta] {$\beta$} (\colSep*\j, \uY);
-    \draw[thr] (\colSep*\i, \sY) -- node[labelthr] {$-U_{\mathrm{thr}}$} (\colSep*\j, \uY);
-  }
- 
-  % Input weights between successive columns
-  \draw[weights] (-1.55,-1.25) -- node[labelweights] {$W_{-1}$} (0, \iY);
-  \draw[weights, shorten <=1.5pt, shorten >=1.5pt] (\colSep*0, \xY) -- node[labelweights] {$W_{-1}$} (\colSep*1, \iY);
-  \draw[weights, shorten <=1.5pt, shorten >=1.5pt] (\colSep*1, \xY) -- node[labelweights] {$W_{-1}$} (\colSep*2, \iY);
-  \draw[weights] (\colSep*2, \xY) -- ++(\blueRun,\blueRise);
+    % Layer nodes
+    \foreach \i in {0,1,2} {
+     \node[rect=blue!55!black]           (X\i) at (\colSep*\i, \xY) {X[\i]};
+     \node[rect=cyan!60!black]           (I\i) at (\colSep*\i, \iY) {$I_{\mathrm{in}}[\i]$};
+     \node[rect=orange!70!brown!85!black](S\i) at (\colSep*\i, \sY) {S[\i]};
+     \node[rect=red!55!black]            (U\i) at (\colSep*\i, \uY) {U[\i]};
+    }
+
+    % Dotted recurrent shell over U and S layers (auto-fit, behind nodes/arrows)
+    \begin{scope}[on background layer]
+     \node[draw=black, dashed, line width=1.15pt, rounded corners=0.58cm,
+           fill=black!4, fill opacity=0.20, inner sep=0.30cm,
+           fit={(U0)(U1)(U2)(S0)(S1)(S2)}] {};
+    \end{scope}
+
+    % Vertical input chain
+    \foreach \i in {0,1,2} {
+     \draw[spike] (X\i.north) -- node[midway, right=2pt, font=\large] {$W_0$} (I\i.south);
+     \draw[spike] (I\i.north) -- (U\i.south);
+     \draw[spike] (U\i.north) -- (S\i.south);
+     \draw[spike] (S\i.north) -- ++(0,0.6);
+    }
+
+    % Recurrent beta and threshold branches
+    \foreach \i [evaluate=\i as \j using int(\i+1)] in {0,1} {
+     \draw[beta] (U\i.east) -- node[labelbeta] {$\beta$} (U\j.west);
+     \draw[thr]  (S\i.east) -- node[labelthr]  {$-U_{\mathrm{thr}}$} (U\j.north);
+    }
+
+     % Input weights between successive columns
+     \draw[weights] (-1.55,-1.25) -- node[labelweights] {$W_{-1}$} (I0.225);
+     \draw[weights] (X0.45) -- node[labelweights] {$W_{-1}$} (I1.135);
+     \draw[weights] (X1.45) -- node[labelweights] {$W_{-1}$} (I2.135);
+     \draw[weights] (X2.45) -- ++(\blueRun,\blueRise);
  
   % Time labels
   \node[font=\Large] at (0,\tLabelY) {$t = 0$};
@@ -89,10 +93,10 @@
   \node[font=\Large] at (2*\colSep,\tLabelY) {$t = 2$};
   
   % Top arrows and labels
-  \node[font=\Large] at (\ellipsisX,-2.) {$\cdots$};
-  \node[font=\Large] at (\ellipsisX,-.5) {$\cdots$};
-  \node[font=\Large] at (\ellipsisX,1.0) {$\cdots$};
-  \node[font=\Large] at (\ellipsisX,2.5) {$\cdots$};
+    \node[font=\Large] at (\ellipsisX, \sY) {$\cdots$};
+    \node[font=\Large] at (\ellipsisX, \uY) {$\cdots$};
+    \node[font=\Large] at (\ellipsisX, \iY) {$\cdots$};
+    \node[font=\Large] at (\ellipsisX, \xY) {$\cdots$};
  
   % Clip-friendly top border for the dashed envelope
   \path[use as bounding box] (-1.7,-3.35) rectangle (9.8,3.55);
