@@ -220,7 +220,7 @@ class HD_SNN(nn.Module):
             optimizer.zero_grad()
             # the optimal output spikes that the network produces in response to the input spikes
             _, _, output_spikes = self.forward_pass(input_spikes)
-            loss_train = loss_fn(output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(-self.opt.N_pretime)], 
+            loss_train = loss_fn(output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(self.opt.N_time-self.opt.N_pretime)], 
                                  target[:, :, self.opt.num_delay:])
             loss_train.backward()
             optimizer.step()
@@ -234,8 +234,7 @@ class HD_SNN(nn.Module):
                 input_spikes = self.get_input_spikes(target=target).detach()
                 # the optimal output spikes that the network produces in response to the input spikes
                 _, _, output_spikes = self.forward_pass(input_spikes)
-                # input_spikes_trimmed = input_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(-self.opt.N_pretime)]
-                output_spikes_trimmed = output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(-self.opt.N_pretime)]
+                output_spikes_trimmed = output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(self.opt.N_time-self.opt.N_pretime)]
                 input_target_trimmed = target[:, :, self.opt.num_delay:]
                 loss_val_ = loss_fn(output_spikes_trimmed, input_target_trimmed)
                 loss_val.append(loss_val_.item())
