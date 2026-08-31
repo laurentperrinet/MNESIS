@@ -166,7 +166,7 @@ class HD_SNN(nn.Module):
             W_init = self.get_W_init()
             self.net.lin.weight.copy_(W_init)
             
-    def get_input_spikes(self, target=None, p_A=None, N_pretime=None, N_trigger_time=None, N_time=None):
+    def get_input_spikes(self, target, p_A=None, N_pretime=None, N_trigger_time=None, N_time=None):
         """
         generate the trigger input spikes for the network, including pre-time spontaneous activity and the target pattern.
         
@@ -178,8 +178,8 @@ class HD_SNN(nn.Module):
 
         input_spikes = torch.zeros((self.opt.N_pattern, self.opt.N_neuron, N_time+2*N_pretime))
         input_spikes[:, :, :N_pretime] = torch.bernoulli(p_A * torch.ones((self.opt.N_pattern, self.opt.N_neuron, N_pretime)))
-        if target is None:
-            target = self.target()
+        # if target is None:
+        #     target = self.target()
         input_spikes[:, :, N_pretime:(N_pretime+N_trigger_time)] = target[:, :, :N_trigger_time]
         return input_spikes.to(self.opt.device).detach()
 
