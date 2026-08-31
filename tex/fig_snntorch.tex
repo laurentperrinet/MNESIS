@@ -78,14 +78,14 @@
     % Recurrent beta and threshold branches
     \foreach \i [evaluate=\i as \j using int(\i+1)] in {0,1} {
      \draw[beta] (U\i.east) -- node[labelbeta] {$\beta$} (U\j.west);
-     \draw[thr]  (S\i.east) -- node[labelthr]  {$-U_{\mathrm{thr}}$} (U\j.north);
+     \draw[thr]  (S\i.east) -- node[labelthr]  {$-U_{\mathrm{thr}}$} (U\j.north west);
     }
 
      % Input weights between successive columns
-     \draw[weights] (-1.55,-1.25) -- node[labelweights] {$W_{-1}$} (I0.225);
-     \draw[weights] (X0.45) -- node[labelweights] {$W_{-1}$} (I1.135);
-     \draw[weights] (X1.45) -- node[labelweights] {$W_{-1}$} (I2.135);
-     \draw[weights] (X2.45) -- ++(\blueRun,\blueRise);
+      % \draw[weights] (-1.55,-1.25) -- node[labelweights] {$W_{-1}$} (I0.south west);
+      \draw[weights] (X0.north east) -- node[labelweights] {$W_{-1}$} (I1.south west);
+      \draw[weights] (X1.north east) -- node[labelweights] {$W_{-1}$} (I2.south west);
+      % \draw[weights] (X2.north east) -- ++(\blueRun,\blueRise);
  
   % Time labels
   \node[font=\Large] at (0,\tLabelY) {$t = 0$};
