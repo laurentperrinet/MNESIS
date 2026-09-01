@@ -1,7 +1,7 @@
 %!TeX TS-program = lualatex
 %!TeX encoding = UTF-8 Unicode
 %!TeX spellcheck = en-UK
-%!BIB TS-program = bibtex
+%!BIB TS-program = biber
 % -*- coding: UTF-8; -*-
 % vim: set fenc=utf-8
 \input{metadata}
@@ -31,18 +31,8 @@
 \usepackage{dsfont}
 \usepackage{url}
 %
-\usepackage[%
-  square,        % for square brackets
-  comma,         % use commas as separators
-  numbers,       % for numerical citations;
-%  sort,          % orders multiple citations into the sequence in which they appear in the list of references;
-  sort&compress, % as sort but in addition multiple numerical citations
-                 % are compressed if possible (as 3-6, 15);
-]{natbib}
-% In the bibliography, references have to be formatted as 1., 2., ... not [1], [2], ...
-% \renewcommand{\bibnumfmt}[1]{#1.}
-% \renewcommand{\bibsection}{\section*{References}} % requried for natbib to have "References" printed and as section*, not chapter*
-%
+\usepackage[style=numeric, sorting=none]{biblatex}
+\addbibresource{mnesis.bib}
 %
 \graphicspath{{../figures/}}
 \title{\Title}
