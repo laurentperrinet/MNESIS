@@ -63,10 +63,11 @@
   % Spike height parameters
   \def\spikeFoot{0.15}
   \def\spikeTop{0.75}
-  \def\spikeXOne{0.90} \def\oyFootOne{\spikeFoot} \def\oyTopOne{\spikeTop}
-  \def\spikeXTwo{2.95} \def\oyFootTwo{\spikeFoot} \def\oyTopTwo{\spikeTop}
-  \def\spikeXThree{4.85} \def\oyFootThree{\spikeFoot} \def\oyTopThree{\spikeTop}
-  \def\spikeXFour{7.95} \def\oyFootFour{\spikeFoot} \def\oyTopFour{\spikeTop}
+
+  \def\spikeXOne{0.90} 
+  \def\spikeXTwo{2.95} 
+  \def\spikeXThree{4.85}
+  \def\spikeXFour{7.95}
  
   % Left panel
   \node[anchor=south west, font=\itshape\Large] at (\xLeftPanelLabel,4.55) {pre};
@@ -119,34 +120,34 @@
       \draw[layer] (0,\y) -- (11.8,\y);
     }
  
-    % Orange trigger spikes
-    \draw[orange!90!black, line width=3.5pt] (\oxOne,\oyFootOne) -- (\oxOne,\oyTopOne);
-    \draw[orange!90!black, line width=3.5pt] (\oxTwo,\oyFootTwo) -- (\oxTwo,\oyTopTwo);
-    \draw[orange!90!black, line width=3.5pt] (\oxThree,\oyFootThree) -- (\oxThree,\oyTopThree);
-    \draw[orange!90!black, line width=3.5pt] (\oxFour,\oyFootFour) -- (\oxFour,\oyTopFour);
+    % % Orange trigger spikes
+    % \draw[orange!90!black, line width=3.5pt] (\oxOne,\spikeFoot) -- (\oxOne,\spikeTop);
+    % \draw[orange!90!black, line width=3.5pt] (\oxTwo,\spikeFoot) -- (\oxTwo,\spikeTop);
+    % \draw[orange!90!black, line width=3.5pt] (\oxThree,\spikeFoot) -- (\oxThree,\spikeTop);
+    % \draw[orange!90!black, line width=3.5pt] (\oxFour,\spikeFoot) -- (\oxFour,\spikeTop);
  
-    % Green propagated spikes
-    \draw[green!45!black, line width=3.5pt] (\greenSpikeX,\greenSpikeFootY) -- (\greenSpikeX,\greenSpikeTopY);
+    % % Green propagated spikes
+    % \draw[green!45!black, line width=3.5pt] (\greenSpikeX,\greenSpikeFootY) -- (\greenSpikeX,\greenSpikeTopY);
  
-    % Red output spike
-    \draw[red!90!black, line width=4.4pt] (\redSpikeX,\redSpikeFootY) -- (\redSpikeX,\redSpikeTopY);
+    % % Red output spike
+    % \draw[red!90!black, line width=4.4pt] (\redSpikeX,\redSpikeFootY) -- (\redSpikeX,\redSpikeTopY);
  
-    % Brown branches to the final spike (stems from foot)
-    \draw[brownlink] (\oxOne,\oyFootOne) -- (\redSpikeX,4.65);
-    \draw[brownlink] (\oxTwo,\oyFootTwo) -- (\redSpikeX,4.65);
-    \draw[brownlink] (\oxThree,\oyFootThree) -- (\redSpikeX,4.65);
-    \draw[brownlink] (\oxFour,\oyFootFour) -- (\redSpikeX,4.65);
+    % % Brown branches to the final spike (stems from foot)
+    % \draw[brownlink] (\oxOne,\oyFootOne) -- (\redSpikeX,4.65);
+    % \draw[brownlink] (\oxTwo,\oyFootTwo) -- (\redSpikeX,4.65);
+    % \draw[brownlink] (\oxThree,\oyFootThree) -- (\redSpikeX,4.65);
+    % \draw[brownlink] (\oxFour,\oyFootFour) -- (\redSpikeX,4.65);
  
-    % Green branches converging on the lower output spike
-    \draw[greenlink] (\oxOne,\oyFootOne) -- (\greenSpikeX,\greenSpikeFootY);
-    \draw[greenlink] (\oxTwo,\oyFootTwo) -- (\greenSpikeX,\greenSpikeFootY);
-    \draw[greenlink] (\oxThree,\oyFootThree) -- (\greenSpikeX,\greenSpikeFootY);
-    \draw[greenlink] (\oxFour,\oyFootFour) -- (\greenSpikeX,\greenSpikeFootY);
-    \draw[greenlink] (\greenSpikeX,\greenSpikeTopY) -- (\redSpikeX,4.35);
+    % % Green branches converging on the lower output spike
+    % \draw[greenlink] (\oxOne,\oyFootOne) -- (\greenSpikeX,\spikeFoot);
+    % \draw[greenlink] (\oxTwo,\oyFootTwo) -- (\greenSpikeX,\spikeFoot);
+    % \draw[greenlink] (\oxThree,\oyFootThree) -- (\greenSpikeX,\spikeFoot);
+    % \draw[greenlink] (\oxFour,\oyFootFour) -- (\greenSpikeX,\spikeFoot);
+    % \draw[greenlink] (\greenSpikeX,\spikeFoot) -- (\redSpikeX,4.35);
  
     % D marker and time axis
     \draw[<->, line width=1.1pt] (0.0,-0.16) -- node[below, font=\Large] {$D = 41\,\mathrm{ms}$} (\greenSpikeX,-0.16);
-    \draw[->, line width=1.3pt] (0.0,-0.65) -- (12.4,-0.65) node[below, font=\Large] {time (ms)};
+    \draw[->, line width=1.3pt] (0.0,-0.68) -- (12.4,-0.68) node[below, font=\Large] {time (ms)};
  
   \end{scope}
   \end{tikzpicture}
