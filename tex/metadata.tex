@@ -2,7 +2,7 @@
 %!TeX spellcheck = en-UK
 % !TeX root = Perrinet26mnesis.tex
 % -*- coding: UTF-8; -*-
-\newcommand{\FirstLP}{Laurent Ursule}
+\newcommand{\FirstLP}{Laurent Ul}
 \newcommand{\LastLP}{Perrinet}
 \newcommand{\AuthorLP}{\FirstLP\ \LastLP}
 \newcommand{\EmailLP}{laurent.perrinet@univ-amu.fr}
@@ -21,4 +21,7 @@ For the purpose of open access, the authors have applied a CC-BY public copyrigh
 }
 \newcommand{\AIstatement}{
 During the preparation of this paper, I used the Gemma4:31b generative AI tool (\url{https://ollama.com/library/gemma4:31b-mlx}) only for language editing---improving the clarity, grammar, and phrasing of drafted text---and for limited technical assistance with code development. The tool was not used for generating research ideas, formulating research questions or hypotheses, designing the methodology, conducting or interpreting data analysis, or performing mathematical derivations or calculations. All intellectual contributions, analytical work, and mathematical reasoning in this thesis are my own. I have reviewed all AI-assisted content and assume full responsibility for the accuracy and integrity of the entire work.  
+}
+\newcommand{\Abstract}{
+Working memory --- the ability to store and recall precise temporal patterns of neural activity --- remains an open challenge for spiking neural networks (SNNs). We propose a recurrent SNN of $N=1024$ neurons in which each synapse is equipped with $D = 41$ heterogeneous delays, parameterised as a weight tensor $\mathbf{W} \in \mathbb{R}^{N \times N \times D}$ and trained end-to-end with surrogate-gradient backpropagation through time. Each stored pattern is represented as a sequential chain of overlapping Spiking Motifs: contiguous context windows of length $D$ that uniquely predict the activity at the next time step. A closed-form Hebbian initialisation, derived by deconvolving the LIF membrane response and targeting a sub-threshold membrane potential value superior to the threshold $\vartheta$, achieves an accuracy as measured by the $F_1$-score relative close to that expected when noise is present and before any gradient step on a benchmark of $M=16$ patterns of duration $T=1000\,\mathrm{ms}$. With learning, the network tolerates up to $25\%$ bit-flip noise, and reaches $F_1$ scrores closer to the value expected from the noise level. These results demonstrate attractor-like retrieval dynamics consistent with hippocampal pattern completion, low-dimensional collective dynamics of population activity on manifold or mesoscopic traveling waves in sensory areas. These results show that heterogeneous synaptic delays are an efficient and scalable substrate for working memory in SNNs, with direct implications for neuromorphic edge deployment.
 }
