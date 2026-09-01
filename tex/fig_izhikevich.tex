@@ -36,9 +36,10 @@
     spike/.style={line width=3.3pt, draw=#1},
   ]
  
-  \def\xLeftPanelLabel{-0.15}
+\def\xLeftPanelLabel{-0.15}
   \def\xPostLabel{4.15}
   \def\xRightShift{7.4}
+  \def\bRightShift{4.55}
   \def\panelHeight{5.25}
   \def\spikeTop{4.95}
   \def\spikeBottom{0.14}
@@ -55,12 +56,17 @@
   \def\greenTargetY{\redSpikeFootY}
   \pgfmathsetmacro{\brownTargetX}{\redSpikeX}
   \pgfmathsetmacro{\greenTargetX}{\greenSpikeX}
- 
+  
   % Orange trigger spikes parameters
-  \def\oxOne{0.90} \def\oyFootOne{0.15} \def\oyTopOne{0.74}
-  \def\oxTwo{2.95} \def\oyFootTwo{1.15} \def\oyTopTwo{1.98}
-  \def\oxThree{4.85} \def\oyFootThree{2.02} \def\oyTopThree{2.83}
-  \def\oxFour{7.95} \def\oyFootFour{3.02} \def\oyTopFour{3.84}
+  % Delays: brown a2(4ms),a3(9ms),a4(6ms),a5(3ms) to b1
+  %         green a1(1ms),a2(6ms),a3(3ms),a4(8ms) to b5
+  % Spike height parameters
+  \def\spikeFoot{0.15}
+  \def\spikeTop{0.75}
+  \def\spikeXOne{0.90} \def\oyFootOne{\spikeFoot} \def\oyTopOne{\spikeTop}
+  \def\spikeXTwo{2.95} \def\oyFootTwo{\spikeFoot} \def\oyTopTwo{\spikeTop}
+  \def\spikeXThree{4.85} \def\oyFootThree{\spikeFoot} \def\oyTopThree{\spikeTop}
+  \def\spikeXFour{7.95} \def\oyFootFour{\spikeFoot} \def\oyTopFour{\spikeTop}
  
   % Left panel
   \node[anchor=south west, font=\itshape\Large] at (\xLeftPanelLabel,4.55) {pre};
@@ -72,33 +78,25 @@
   \coordinate (a4) at (0,1);
   \coordinate (a5) at (0,0);
  
-  \coordinate (b1) at (4.55,4);
-  \coordinate (b2) at (4.55,3);
-  \coordinate (b3) at (4.55,2);
-  \coordinate (b4) at (4.55,1);
-  \coordinate (b5) at (4.55,0);
+  \coordinate (b1) at (\bRightShift,4);
+  \coordinate (b2) at (\bRightShift,3);
+  \coordinate (b3) at (\bRightShift,2);
+  \coordinate (b4) at (\bRightShift,1);
+  \coordinate (b5) at (\bRightShift,0);
  
   \foreach \n in {1,...,5} {
     \draw[densely dotted, green!50!black] (a\n) -- (b\n);
   }
  
-  \draw[brownlink] (a2) -- node[midway, sloped, above, fill=white, inner sep=1pt,
-  font=\small] {4 ms} (b1);
-  \draw[brownlink] (a3) -- node[midway, sloped, above, fill=white, inner sep=1pt,
-  font=\small] {9 ms} (b1);
-  \draw[brownlink] (a4) -- node[midway, sloped, above, fill=white, inner sep=1pt,
-  font=\small] {6 ms} (b1);
-  \draw[brownlink] (a5) -- node[midway, sloped, above, fill=white, inner sep=1pt,
-  font=\small] {3 ms} (b1);
+  \draw[brownlink] (a2) -- node[midway, sloped, above, fill=white, inner sep=1pt, font=\small] {4 ms} (b1);
+  \draw[brownlink] (a3) -- node[midway, sloped, above, fill=white, inner sep=1pt, font=\small] {9 ms} (b1);
+  \draw[brownlink] (a4) -- node[midway, sloped, above, fill=white, inner sep=1pt, font=\small] {6 ms} (b1);
+  \draw[brownlink] (a5) -- node[midway, sloped, above, fill=white, inner sep=1pt, font=\small] {3 ms} (b1);
  
-  \draw[greenlink] (a2) -- node[midway, sloped, below, fill=white, inner sep=1pt,
-  font=\small] {1 ms} (b5);
-  \draw[greenlink] (a3) -- node[midway, sloped, below, fill=white, inner sep=1pt,
-  font=\small] {6 ms} (b5);
-  \draw[greenlink] (a4) -- node[midway, sloped, below, fill=white, inner sep=1pt,
-  font=\small] {3 ms} (b5);
-  \draw[greenlink] (a5) -- node[midway, sloped, above, fill=white, inner sep=1pt,
-  font=\small] {8 ms} (b5);
+  \draw[greenlink] (a2) -- node[midway, sloped, below, fill=white, inner sep=1pt, font=\small] {1 ms} (b5);
+  \draw[greenlink] (a3) -- node[midway, sloped, below, fill=white, inner sep=1pt, font=\small] {6 ms} (b5);
+  \draw[greenlink] (a4) -- node[midway, sloped, below, fill=white, inner sep=1pt, font=\small] {3 ms} (b5);
+  \draw[greenlink] (a5) -- node[midway, sloped, below, fill=white, inner sep=1pt, font=\small] {8 ms} (b5);
  
   \foreach \i/\p in {1/a1,2/a2,3/a3,4/a4,5/a5} {
     \node[neuron] at (\p) {$a_{\i}$};
