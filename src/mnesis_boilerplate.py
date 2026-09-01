@@ -101,6 +101,7 @@ figpath = Path('../figures')
 if os.environ.get("USER") == "uvb28bo": 
     figpath = None # Jean Zay
 
+# plt.style.use(['nature', 'science', 'prl'])   # or 'nature' for a colour figure
 
 # --- Constants ---
 phi = np.sqrt(5)/2 + 1/2

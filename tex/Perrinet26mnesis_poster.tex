@@ -1,29 +1,31 @@
 %!TeX TS-program = lualatex
 %!TeX encoding = UTF-8 Unicode
 %!TeX spellcheck = en-UK
-%!BIB TS-program = bibtex
+%!BIB TS-program = biber
 % -*- coding: UTF-8; -*-
-%--------------------------------------------------------------
-%  A0 Poster with tikzposter
-%  Compile with:  lualatex poster.tex   (or xelatex)
-%--------------------------------------------------------------
-% a0 = 841×1189 mm
-\documentclass[portrait,size=a0]{tikzposter}
-%--- geometry (optional, overrides class defaults) ------------
-
-%--- packages ----------------------------------------------------
-%--- fonts ------------------------------------------------------
-\usepackage{fontspec}
-% \setmainfont{Helvetica Neue}            % any OTF/TTF on your system
-% \setsansfont{Helvetica Neue}
-% \setmonofont{Courier New}
+\documentclass[25pt, a0paper, portrait, margin=0mm, innermargin=15mm,
+blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
+\input{metadata}
+%  Default, Rays, Basic, Simple, Envelope, Wave, Board, Autumn, and Desert.
+\usetheme{Board}
 
 %--- graphics ----------------------------------------------------
 \usepackage{graphicx}
-% \usepackage{tikz}
-\graphicspath{{./figures/},{./}}             % folder for images
+\usepackage{tikz}
+\usepackage{adjustbox}
+\usepackage{capt-of}
+\usepackage{epstopdf-base}
+\graphicspath{{../figures/}{./}}
 
-%--- colour scheme (pick one or define your own) ----------------
+\newcommand{\posterfigureinput}[1]{%
+  \begingroup
+  \RenewDocumentEnvironment{figure}{o}{\par\centering}{\par}%
+  \RenewDocumentCommand{\caption}{o m}{\captionof{figure}{##2}}%
+  \input{#1}%
+  \endgroup
+}
+
+%--- colour scheme ------------------------------------------------
 \usecolorstyle{Default}
 
 %--- hyperref ----------------------------------------------------
@@ -31,18 +33,6 @@
 \hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
 
 %--------------------------------------------------------------
-% Import metadata from metadata.tex
-\input{metadata}
-
-% %--------------------------------------------------------------
-% \title{\Title}
-% \author{\AuthorLP \\
-%         \EmailLP \\
-%         \Department \\
-%         \Affiliation \\
-%         \Street, \PostCode\ \City, \Country \\
-%         \WebsiteLP}
-% \date{}
 \title{\Title}
 \author{
   \AuthorLP \\
@@ -51,74 +41,44 @@
   \Affiliation \\
   \Street, \PostCode\ \City, \Country \\
   \url{\WebsiteLP/perrinet-26}
-  % official institution "Aix Marseille Univ, CNRS, INT, Inst Neurosci Timone, Marseille, France" 
 }
 \date{\today}
-%--------------------------------------------------------------
 \begin{document}
 \maketitle
 
-%--- COLUMN LAYOUT --------------------------------------------
 \begin{columns}
-  \column{0.48}  % ≈ 48 % of the width
+  \column{0.48}
     \block{Introduction}{
-      \begin{center}
-        \includegraphics[width=\linewidth]{fig_izhikevich}
-      \end{center}
-    }
-
-    \block{Methods}{
-      \begin{center}
-        \includegraphics[width=\linewidth]{fig_izhikevich}
-      \end{center}
-    }
-
-    \block{Results}{
-      \begin{center}
-        \includegraphics[width=\linewidth]{fig_izhikevich}
-      \end{center}
+      \posterfigureinput{figure_izhikevich}
     }
 
   \column{0.48}
-    \block{Discussion}{
+    \block{Architecture}{
+      \posterfigureinput{figure_snntorch}
+    }
+\end{columns}
 
-
-      % Figure
-      \begin{center}
-        \includegraphics[width=\linewidth]{fig_snntorch}
-      \end{center}
+\begin{columns}
+  \column{0.48}
+    \block{Pattern Retrieval}{
+      \posterfigureinput{figure_target}
     }
 
-    \block{References}{
-      \small
-      \begin{thebibliography}{99}
-        \bibitem{Adrian1926}
-          Adrian, D. and Bronk, D. D. (1926). The all-or-none character of quantal quantal releases at the frog's neuromuscular junction. Journal of Physiology, 61(3):405--453.
+  \column{0.48}
+    \block{Sequential Retrieval}{
+      \posterfigureinput{figure_retrieval}
+    }
+\end{columns}
 
-        \bibitem{Izhikevich2006}
-          Izhikevich, E. M. (2006). Polychronization: computation with spikes. Neural Computation, 18(8):1879--1905.
-
-        \bibitem{Perrinet2023}
-          Perrinet, L. (2023). Spiking Motifs: A Gradient-Trainable, Hardware-Compatible Framework for Spiking Neural Networks. arXiv preprint arXiv:2304.01234.
-
-        \bibitem{Kronland-Martinet2025}
-          Kronland-Martinet, T. and et al. (2025). Extended Chain-of-Motifs Framework for Robust Encoding of Spiking Heidelberg Digits Patterns. Neural Computation.
-
-        \bibitem{Neftci2019a}
-          Neftci, E. M., Das, A., Pedroni, G., and Kreiter, A. K. (2019). Learning Spiking Neural Networks with Sparse Gradients. IEEE Transactions on Neural Networks and Learning Systems.
-
-        \bibitem{Eshraghian2023}
-          Eshraghian, K., Ward, L., Loke, J. H., Laughlin, S. B., Neftci, E. M., Zhang, J., and Acharya, S. (2023). SNNTorch: A PyTorch-Based Library for Spiking Neural Networks. Journal of Open Source Software.
-
-        \bibitem{Izhikevich2006b}
-          Izhikevich, E. M. (2006). Simple Model of Spiking Neurons. Physical Review E, 73(3):038101.
-
-        % Add more references as needed from mnesis.bib
-      \end{thebibliography}
+\begin{columns}
+  \column{0.48}
+    \block{Robustness}{
+      \posterfigureinput{figure_robustness}
     }
 
-    % \block{Acknowledgements}{
-    %   \Acknowledgements
-    % }
+  \column{0.48}
+    \block{Parameter Scan}{
+      \posterfigureinput{figure_scan}
+    }
 \end{columns}
 \end{document}
