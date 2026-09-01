@@ -1,7 +1,7 @@
 %!TeX TS-program = lualatex
 %!TeX encoding = UTF-8 Unicode
 %!TeX spellcheck = en-UK
-%!BIB TS-program = bibtex
+%!BIB TS-program = biber
 % -*- coding: UTF-8; -*-
 % vim: set fenc=utf-8
 \input{metadata}
@@ -14,7 +14,6 @@
 \hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
 
 % \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
@@ -178,18 +177,8 @@ Each weight $w_{i, j, d}$ is proportional to the cross-correlation between the d
 %%%-----------------------------------------------------------------
 \subsection{Training}
 %%%-----------------------------------------------------------------
-%%%----------------------------------------------------------------- 
-\begin{figure}%[htbp]
-  \centering
-  \adjustbox{valign=t,width=0.43\textwidth}{%
-  \includegraphics[width=\linewidth]{fig_snntorch.pdf}%
-  }
-    \hfill
-    \adjustbox{valign=t}{\includegraphics[width=0.52\textwidth]{pattern.pdf}}
-  \caption{%
-    Network architecture and a sample target pattern. \emph{Left:} Unrolled view of the recurrent HD-SNN over time (one column representing one time step), illustrating delayed connections between neurons: Blue arrows indicate synaptic connections that integrate past activity across heterogeneous delays; for clarity only one delay is shown. \emph{Right:} One representative target spike pattern ($N=1024$ neurons, $T=1000$ time steps, of which we show $256$ neurons and $400$ time steps); each red circle marks one target spike. The goal of the network is to memorise $M=16$ such patterns. Each trial is flanked by $N_\mathrm{pretime}=50$ time steps of spontaneous background activity (random spikes at rate $p_A$) before and after the stimulus. The trigger window (green crosses between the dashed lines) consists of the first $D=41$ time steps of the target pattern clamped to the network input; the recurrent network then autonomously predicts the remaining spikes.
-  }\label{fig:model}
-\end{figure}
+%%%-----------------------------------------------------------------
+\include{figure_snntorch}
 %%%-----------------------------------------------------------------
 The loss is defined as $\mathcal{L} = 1 - F_1$, such that minizing this loss (with a maximum of $1$ and minimum of $0$) maximises the mean $F_1$ score across all $M$ target patterns. Learning is carried out with surrogate-gradient BPTT~\citep{Neftci2019a}, using a fast-sigmoid surrogate with sharpness parameter $\alpha = 12$. Weights are optimised with SGD, using a cosine learning-rate schedule with warmup, as used for instance in~\citep{Hammouamri2023}, from a base learning rate $\eta_\mathrm{base} = 20.0 \times 10^{-3}$ to a final learning rate $\eta_\mathrm{final} = 400 \times 10^{-6}$, with $16$ warmup epochs over $256$ total epochs. Dropout regularization with probability $0.10$ is applied. The validation loss is monitored for detecting overfitting.
 
@@ -209,13 +198,8 @@ Training the recurrent HD-SNN with surrogate-gradient BPTT~\citep{Neftci2019a} c
 
 Remarkably, the analytical weight initialisation alone (Eq.~\ref{eq:init}) already achieves high $F_1$ scores before any gradient step, demonstrating that the closed-form Hebbian solution provides a strong baseline for recall on this benchmark. The Gram-matrix approximation $\mathbf{C}\mathbf{C}^\top \approx N \cdot D \cdot p_A \cdot \mathbf{I}$ reduces the pseudo-inverse to a simple cross-correlation, yielding a ${\approx}5\times$ speed-up with identical accuracy; this approximation is used throughout. Gradient training serves primarily to improve robustness: errors arise when the trigger window is corrupted (Section~\ref{sec:robustness}), and learning helps mitigate their accumulation.
 
-%%%----------------------------------------------------------------- 
-\begin{figure}[!ht]
-  \begin{center}
-    \includegraphics[width=\textwidth]{target.pdf}
-  \end{center}
-  \caption{Pattern retrieval from the recurrent HD-SNN. After clamping the network with input spikes (green crosses) with 50 steps of spontaneous activity (left of the red dashed line) and a trigger window consisting of the initial sequence of one of the $M=16$ target patterns ($0 \leq t < D = 41$, delimited by the dashed red and blue line), we simulate the network after training output the duration the full sequence duration ($T = 1000$ steps). We observe that the raster plot shows network activity (blue crosses, $N=1024$ neurons) which perfectly matches the target pattern which was cued during the trigger window. Note that the target spikes after the trigger window (red circles right of the blue dashed line) are hidden from the network.}\label{fig:target}
-\end{figure}
+%%%-----------------------------------------------------------------
+\input{figure_target}
 %%%-----------------------------------------------------------------
 
 %%%-----------------------------------------------------------------
@@ -240,12 +224,7 @@ Training was not uniform in time: the network first reproduced spikes immediatel
 To evaluate the network's ability to retrieve and distinguish multiple stored patterns in sequence, we concatenated all $M=16$ patterns into a single long raster, each trial flanked by $N_\mathrm{pretime}=50$ steps of spontaneous background activity at rate $p_A$ before and after the stimulus (Figure~\ref{fig:retrieval}). Each pattern was triggered by its individual trigger window, and retrieval was evaluated by a sliding-window $F_1$ score over time. The $F_1$ score rose sharply at the onset of each trigger window, remained high throughout each pattern's duration, and dropped back to the background level during the inter-trial intervals, confirming that the network correctly associates each trigger window with its corresponding stored pattern without cross-interference between the $M=16$ stored memories.
 
 %%%----------------------------------------------------------------- 
-\begin{figure}[!ht]
-\begin{center}
-\includegraphics[width=\textwidth]{retrieval.pdf}
-\end{center}
-\caption{Sequential retrieval of the $M=16$ stored patterns. The sliding-window $F_1$ score (blue) is shown as a function of time, together with the onset indicator of each trigger window (green dashes) and the corresponding pattern mask (red dashes). The $F_1$ score rises sharply at each trigger-window onset and remains high for the full pattern duration ($T=1000$ steps $\sim 1$ second), then returns to baseline during the inter-trial intervals, demonstrating selective retrieval of all stored memories in sequence without cross-interference.}\label{fig:retrieval}
-\end{figure}
+\input{figure_retrieval}
 %%%-----------------------------------------------------------------
 
 %%%-----------------------------------------------------------------
@@ -268,13 +247,7 @@ We varied the duration of the trigger window from $0$ to $D-1 = 40$ steps, scann
 We varied the number of neurons whose activity was silenced during the trigger window, from $0$ (full trigger) to $N = 1024$ (no trigger). With $N/8 = 128$ neurons silenced --- meaning $87.5\%$ of the population remained active --- the network still achieved an $F_1$ score of $\approx 0.602$ (precision $\approx 0.837$, recall $\approx 0.469$). The $F_1$ score degrades smoothly as more neurons are silenced and drops sharply only when the majority of the trigger population is inactive, again consistent with an attractor interpretation in which a sufficient fraction of the pattern suffices to pull the network dynamics towards the stored memory.
 %
 %%%----------------------------------------------------------------- 
-\begin{figure}[!t]
-\centering
-\includegraphics[width=0.325\linewidth]{p_flip_score.pdf}\hfill
-\includegraphics[width=0.325\linewidth]{trigger_time_score.pdf}\hfill
-\includegraphics[width=0.325\linewidth]{fraction_target_score.pdf}
-\caption{Robustness of working-memory retrieval to three types of trigger-window perturbation ($F_1$ score averaged over $M=16$ patterns). \emph{Left:} Bit-flip noise applied to all spikes in the trigger window ($p_\mathrm{flip} \in [0,1]$); the network maintains high $F_1$ up to $p_\mathrm{flip} \approx 0.4$. \emph{Middle:} Truncated trigger window (trigger duration from $0$ to $D-1 = 40$ steps); retrieval remains reliable for durations above roughly $D/2$. \emph{Right:} Partial neuron coverage (number of silenced neurons from $0$ to $N = 1024$); perfect recall is maintained until the majority of the trigger population is inactive. Orange dashed lines indicate $F_1 \in \{0, 1\}$.}\label{fig:noise}
-\end{figure}
+\input{figure_robustness}
 %%%-----------------------------------------------------------------
 %
 %%%-----------------------------------------------------------------
@@ -288,20 +261,7 @@ To characterise how the architectural parameters govern working-memory performan
 The loss decreases monotonically as $D$ grows from $3$ to $127\,\mathrm{ms}$, dropping from $\mathcal{L} \approx 0.85$ at $D = 3$ to near zero at $D = 127$. This confirms the capacity argument: the parameter budget $N^2 \cdot D$ and the context-window size $N \cdot D$ both scale linearly with $D$. A wider delay window provides more temporally diverse synaptic pathways, increasing the number of simultaneously representable Spiking Motifs and reducing interference between overlapping context windows. At $D = 3$ the context vector has only $N \cdot D = 3072$ dimensions with expected activity $N \cdot D \cdot p_A \approx 3.07$ --- a regime where contexts are nearly all-zero and indistinguishable. At $D = 127$ the context has $N \cdot D = 129{,}024$ dimensions with expected activity $\approx 129$, and near-orthogonality is strongly satisfied.
 
 %%%----------------------------------------------------------------- 
-\begin{figure}[!t] 
-  \centering
-  \includegraphics[width=0.6\linewidth]{scan_num_delay.pdf}\hfill
-  % TODO \includegraphics[width=0.6\linewidth]{scan_N_time.pdf}\hfill
-  % TODO \includegraphics[width=0.9\linewidth]{scan_p_A.pdf}
-  \caption{%
-    Effect of some key parameters on working-memory performance (loss $\mathcal{L} = 1 - F_1$, mean $\pm$ s.e.\ over $N_\mathrm{cv} = 10$ cross-validation folds). %
-    \emph{Left:} Increasing the maximum delay $D$ consistently reduces the loss, confirming that deeper delay windows provide a larger, more orthogonal context and that longer maximum delays directly increase the capacity of the recurrent HD-SNN. % (Section~\ref{sec:capacity}). %
-    \emph{Right:} 
-    % \emph{Middle:} 
-    Loss grows slowly and monotonically with pattern duration $T$, consistent with the compounding-error and gradient-vanishing arguments: longer sequences require the network to maintain coherent predictions further from the trigger window. %
-    % Performance is optimal at low background firing rates ($p_A \lesssim 10^{-3}$) and degrades sharply at higher rates. 
-  }\label{fig:scan}
-\end{figure}
+\input{figure_scan}
 %%%----------------------------------------------------------------- 
 \paragraph{Pattern duration $T$ (Figure~\ref{fig:scan}, middle).}
 The loss grows monotonically with $T$, from $\mathcal{L} \approx 0.004$ at $T = 64$ to $\mathcal{L} \approx 0.08$ at $T = 2048$. This is the empirical signature of the two compounding difficulties identified in the capacity analysis: longer sequences impose a larger open-loop rollout, and the error propagation recurrence accumulates over $T - D$ steps. Even a sub-critical propagation coefficient $\lambda < 1/D$ eventually allows errors to reach a non-negligible fraction of $N$ spikes.
@@ -316,14 +276,11 @@ Taken together, the  scans quantitatively validate the theoretical framework: de
 % \subsection{Retrieval of periodic spike patterns}
 %%%-----------------------------------------------------------------
 %  this section reflects what is computed in 30_MNESIS_learn-periodic.ipynb
-
+%
 % %%%-----------------------------------------------------------------
 % \subsection{Retrieval of traveling wave patterns}
 % %%%-----------------------------------------------------------------
 %  this section reflects what is computed in 32_MNESIS_learn-travelling-waves.ipynb
-
-
-
 %%%----------------------------------------------------------------- 
 \section{Discussion}
 %%%-----------------------------------------------------------------

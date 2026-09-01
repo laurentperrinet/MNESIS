@@ -1,0 +1,20 @@
+%!TeX encoding = UTF-8 Unicode
+%!TeX spellcheck = en-UK
+% !TeX root = Perrinet26mnesis.tex
+% -*- coding: UTF-8; -*-
+%%%-----------------------------------------------------------------
+\begin{figure}[!t] 
+  \centering
+  \includegraphics[width=0.6\linewidth]{scan_num_delay.pdf}\hfill
+  % TODO \includegraphics[width=0.6\linewidth]{scan_N_time.pdf}\hfill
+  % TODO \includegraphics[width=0.9\linewidth]{scan_p_A.pdf}
+  \caption{%
+    Effect of some key parameters on working-memory performance (loss $\mathcal{L} = 1 - F_1$, mean $\pm$ s.e.\ over $N_\mathrm{cv} = 10$ cross-validation folds). %
+    \emph{Left:} Increasing the maximum delay $D$ consistently reduces the loss, confirming that deeper delay windows provide a larger, more orthogonal context and that longer maximum delays directly increase the capacity of the recurrent HD-SNN. % (Section~\ref{sec:capacity}). %
+    \emph{Right:} 
+    % \emph{Middle:} 
+    Loss grows slowly and monotonically with pattern duration $T$, consistent with the compounding-error and gradient-vanishing arguments: longer sequences require the network to maintain coherent predictions further from the trigger window. %
+    % Performance is optimal at low background firing rates ($p_A \lesssim 10^{-3}$) and degrades sharply at higher rates. 
+  }\label{fig:scan}
+\end{figure}
+%%%-----------------------------------------------------------------
