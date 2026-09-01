@@ -32,45 +32,15 @@
     panelbox/.style={rounded corners=2pt, line width=1.1pt, dash pattern=on 2.2pt off 3.2pt},
     layer/.style={draw=blue!60!black, line width=1.2pt},
     brownlink/.style={draw=black!60!red!75!brown, line width=1.7pt},
-    greenlink/.style={draw=green!40!black, line width=1.7pt},
+    greenlink/.style={draw=green!60!black, line width=1.7pt},
     spike/.style={line width=3.3pt, draw=#1},
   ]
  
 \def\xLeftPanelLabel{-0.15}
   \def\xPostLabel{4.15}
-  \def\xRightShift{7.4}
   \def\bRightShift{4.55}
-  \def\panelHeight{5.25}
-  \def\spikeTop{4.95}
-  \def\spikeBottom{0.14}
-  \def\triggerBottom{0.18}
-  \def\greenSpikeX{8.90}
-  \def\greenSpikeFootY{0.18}
-  \def\greenSpikeTopY{0.82}
-  \def\redSpikeX{10.85}
-  \def\redSpikeFootY{4.06}
-  \def\redSpikeTopY{4.95}
-  \def\spikeLift{0.56}
-  \def\axisY{-0.85}
-  \def\brownTargetY{\greenSpikeFootY}
-  \def\greenTargetY{\redSpikeFootY}
-  \pgfmathsetmacro{\brownTargetX}{\redSpikeX}
-  \pgfmathsetmacro{\greenTargetX}{\greenSpikeX}
-  
-  % Orange trigger spikes parameters
-  % Delays: brown a2(4ms),a3(9ms),a4(6ms),a5(3ms) to b1
-  %         green a1(1ms),a2(6ms),a3(3ms),a4(8ms) to b5
-  % Spike height parameters
-  \def\spikeFoot{0.15}
-  \def\spikeTop{0.75}
-
-  \def\spikeXOne{0.90} 
-  \def\spikeXTwo{2.95} 
-  \def\spikeXThree{4.85}
-  \def\spikeXFour{7.95}
- 
   % Left panel
-  \node[anchor=south west, font=\itshape\Large] at (\xLeftPanelLabel,4.55) {pre};
+  \node[anchor=south, font=\itshape\Large] at (\xLeftPanelLabel,4.55) {pre};
   \node[anchor=south west, font=\itshape\Large] at (\xPostLabel,4.55) {post};
  
   \coordinate (a1) at (0,4);
@@ -85,10 +55,13 @@
   \coordinate (b4) at (\bRightShift,1);
   \coordinate (b5) at (\bRightShift,0);
  
+  % Dotted lines between corresponding neurons
   \foreach \n in {1,...,5} {
     \draw[densely dotted, green!50!black] (a\n) -- (b\n);
   }
  
+  % Connections from pre to post
+      % \def\nodeLabelStyle{midway, sloped, above, fill=white, inner sep=1pt, font=\small}
   \draw[brownlink] (a2) -- node[midway, sloped, above, fill=white, inner sep=1pt, font=\small] {4 ms} (b1);
   \draw[brownlink] (a3) -- node[midway, sloped, above, fill=white, inner sep=1pt, font=\small] {9 ms} (b1);
   \draw[brownlink] (a4) -- node[midway, sloped, above, fill=white, inner sep=1pt, font=\small] {6 ms} (b1);
@@ -107,48 +80,80 @@
   }
  
   % Right panel
+
+  % \def\spikeLift{0.56}
+  % \def\axisY{-0.85}
+  % \def\brownTargetY{\spikeYgreen}
+  % \def\greenTargetY{\redSpikeFootY}
+  % \pgfmathsetmacro{\brownTargetT}{\spikeTred}
+  % \pgfmathsetmacro{\greenTargetT}{\greenSpikeT}
+  
+  % Orange trigger spikes parameters
+  % Delays: brown a2(4ms),a3(9ms),a4(6ms),a5(3ms) to b1
+  %         green a1(1ms),a2(6ms),a3(3ms),a4(8ms) to b5
+  % Spike height parameters
+  \def\spikeFoot{0.15}
+  \def\spikeTop{0.75}
+  % Node style for labels on connections
+  
+  \def\spikeTOne{0.90} 
+  \def\spikeYOne{0.} 
+  \def\spikeTTwo{2.90} 
+  \def\spikeYTwo{3} 
+  \def\spikeTThree{5.90}
+  \def\spikeYThree{4}
+  \def\spikeTFour{7.90}
+  \def\spikeYFour{2}
+  
   \begin{scope}[xshift=7.4cm]
-    \coordinate (R0) at (0,0);
-    \coordinate (R1) at (12.0,0);
-    \coordinate (top) at (0,4.8);
- 
-    \draw[panelbox, draw=green!45!black, opacity=.35] (0.15,0.2) rectangle (10.15,4.8);
-    \draw[panelbox, draw=black!35!red, opacity=.35] (2.0,0.2) rectangle (11.3,4.9)
-;
- 
+    % \coordinate (R0) at (0,0);
+    % \coordinate (R1) at (12.0,0);
+    % \coordinate (top) at (0,4.8);
+    
+    
     \foreach \y in {0,1,2,3,4} {
       \draw[layer] (0,\y) -- (11.8,\y);
-    }
- 
-    % % Orange trigger spikes
-    % \draw[orange!90!black, line width=3.5pt] (\oxOne,\spikeFoot) -- (\oxOne,\spikeTop);
-    % \draw[orange!90!black, line width=3.5pt] (\oxTwo,\spikeFoot) -- (\oxTwo,\spikeTop);
-    % \draw[orange!90!black, line width=3.5pt] (\oxThree,\spikeFoot) -- (\oxThree,\spikeTop);
-    % \draw[orange!90!black, line width=3.5pt] (\oxFour,\spikeFoot) -- (\oxFour,\spikeTop);
- 
-    % % Green propagated spikes
-    % \draw[green!45!black, line width=3.5pt] (\greenSpikeX,\greenSpikeFootY) -- (\greenSpikeX,\greenSpikeTopY);
- 
-    % % Red output spike
-    % \draw[red!90!black, line width=4.4pt] (\redSpikeX,\redSpikeFootY) -- (\redSpikeX,\redSpikeTopY);
- 
-    % % Brown branches to the final spike (stems from foot)
-    % \draw[brownlink] (\oxOne,\oyFootOne) -- (\redSpikeX,4.65);
-    % \draw[brownlink] (\oxTwo,\oyFootTwo) -- (\redSpikeX,4.65);
-    % \draw[brownlink] (\oxThree,\oyFootThree) -- (\redSpikeX,4.65);
-    % \draw[brownlink] (\oxFour,\oyFootFour) -- (\redSpikeX,4.65);
- 
-    % % Green branches converging on the lower output spike
-    % \draw[greenlink] (\oxOne,\oyFootOne) -- (\greenSpikeX,\spikeFoot);
-    % \draw[greenlink] (\oxTwo,\oyFootTwo) -- (\greenSpikeX,\spikeFoot);
-    % \draw[greenlink] (\oxThree,\oyFootThree) -- (\greenSpikeX,\spikeFoot);
-    % \draw[greenlink] (\oxFour,\oyFootFour) -- (\greenSpikeX,\spikeFoot);
-    % \draw[greenlink] (\greenSpikeX,\spikeFoot) -- (\redSpikeX,4.35);
- 
-    % D marker and time axis
-    \draw[<->, line width=1.1pt] (0.0,-0.16) -- node[below, font=\Large] {$D = 41\,\mathrm{ms}$} (\greenSpikeX,-0.16);
-    \draw[->, line width=1.3pt] (0.0,-0.68) -- (12.4,-0.68) node[below, font=\Large] {time (ms)};
- 
+      }
+      
+      % % Orange trigger spikes
+      \draw[orange!90!black, line width=3.5pt] (\spikeTOne,\spikeYOne) -- (\spikeTOne,{ \spikeYOne + \spikeTop });
+      \draw[orange!90!black, line width=3.5pt] (\spikeTTwo,\spikeYTwo) -- (\spikeTTwo,{ \spikeYTwo + \spikeTop });
+      \draw[orange!90!black, line width=3.5pt] (\spikeTThree,\spikeYThree) -- (\spikeTThree,{ \spikeYThree + \spikeTop });
+      \draw[orange!90!black, line width=3.5pt] (\spikeTFour,\spikeYFour) -- (\spikeTFour,{ \spikeYFour + \spikeTop });
+      
+      % Green propagated spikes
+      \def\greenSpikeT{8.90}
+      \def\spikeYgreen{0.0}
+      \draw[green!45!black, line width=3.5pt] (\greenSpikeT,\spikeYgreen) -- (\greenSpikeT,{\spikeYgreen + \spikeTop});
+      
+      % Green branches converging on the lower output spike
+      \draw[greenlink] (\spikeTOne,\spikeYOne) -- (\greenSpikeT,\spikeYgreen);
+      \draw[greenlink] (\spikeTTwo,\spikeYTwo) -- (\greenSpikeT,\spikeYgreen);
+      \draw[greenlink] (\spikeTThree,\spikeYThree) -- (\greenSpikeT,\spikeYgreen);
+      \draw[greenlink] (\spikeTFour,\spikeYFour) -- (\greenSpikeT,\spikeYgreen);
+      
+      
+      % Red output spike
+      \def\spikeTred{10.85}
+      \def\spikeYred{4.}
+      % \def\spikeTredopY{4.95}
+      
+      \draw[red!90!black, line width=4.4pt] (\spikeTred,\spikeYred) -- (\spikeTred,{\spikeYred + \spikeTop});
+      
+      % % Brown branches to the final spike (stems from foot)
+      \draw[brownlink] (\spikeTTwo,\spikeYTwo) -- (\spikeTred,\spikeYred);
+      \draw[brownlink] (\spikeTThree,\spikeYThree) -- (\spikeTred,\spikeYred);
+      \draw[brownlink] (\spikeTFour,\spikeYFour) -- (\spikeTred,\spikeYred);
+      \draw[brownlink] (\greenSpikeT,\spikeFoot) -- (\spikeTred,\spikeYred);
+
+      % context window 
+      \draw[panelbox, draw=green!45!black, opacity=.35] (0.15,-0.12) rectangle (\greenSpikeT,{\spikeYred+1.05});
+      \draw[panelbox, draw=black!35!red, opacity=.35] (2.0,-0.10) rectangle (11.3,{\spikeYred+1.08});
+
+      % D marker and time axis
+      \draw[<->, line width=1.1pt] (0.0,-0.16) -- node[below, font=\Large] {$D = 41\,\mathrm{ms}$} (\greenSpikeT,-0.16);
+      \draw[->, line width=1.3pt] (0.0,-0.68) -- (12.4,-0.68) node[below, font=\Large] {time (ms)};
+      
   \end{scope}
   \end{tikzpicture}
 % -------------------- END OF YOUR PICTURE -----------------
