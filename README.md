@@ -48,9 +48,7 @@ MNESIS/
 ├── tex/                           # Paper source
 │    ├── Perrinet26mnesis.tex      # Main LaTeX source
 │    ├── Perrinet26mnesis.pdf      # Compiled paper
-│    ├── mnesis.bib                # Bibliography
-│    ├── llncs.cls                 # Springer LNCS class
-│    └── splncs04.bst              # BibTeX style
+│    └── mnesis.bib                # Bibliography
 ├── cached_data/                   # Cached weights and scan results (git-ignored)
 ├── LICENSE
 └── README.md

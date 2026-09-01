@@ -122,7 +122,6 @@ jupyter nbconvert --to notebook --execute --inplace 99_MNESIS_run-all.ipynb
 | `metadata.tex` | `\input` fragment (author/affiliation/AI-statement macros); **no** `\documentclass`, do not compile standalone. |
 | `fig_izhikevich.tex`, `fig_snntorch.tex` | Standalone TikZ figures (`\documentclass{standalone}`); compiled to their own PDFs in `tex/`. |
 | `mnesis.bib` | Bibliography database. |
-| `llncs.cls`, `splncs04.bst` | Springer LNCS class and BibTeX style. |
 
 The main paper resolves experiment figures through `\graphicspath{{../figures/}}`
 (`Perrinet26mnesis.tex:48`): `pattern.pdf`, `target.pdf`, `retrieval.pdf`, the
