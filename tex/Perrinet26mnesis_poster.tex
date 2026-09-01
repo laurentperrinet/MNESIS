@@ -3,27 +3,23 @@
 %!TeX spellcheck = en-UK
 %!BIB TS-program = biber
 % -*- coding: UTF-8; -*-
+\newcommand{\DoNotLoadEpstopdf}{}
 \documentclass[25pt, a0paper, portrait, margin=0mm, innermargin=15mm,
 blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
 \input{metadata}
 %  Default, Rays, Basic, Simple, Envelope, Wave, Board, Autumn, and Desert.
-\usetheme{Board}
+\usetheme{Simple}
 
 %--- graphics ----------------------------------------------------
 \usepackage{graphicx}
 \usepackage{tikz}
 \usepackage{adjustbox}
 \usepackage{capt-of}
-\usepackage{epstopdf-base}
 \graphicspath{{../figures/}{./}}
 
-\newcommand{\posterfigureinput}[1]{%
-  \begingroup
-  \RenewDocumentEnvironment{figure}{o}{\par\centering}{\par}%
-  \RenewDocumentCommand{\caption}{o m}{\captionof{figure}{##2}}%
-  \input{#1}%
-  \endgroup
-}
+\makeatletter
+\renewenvironment{figure}[1][]{\par\centering\def\@captype{figure}}{\par}
+\makeatother
 
 %--- colour scheme ------------------------------------------------
 \usecolorstyle{Default}
@@ -49,36 +45,36 @@ blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
 \begin{columns}
   \column{0.48}
     \block{Introduction}{
-      \posterfigureinput{figure_izhikevich}
+      \input{figure_izhikevich}
     }
 
   \column{0.48}
     \block{Architecture}{
-      \posterfigureinput{figure_snntorch}
+      \input{figure_snntorch}
     }
 \end{columns}
 
 \begin{columns}
   \column{0.48}
     \block{Pattern Retrieval}{
-      \posterfigureinput{figure_target}
+      \input{figure_target}
     }
 
   \column{0.48}
     \block{Sequential Retrieval}{
-      \posterfigureinput{figure_retrieval}
+      \input{figure_retrieval}
     }
 \end{columns}
 
 \begin{columns}
   \column{0.48}
     \block{Robustness}{
-      \posterfigureinput{figure_robustness}
+      \input{figure_robustness}
     }
 
   \column{0.48}
     \block{Parameter Scan}{
-      \posterfigureinput{figure_scan}
+      \input{figure_scan}
     }
 \end{columns}
 \end{document}
