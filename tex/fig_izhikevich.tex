@@ -34,6 +34,7 @@
     brownlink/.style={draw=black!60!red!75!brown, line width=1.7pt},
     greenlink/.style={draw=green!60!black, line width=1.7pt},
     spike/.style={line width=3.3pt, draw=#1},
+    nodeLabel/.style={midway, sloped, above, fill=white, inner sep=2pt, font=\small},
   ]
  
 \def\xLeftPanelLabel{-0.15}
@@ -61,16 +62,15 @@
   }
  
   % Connections from pre to post
-      % \def\nodeLabelStyle{midway, sloped, above, fill=white, inner sep=1pt, font=\small}
-  \draw[brownlink] (a2) -- node[midway, sloped, above, fill=white, inner sep=1pt, font=\small] {3 ms} (b1);
-  \draw[brownlink] (a3) -- node[midway, sloped, above, fill=white, inner sep=1pt, font=\small] {8 ms} (b1);
-  \draw[brownlink] (a4) -- node[midway, sloped, above, fill=white, inner sep=1pt, font=\small] {4 ms} (b1);
-  \draw[brownlink] (a5) -- node[midway, sloped, above, fill=white, inner sep=1pt, font=\small] {2 ms} (b1);
+  \draw[brownlink] (a2) -- node[nodeLabel] {3 ms} (b1);
+  \draw[brownlink] (a3) -- node[nodeLabel] {8 ms} (b1);
+  \draw[brownlink] (a4) -- node[nodeLabel] {4 ms} (b1);
+  \draw[brownlink] (a5) -- node[nodeLabel] {2 ms} (b1);
  
-  \draw[greenlink] (a2) -- node[midway, sloped, below, fill=white, inner sep=1pt, font=\small] {1 ms} (b5);
-  \draw[greenlink] (a3) -- node[midway, sloped, below, fill=white, inner sep=1pt, font=\small] {6 ms} (b5);
-  \draw[greenlink] (a4) -- node[midway, sloped, below, fill=white, inner sep=1pt, font=\small] {2 ms} (b5);
-  \draw[greenlink] (a5) -- node[midway, sloped, below, fill=white, inner sep=1pt, font=\small] {8 ms} (b5);
+  \draw[greenlink] (a2) -- node[nodeLabel] {1 ms} (b5);
+  \draw[greenlink] (a3) -- node[nodeLabel] {6 ms} (b5);
+  \draw[greenlink] (a4) -- node[nodeLabel] {2 ms} (b5);
+  \draw[greenlink] (a5) -- node[nodeLabel] {8 ms} (b5);
  
   \foreach \i/\p in {1/a1,2/a2,3/a3,4/a4,5/a5} {
     \node[neuron] at (\p) {$a_{\i}$};
@@ -84,19 +84,19 @@
   % Spike height parameters
   \def\spikeTop{0.75}
   
-  \def\spikeTOne{0.90} 
+  \def\spikeTOne{1} 
   \def\spikeYOne{0.} 
-  \def\spikeTTwo{2.90} 
+  \def\spikeTTwo{3} 
   \def\spikeYTwo{2} 
-  \def\spikeTThree{6.90}
+  \def\spikeTThree{7}
   \def\spikeYThree{1}
-  \def\spikeTFour{7.90}
+  \def\spikeTFour{8}
   \def\spikeYFour{3}
   % Green propagated spikes
-  \def\greenSpikeT{8.90}
+  \def\greenSpikeT{9}
   \def\spikeYgreen{0.0}
   % Red output spike
-  \def\spikeTred{10.90}
+  \def\spikeTred{11}
   \def\spikeYred{4.}
   
   \begin{scope}[xshift=7.4cm]
@@ -135,7 +135,7 @@
 
       % D marker and time axis
       % \draw[<->, line width=1.1pt] (0.0,-0.16) -- node[below, font=\Large] {$D = 41\,\mathrm{ms}$} (\greenSpikeT,-0.16);
-      \draw[->, line width=1.3pt] (0.0,-0.68) -- (12.4,-0.68) node[below, font=\Large] {time (ms)};
+      \draw[->, line width=1.3pt] (0.0,-0.68) -- (12.4,-0.68) node[above, font=\Large] {time (ms)};
       % Time axis markers at 1ms intervals
       \foreach \t in {0,1,2,3,4,5,6,7,8,9,10,11,12} {
         \draw (\t,-0.78) -- +(0,-0.05) node[below] {$\t$};
