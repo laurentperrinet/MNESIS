@@ -10,7 +10,7 @@
   \caption{%
     \textbf{Working memory as a chained sequential spike prediction via heterogeneous delays.}
     %
-    \emph{Left:} A recurrent HD-SNN of five neurons numbered $1$--$5$, connected by two subsets of recurrent connections that define two Spiking Motifs from the pre-synaptic side (neurons $a$) to the post-synaptic side (neurons $b$): dark-r ed connections from $a_2$, $a_3$, $a_4$, and $a_5$ target $b_1$ with delays $4$, $9$, $6$, $3$\,ms; green connections from $a_1$, $a_2$, $a_3$, $a_4$ target $b_ 5$ with delays $1$, $6$, $3$, $8$\,ms. %
+    \emph{Left:} A recurrent HD-SNN of five neurons numbered $1$--$5$, connected by two subsets of recurrent connections that define two Spiking Motifs from the pre-synaptic side (neurons $a$) to the post-synaptic side (neurons $b$): dark-red connections from $a_2$, $a_3$, $a_4$, and $a_5$ target $b_1$ with delays $3$, $8$, $4$, $2$\,ms; green connections from $a_2$, $a_3$, $a_4$, and $a_5$ target $b_5$ with delays $1$, $6$, $2$, $8$\,ms. %
     \emph{Right:} Raster plot illustrating how the network predicts successive s pikes from a past context window.
     %
     \emph{Step~1 --- first prediction (green dashed box):} the orange input spik es emitted at staggered times by $a_2$--$a_5$ within the first context window (dashed green box) constitute a heterogeneous Spiking Motif. The green delays are tuned so that all four spikes converge \emph{synchronously} at $b_5$, crossing the firing threshold and producing the green output spike at a precise time. 

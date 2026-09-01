@@ -131,11 +131,15 @@
 
       % context window 
       \draw[panelbox, draw=green!45!black, opacity=.35] (0.15,-0.12) rectangle (\greenSpikeT,{\spikeYred+1.05});
-      \draw[panelbox, draw=black!35!red, opacity=.35] (2.0,-0.10) rectangle (11.3,{\spikeYred+1.08});
+      \draw[panelbox, draw=black!35!red, opacity=.35] (2.0,-0.10) rectangle (\spikeTred,{\spikeYred+1.08});
 
       % D marker and time axis
       % \draw[<->, line width=1.1pt] (0.0,-0.16) -- node[below, font=\Large] {$D = 41\,\mathrm{ms}$} (\greenSpikeT,-0.16);
       \draw[->, line width=1.3pt] (0.0,-0.68) -- (12.4,-0.68) node[below, font=\Large] {time (ms)};
+      % Time axis markers at 1ms intervals
+      \foreach \t in {0,1,2,3,4,5,6,7,8,9,10,11,12} {
+        \draw (\t,-0.78) -- +(0,-0.05) node[below] {$\t$};
+      }
       
   \end{scope}
   \end{tikzpicture}
