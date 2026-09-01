@@ -34,6 +34,9 @@
 \usepackage[style=numeric, sorting=none]{biblatex}
 \addbibresource{mnesis.bib}
 %
+\newcommand{\citep}[1]{\parencite{#1}}
+\newcommand{\citet}[1]{\textcite{#1}}
+%
 \graphicspath{{../figures/}}
 \title{\Title}
 \author{
@@ -47,6 +50,7 @@
 }
 \date{\today}
 
+%%%%%%%%%%%% Her begynner selve dokumentet %%%%%%%%%%%%%%%
 \begin{document}
 \maketitle
 
@@ -398,8 +402,9 @@ M^*_\delta = \frac{\delta^2 \cdot N \cdot D}{\vartheta_0^2 \cdot p_A} = \frac{(0
 Since $M^*_\delta \gg M^*$, the binding constraint is always the parameter count, not interference. The margin $\delta$ does not limit capacity; it governs only the quality of the gradient signal at initialisation.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliographystyle{plainnat}
-\bibliography{mnesis}
-% \printbibliography
+%%%%%%%%%%%% Endyet daag koepf dokumentet %%%%%%%%%%%%%%%
+% \bibliographystyle{plainnat}
+% \bibliography{mnesis}
+\printbibliography
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
