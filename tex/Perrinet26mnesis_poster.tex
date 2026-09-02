@@ -58,9 +58,13 @@
 \colorlet{blocktitlefgcolor}{blue!80!black}
 \colorlet{blocktitlebordercolor}{blue!80}
 
-\colorlet{blockbodybgcolor}{white}
-\colorlet{blockbodyfgcolor}{black!80}
-\colorlet{blockbodybordercolor}{red!90}
+% \colorlet{blockbodybgcolor}{white}
+% \colorlet{blockbodyfgcolor}{black!80}
+% \colorlet{blockbodybordercolor}{red!90}
+% 
+% \colorlet{innerblockbodybgcolor}{white}
+% \colorlet{innerblockbodyfgcolor}{black!80}
+% \colorlet{innerblockbodybordercolor}{red!90}
 % \tikzposterset{
 %   block border line width = 1.2pt   % choose any dimension you like
 % }
@@ -96,23 +100,11 @@
 %--- hyperref ----------------------------------------------------
 \usepackage{hyperref}
 % \hypersetup{colorlinks=false, pdfborder={0 0 0}, pdfauthor={\AuthorLP}, pdftitle={\Title}, pdfsubject={\Subject}, pdfkeywords={\Keywords}}
-% \makeatletter
-% \renewcommand{\TP@logo}{%
-% TOTO
-%   % \href{https://my.site}{TOTO}
-%   % }%
-% }
-% \makeatother
 %--------------------------------------------------------------
 \title{\Title}
-\author{
-  \AuthorLP 
-  %  \Street, \PostCode\ \City, \Country \\
-  }
+\author{\AuthorLP  }
 \institute{\textbf{\Department} - \Affiliation}
   
-  % \texttt{\EmailLP} \\
-% \url{\WebsiteLP/perrinet-26}
 
 % \date{\today}
 \date{September 3rd, 2026}
@@ -161,12 +153,18 @@
     \block{Architecture}{
       \input{figure_snntorch}
     }
-\end{columns}
+
+  \column{0.33}
+    \block{Pattern Retrieval}{
+      \input{figure_target}
+    }
+
+  \end{columns}
 
 \begin{columns}
   \column{0.33}
     \block{Pattern Retrieval}{
-      \input{figure_target}
+      % \input{figure_target}
     }
 
   \column{0.33}
@@ -194,6 +192,6 @@
 
 
 \block{Contact}{%\small
-     presenter.email@university.edu | Twitter: @labname | Website: labname.university.edu
+\Street, \PostCode\ \City, \Country   --- E-mail: \texttt{\EmailLP} --- Source code: \url{\WebsiteLP/publication/perrinet-26}
 }
 \end{document}
