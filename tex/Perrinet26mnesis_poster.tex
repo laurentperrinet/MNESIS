@@ -1,15 +1,20 @@
-%!TeX TS-program = lualatex
+%!TeX TS-program = lulalatex
 %!TeX encoding = UTF-8 Unicode
 %!TeX spellcheck = en-UK
 %!BIB TS-program = biber
 % -*- coding: UTF-8; -*-
 \newcommand{\DoNotLoadEpstopdf}{}
-\documentclass[25pt, a0paper, portrait, margin=0mm, innermargin=15mm,
+\documentclass[15pt, a0paper, portrait, margin=0mm, innermargin=15mm,
 blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
 \input{metadata}
 %  Default, Rays, Basic, Simple, Envelope, Wave, Board, Autumn, and Desert.
 \usetheme{Simple}
 
+\usepackage[style=numeric, sorting=none]{biblatex}
+\addbibresource{mnesis.bib}
+%
+\newcommand{\citep}[1]{\parencite{#1}}
+\newcommand{\citet}[1]{\textcite{#1}}
 %--- graphics ----------------------------------------------------
 \usepackage{graphicx}
 \usepackage{tikz}
@@ -18,7 +23,10 @@ blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
 \graphicspath{{../figures/}{./}}
 
 \makeatletter
-\renewenvironment{figure}[1][]{\par\centering\def\@captype{figure}}{\par}
+% Redefine figure to strip float behavior and force \textwidth to be \linewidth
+\renewenvironment{figure}[1][]{\par\centering\def\@captype{figure}\let\textwidth\linewidth}{\par}
+% Redefine center to avoid extra vertical space
+\renewenvironment{center}{\centering}{\par}
 \makeatother
 
 %--- colour scheme ------------------------------------------------
@@ -26,53 +34,53 @@ blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
 
 %--- hyperref ----------------------------------------------------
 \usepackage{hyperref}
-\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+%\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
 
 %--------------------------------------------------------------
 \title{\Title}
 \author{
   \AuthorLP \\
-  \texttt{\EmailLP} \\
-  \Department \\
-  \Affiliation \\
-  \Street, \PostCode\ \City, \Country \\
-  \url{\WebsiteLP/perrinet-26}
+%  \texttt{\EmailLP} \\
+%  \Department \\
+%  \Affiliation \\
+%  \Street, \PostCode\ \City, \Country \\
+% \url{\WebsiteLP/perrinet-26}
 }
 \date{\today}
 \begin{document}
 \maketitle
 
 \begin{columns}
-  \column{0.48}
+  \column{0.33}
     \block{Introduction}{
       \input{figure_izhikevich}
     }
 
-  \column{0.48}
+  \column{0.33}
     \block{Architecture}{
       \input{figure_snntorch}
     }
 \end{columns}
 
 \begin{columns}
-  \column{0.48}
+  \column{0.33}
     \block{Pattern Retrieval}{
       \input{figure_target}
     }
 
-  \column{0.48}
+  \column{0.33}
     \block{Sequential Retrieval}{
       \input{figure_retrieval}
     }
 \end{columns}
 
 \begin{columns}
-  \column{0.48}
+  \column{0.33}
     \block{Robustness}{
       \input{figure_robustness}
     }
 
-  \column{0.48}
+  \column{0.33}
     \block{Parameter Scan}{
       \input{figure_scan}
     }
