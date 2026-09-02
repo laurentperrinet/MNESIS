@@ -1,23 +1,86 @@
-%!TeX TS-program = lulalatex
+%!TeX TS-program = lualatex
 %!TeX encoding = UTF-8 Unicode
 %!TeX spellcheck = en-UK
 %!BIB TS-program = biber
 % -*- coding: UTF-8; -*-
 \newcommand{\DoNotLoadEpstopdf}{}
-\documentclass[15pt, a0paper, portrait, margin=0mm, innermargin=15mm,
-blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
+% \documentclass[a0paper, portrait, margin=0mm, innermargin=15mm,blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
+% \documentclass[a0paper, portrait]{tikzposter}
+\documentclass[
+  25pt,                      % Font scaling
+  a0paper,                   % Paper size
+  portrait,                  % Orientation
+  margin=10mm,               % Outer margins (minimal for full page)
+  innermargin=15mm,          % Space inside blocks
+  blockverticalspace=15mm,   % Space between blocks
+  colspace=15mm,             % Space between columns
+  subcolspace=8mm            % Space between subcolumns
+]{tikzposter}
 \input{metadata}
 %  Default, Rays, Basic, Simple, Envelope, Wave, Board, Autumn, and Desert.
-\usetheme{Simple}
+\usetheme{Board}
 
-\usepackage[style=numeric, sorting=none]{biblatex}
+%--- colour scheme ------------------------------------------------
+% \usecolorstyle{Default}
+% background = trame delaunay
+\usepackage{graphicx}
+\usecolorstyle{Default}            % keep the standard Board palette
+
+\definebackgroundstyle{whitebackgroundstyle}{
+  %  \centering
+  %    \tikz[remember picture,overlay]\node[scale=0.8,anchor=east,xshift=0.5\linewidth,yshift=4cm,inner sep=0pt] {%
+  %     \includegraphics[width=0.2\textwidth]{/Users/laurent/sdrive_cnrs/blog/perrinet_curriculum-vitae.tex/logotypes/logo_int.png}
+  %   };
+\draw[fill=white!99!black] (bottomleft) rectangle (topright);
+}
+\usebackgroundstyle{whitebackgroundstyle}
+\tikzposterlatexaffectionproofoff
+
+% \makeatletter
+% \definebackgroundstyle{dottedbackground}{%
+%   \fill[white] (bottomleft) rectangle (topright);
+%   \def\dotcount{15000}\def\dotradius{0.30pt}\def\dotcolor{black!30}
+%   \pgfmathsetseed{12345}
+%   \begin{scope}[shift={(current page.south west)}]
+%     \foreach \i in {1,...,\dotcount}{%
+%       \pgfmathsetmacro{\rx}{rnd}\pgfmathsetmacro{\ry}{rnd}
+%       \fill[\dotcolor] (\rx*\paperwidth,\ry*\paperheight) circle (\dotradius);
+%     }
+%   \end{scope}
+% }
+% \makeatother
+% \usebackgroundstyle{dottedbackground}
+
+% -------------------------------------------------
+%.      Global block colours
+% -------------------------------------------------
+\colorlet{blocktitlebgcolor}{white}
+\colorlet{blocktitlefgcolor}{blue!80!black}
+\colorlet{blocktitlebordercolor}{blue!80}
+
+\colorlet{blockbodybgcolor}{white}
+\colorlet{blockbodyfgcolor}{black!80}
+\colorlet{blockbodybordercolor}{red!90}
+% \tikzposterset{
+%   block border line width = 1.2pt   % choose any dimension you like
+% }
+% -------------------------------------------------
+%  Jitter / line‑width of the outer border
+% -------------------------------------------------
+% \tikzposterset{
+%   border jitter   = 1.0pt,   % more “sketchy”
+%   border line width = 0.9pt % a little thicker
+% }
+
+
+% --------------
+
+\usepackage[backend=biber,style=numeric,style=numeric-comp,sorting=none,defernumbers=true,url=false]{biblatex}
 \addbibresource{mnesis.bib}
 %
 \newcommand{\citep}[1]{\parencite{#1}}
 \newcommand{\citet}[1]{\textcite{#1}}
 %--- graphics ----------------------------------------------------
-\usepackage{graphicx}
-\usepackage{tikz}
 \usepackage{adjustbox}
 \usepackage{capt-of}
 \graphicspath{{../figures/}{./}}
@@ -29,32 +92,70 @@ blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
 \renewenvironment{center}{\centering}{\par}
 \makeatother
 
-%--- colour scheme ------------------------------------------------
-\usecolorstyle{Default}
 
 %--- hyperref ----------------------------------------------------
 \usepackage{hyperref}
-%\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
-
+% \hypersetup{colorlinks=false, pdfborder={0 0 0}, pdfauthor={\AuthorLP}, pdftitle={\Title}, pdfsubject={\Subject}, pdfkeywords={\Keywords}}
+% \makeatletter
+% \renewcommand{\TP@logo}{%
+% TOTO
+%   % \href{https://my.site}{TOTO}
+%   % }%
+% }
+% \makeatother
 %--------------------------------------------------------------
 \title{\Title}
 \author{
-  \AuthorLP \\
-%  \texttt{\EmailLP} \\
-%  \Department \\
-%  \Affiliation \\
-%  \Street, \PostCode\ \City, \Country \\
+  \AuthorLP 
+  %  \Street, \PostCode\ \City, \Country \\
+  }
+\institute{\textbf{\Department} - \Affiliation}
+  
+  % \texttt{\EmailLP} \\
 % \url{\WebsiteLP/perrinet-26}
+
+% \date{\today}
+\date{September 3rd, 2026}
+
+\titlegraphic{\includegraphics[width=0.5\textwidth]{/Users/laurent/sdrive_cnrs/blog/perrinet_curriculum-vitae.tex/logotypes/troislogos.jpg} }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% http://tex.stackexchange.com/questions/167521/tikz-poster-aligning-titlegraphic-to-the-right-of-the-title
+\makeatletter
+\renewcommand\TP@maketitle{%
+   \centering
+     \tikz[remember picture,overlay]\node[scale=0.8,anchor=east,xshift=0.5\linewidth,yshift=4cm,inner sep=0pt] {%
+      \includegraphics[width=0.2\textwidth]{/Users/laurent/sdrive_cnrs/blog/perrinet_curriculum-vitae.tex/logotypes/logo_int.png}
+    };
+   \centering
+     \tikz[remember picture,overlay]\node[scale=0.8,anchor=east,xshift=1.65\linewidth,yshift=4cm,inner sep=0pt] {%
+      \includegraphics[width=0.1\textwidth]{/Users/laurent/sdrive_cnrs/blog/perrinet_curriculum-vitae.tex/logotypes/logo_CNRS.png}
+    };
+   \begin{minipage}[b]{0.8\linewidth}
+        \centering
+        \color{titlefgcolor}
+        {\bfseries \Huge \sc \@title \par}
+        \vspace*{1em}
+        {\huge \@author \par}
+        \vspace*{2em}
+        {\Large \@institute}
+    \end{minipage}%
 }
-\date{\today}
+\makeatother
+% \usetitlestyle{Basic}
+
 \begin{document}
 \maketitle
+\nocite{Grimaldi2023,Izhikevich2006,Grimaldi2023a,Kronland-Martinet2026,Eshraghian2023}
 
 \begin{columns}
   \column{0.33}
     \block{Introduction}{
       \input{figure_izhikevich}
     }
+
+    % \note[rotate=8, connection, width = 7cm,
+    % % roundedcorners=15, targetoffsetx=2cm
+    % ]{Oh wait! A note!}
 
   \column{0.33}
     \block{Architecture}{
@@ -86,8 +187,13 @@ blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
     }
 
     \column{0.33}
-    \block{Parameter Scan}{
-      \input{figure_scan}
+    \block{Bibligraphy}{%\small
+      \printbibliography[heading=none]
     }
 \end{columns}
+
+
+\block{Contact}{%\small
+     presenter.email@university.edu | Twitter: @labname | Website: labname.university.edu
+}
 \end{document}
