@@ -84,8 +84,8 @@ class Params:
     fig_width: float = 30                # width of figure
     fig_height: float = 15                # width of figure
     phi: float = 1.61803                 # beauty is gold
-    N_time_show: int = 512               # number of time points to show in plots
-    N_neuron_show: int = 200             # number of SM to show in plots
+    N_time_show: int = 1000               # number of time points to show in plots
+    N_neuron_show: int = 1024             # number of SM to show in plots
     N_scan: int = 35 // DEBUG + 1        # number of values to scan
 
     def __post_init__(self):
