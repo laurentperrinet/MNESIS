@@ -79,7 +79,7 @@
 
 % --------------
 
-\usepackage[backend=biber,style=numeric,style=numeric-comp,sorting=none,defernumbers=true,url=false]{biblatex}
+\usepackage[backend=biber,style=numeric,style=numeric-comp,sorting=none,defernumbers=true,url=true]{biblatex}
 \addbibresource{mnesis.bib}
 %
 \newcommand{\citep}[1]{\parencite{#1}}
@@ -99,6 +99,7 @@
 
 %--- hyperref ----------------------------------------------------
 \usepackage{hyperref}
+\hypersetup{colorlinks=false, hidelinks=true, pdfauthor={\AuthorLP}, pdftitle={\Title}}
 % \hypersetup{colorlinks=false, pdfborder={0 0 0}, pdfauthor={\AuthorLP}, pdftitle={\Title}, pdfsubject={\Subject}, pdfkeywords={\Keywords}}
 %--------------------------------------------------------------
 \title{\Title}
@@ -141,7 +142,7 @@
 
 \begin{columns}
   \column{0.33}
-    \block{Introduction}{
+    \block{Chains of polychronization}{
       \input{figure_izhikevich}
     }
 
@@ -150,7 +151,7 @@
     % ]{Oh wait! A note!}
 
   \column{0.33}
-    \block{Architecture}{
+    \block{Architecture of the model}{
       \input{figure_snntorch}
     }
 
@@ -162,15 +163,21 @@
   \end{columns}
 
 \begin{columns}
-  \column{0.33}
-    \block{Pattern Retrieval}{
-      % \input{figure_target}
-    }
 
   \column{0.33}
-    \block{Sequential Retrieval}{
-      \input{figure_retrieval}
-    }
+  \block{Sequential Retrieval}{
+    \input{figure_retrieval}
+    }    
+    
+  \column{0.33}
+    \block{Encoding the Lorenz attractor}{
+    \input{figure_lorenz}
+  }
+
+  \column{0.33}
+    \block{Learning Travelling waves}{
+    \input{figure_wave}
+  }
 \end{columns}
 
 \begin{columns}
@@ -185,7 +192,7 @@
     }
 
     \column{0.33}
-    \block{Bibligraphy}{%\small
+    \block{}{%\small
       \printbibliography[heading=none]
     }
 \end{columns}
