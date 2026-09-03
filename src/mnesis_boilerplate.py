@@ -114,7 +114,7 @@ def pprint(s):
     print(s)
     print(len(s)*'=')
 
-def printfig(fig, name='', fig_width=12, fig_height=None, exts=['pdf', 'png', 'svg'], figpath=figpath, dpi_exp=None, bbox='tight', verbose=True, do_overwrite=False):
+def printfig(fig, name='', fig_width=12, fig_height=None, exts=['pdf', 'png', 'svg'], figpath=figpath, dpi_exp=None, bbox='tight', verbose=True, do_overwrite=True):
     if fig_height is None: fig_height = fig_width/phi
     cm = 1/2.54  # centimeters in inches
     fig.set_size_inches((fig_width*cm, fig_height*cm))
