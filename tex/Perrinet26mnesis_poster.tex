@@ -31,22 +31,6 @@
 }
 \usebackgroundstyle{whitebackgroundstyle}
 \tikzposterlatexaffectionproofoff
-
-% \makeatletter
-% \definebackgroundstyle{dottedbackground}{%
-%   \fill[white] (bottomleft) rectangle (topright);
-%   \def\dotcount{15000}\def\dotradius{0.30pt}\def\dotcolor{black!30}
-%   \pgfmathsetseed{12345}
-%   \begin{scope}[shift={(current page.south west)}]
-%     \foreach \i in {1,...,\dotcount}{%
-%       \pgfmathsetmacro{\rx}{rnd}\pgfmathsetmacro{\ry}{rnd}
-%       \fill[\dotcolor] (\rx*\paperwidth,\ry*\paperheight) circle (\dotradius);
-%     }
-%   \end{scope}
-% }
-% \makeatother
-% \usebackgroundstyle{dottedbackground}
-
 % -------------------------------------------------
 %.      Global block colours
 % -------------------------------------------------
@@ -64,18 +48,10 @@
 % \tikzposterset{
 %   block border line width = 1.2pt   % choose any dimension you like
 % }
-% -------------------------------------------------
-%  Jitter / line‑width of the outer border
-% -------------------------------------------------
-% \tikzposterset{
-%   border jitter   = 1.0pt,   % more “sketchy”
-%   border line width = 0.9pt % a little thicker
-% }
-
 
 % --------------
 
-\usepackage[backend=biber,style=numeric,style=numeric-comp,sorting=none,defernumbers=true,url=true]{biblatex}
+\usepackage[backend=biber,style=numeric,style=numeric-comp,sorting=none,defernumbers=true,url=false]{biblatex}
 \addbibresource{mnesis.bib}
 %
 \newcommand{\citep}[1]{\parencite{#1}}
@@ -102,22 +78,20 @@
 \author{\AuthorLP  }
 \institute{\textbf{\Department} - \Affiliation}
   
-
 % \date{\today}
 \date{September 3rd, 2026}
 
-\titlegraphic{\includegraphics[width=0.5\textwidth]{/Users/laurent/sdrive_cnrs/blog/perrinet_curriculum-vitae.tex/logotypes/troislogos.jpg} }
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % http://tex.stackexchange.com/questions/167521/tikz-poster-aligning-titlegraphic-to-the-right-of-the-title
 \makeatletter
 \renewcommand\TP@maketitle{%
    \centering
      \tikz[remember picture,overlay]\node[scale=0.8,anchor=east,xshift=0.5\linewidth,yshift=4cm,inner sep=0pt] {%
-      \includegraphics[width=0.2\textwidth]{/Users/laurent/sdrive_cnrs/blog/perrinet_curriculum-vitae.tex/logotypes/logo_int.png}
+      \includegraphics[width=0.2\textwidth]{~/sdrive_cnrs/blog/perrinet_curriculum-vitae.tex/logotypes/logo_int.png}
     };
    \centering
      \tikz[remember picture,overlay]\node[scale=0.8,anchor=east,xshift=1.58\linewidth,yshift=4cm,inner sep=0pt] {%
-      \includegraphics[width=0.1\textwidth]{/Users/laurent/sdrive_cnrs/blog/perrinet_curriculum-vitae.tex/logotypes/logo_CNRS.png}
+      \includegraphics[width=0.1\textwidth]{~/sdrive_cnrs/blog/perrinet_curriculum-vitae.tex/logotypes/logo_CNRS.png}
     };
    \begin{minipage}[b]{0.8\linewidth}
         \centering
@@ -134,7 +108,7 @@
 
 \begin{document}
 \maketitle
-\nocite{Grimaldi2023,Izhikevich2006,Grimaldi2023a,Kronland-Martinet2026,Eshraghian2023}
+\nocite{Izhikevich2006,Grimaldi2023,Perrinet2023,Grimaldi2023a,Kronland-Martinet2026,Eshraghian2023}
 
 \begin{columns}
   \column{0.33}
@@ -166,7 +140,7 @@
     }    
     
   \column{0.33}
-    \block{Encoding the Lorenz attractor}{
+    \block{Navigating the Lorenz attractor}{
     \input{figure_lorenz}
   }
 
