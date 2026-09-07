@@ -25,6 +25,7 @@ if DEBUG > 1:
 
 datetag = '2026-07-11' # run with new parameters from the camera ready
 datetag = '2026-08-06' # novel run on the revamped code
+datetag = '2026-09-07' # post poster RT neurocomp
 print(f"datetag = '{datetag}'")
 
 # --- Torch Setup ---
@@ -54,12 +55,12 @@ class Params:
     N_pretime: int = 50                  # number of timebins for spontaneous activity before and after the stimulus
     p_A: float = 0.00016                 # prior probability of firing for postsynaptic raster plot (spike per timebin)
     p_flip: float = 0.01                 # the default probability of flipping a bit in the stochastic pattern generator
-    seed: int = 2018                     # seed
+    seed: int = 2026                     # seed
     device = device
 
     # network
-    lif_beta: float = 0.8
-    lif_threshold: float = 0.72
+    lif_beta: float = 0.70
+    lif_threshold: float = 0.75
     learn_beta: bool = False
     learn_threshold: bool = False
     do_pinv: bool = True
@@ -68,16 +69,16 @@ class Params:
     # learning
     num_epochs: int = 256 // DEBUG
     num_warmup_epochs: int = 16          # 2**4
-    base_lr: float = 30.0e-3
-    final_lr: float = 1.e-3
-    delta1: float = 10.e-3
+    base_lr: float = 40.0e-3
+    final_lr: float = 4.e-4
+    delta1: float = 3.e-3
     delta2: float = 10.e-6
-    dropout: float = 0.25
+    dropout: float = 0.60
     alpha_surrogate: float = 5.0
     surrogate_name: str = "FastSigmoid"
     loss_name: str = "SpikeF1scoreLoss"  # 'MSELoss' #'L1Loss'
-    reset_mechanism: str = "subtract"    # "zero"
-    optimizer: str = "sgd"              # 'adamw' #adam
+    reset_mechanism: str = "zero"    # "zero"
+    optimizer: str = "adadelta"              # 'adamw' #adam
 
     # figures
     verbose: bool = False                # Displays more verbose output.
