@@ -87,7 +87,8 @@ class Params:
     phi: float = 1.61803                 # beauty is gold
     N_time_show: int = 1000               # number of time points to show in plots
     N_neuron_show: int = 1024             # number of SM to show in plots
-    N_scan: int = 35 // DEBUG + 1        # number of values to scan
+    N_scan: int = 13 // DEBUG + 1        # number of values to scan
+    N_cv: int = 10 // DEBUG + 1        # number of cross-validation steps
 
     def __post_init__(self):
         torch.manual_seed(self.seed)
