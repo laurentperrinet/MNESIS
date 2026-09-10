@@ -78,8 +78,8 @@ class HD_SNN(nn.Module):
     def __init__(self, opt, pattern_object):
         super().__init__()
         self.opt = opt
-        self.target = pattern_object
-        self.target.init(opt)
+        self.pattern_object = pattern_object
+        self.pattern_object.init(opt)
 
         dropout = nn.Dropout(opt.dropout)
         lin = nn.Linear(opt.num_delay*opt.N_neuron, opt.N_neuron, bias=False)
@@ -136,7 +136,7 @@ class HD_SNN(nn.Module):
         return current, mem_rec, spikes
 
     def get_W_init(self):
-        target = self.target()
+        target = self.pattern_object()
         windows = target[:, :, :-1].unfold(dimension=2, size=self.opt.num_delay, step=1)
         windows  = windows.permute(0, 2, 1, 3).contiguous()
         batch    = self.opt.N_pattern * (self.opt.N_time - self.opt.num_delay)
@@ -177,9 +177,9 @@ class HD_SNN(nn.Module):
         if N_time is None: N_time = self.opt.N_time
 
         input_spikes = torch.zeros((self.opt.N_pattern, self.opt.N_neuron, N_time+2*N_pretime))
+        # spontaneous activity before the trigger window
         input_spikes[:, :, :N_pretime] = torch.bernoulli(p_A * torch.ones((self.opt.N_pattern, self.opt.N_neuron, N_pretime)))
-        # if target is None:
-        #     target = self.target()
+        # the trigger window, which is the target pattern for the first milliseconds
         input_spikes[:, :, N_pretime:(N_pretime+N_trigger_time)] = target[:, :, :N_trigger_time]
         return input_spikes.to(self.opt.device).detach()
 
@@ -214,13 +214,14 @@ class HD_SNN(nn.Module):
         for i_step in range(self.opt.num_epochs):
             self.net.train()
             # the pattern that we wish to memorize
-            target = self.target() # NOTE: we assume that the pattern generator can generate a new pattern each time it is called
+            target = self.pattern_object() # NOTE: we assume that the pattern generator can generate a new pattern each time it is called
             # the input spikes that we feed to the network, which includes pre-time spontaneous activity (padding) and the target pattern just for the trigger window
             input_spikes = self.get_input_spikes(target=target).detach()
             optimizer.zero_grad()
             # the optimal output spikes that the network produces in response to the input spikes
             _, _, output_spikes = self.forward_pass(input_spikes)
-            loss_train = loss_fn(output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(self.opt.N_time-self.opt.N_pretime)], 
+            # the loss is computed only on the output spikes that correspond to the target pattern, i.e. after the pre-time spontaneous activity and after the trigger window
+            loss_train = loss_fn(output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(self.opt.N_time+self.opt.N_pretime)], 
                                  target[:, :, self.opt.num_delay:])
             loss_train.backward()
             optimizer.step()
@@ -229,12 +230,12 @@ class HD_SNN(nn.Module):
             with torch.no_grad():
                 self.net.eval()
                 # the pattern that we wish to memorize
-                target = self.target()
+                target = self.pattern_object()
                 # the input spikes 
                 input_spikes = self.get_input_spikes(target=target).detach()
                 # the optimal output spikes that the network produces in response to the input spikes
                 _, _, output_spikes = self.forward_pass(input_spikes)
-                output_spikes_trimmed = output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(self.opt.N_time-self.opt.N_pretime)]
+                output_spikes_trimmed = output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(self.opt.N_time+self.opt.N_pretime)]
                 input_target_trimmed = target[:, :, self.opt.num_delay:]
                 loss_val_ = loss_fn(output_spikes_trimmed, input_target_trimmed)
                 loss_val.append(loss_val_.item())
