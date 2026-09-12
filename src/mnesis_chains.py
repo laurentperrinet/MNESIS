@@ -16,30 +16,30 @@ from mnesis_boilerplate import (
 
 
 class SpikingPattern:
-  """Generate a frozen spiking pattern based on a Bernoulli process.
+    """Generate a frozen spiking pattern based on a Bernoulli process.
 
     The target is a single, reproducible spike raster of shape
-    ``(N_pattern, N_neuron, N_time)`` drawn once from a Bernoulli
+     ``(N_pattern, N_neuron, N_time)`` drawn once from a Bernoulli
     distribution of rate ``p_A``, seeded with ``opt.seed`` so that the same
     pattern is obtained across runs.
-  """
+    """
 
     def __init__(self):
         self.desc = "Frozen Spike pattern generator"
         self.is_periodic = False
 
     def init(self, opt, verbose=False):
-      """Draw the frozen target pattern.
+        """Draw the frozen target pattern.
 
-        Args:
+         Args:
             opt: A :class:`~mnesis_boilerplate.Params` instance providing
-                ``N_pattern``, ``N_neuron``, ``N_time``, ``p_A``, ``seed``
+                 ``N_pattern``, ``N_neuron``, ``N_time``, ``p_A``, ``seed``
                 and ``device``.
             verbose: If ``True``, print the shape and mean firing rate of
                 the generated target.
-      """
+         """
         self.opt = opt
-        frozen_target_generator = torch.Generator()   # used once to generate the target pattern
+        frozen_target_generator = torch.Generator()    # used once to generate the target pattern
         frozen_target_generator.manual_seed(opt.seed)
         p_bias = opt.p_A * torch.ones((opt.N_pattern, opt.N_neuron, opt.N_time))
         self.frozen_target = torch.bernoulli(p_bias, generator=frozen_target_generator)
@@ -49,75 +49,75 @@ class SpikingPattern:
             print(f"Target pattern generated with shape {self.frozen_target.shape} and mean {self.frozen_target.mean().item():.3e}")
 
     def __call__(self):
-      """Return the frozen target pattern.
+        """Return the frozen target pattern.
 
-        Returns:
+         Returns:
             torch.Tensor: The stored spike raster, of shape
-            ``(N_pattern, N_neuron, N_time)``.
-      """
+             ``(N_pattern, N_neuron, N_time)``.
+         """
         return self.frozen_target
 
 
 class StochasticSpikingPattern(SpikingPattern):
-  """A stochastic spiking pattern generator.
+    """A stochastic spiking pattern generator.
 
     Extends :class:`SpikingPattern` with stochastic variability: each call
     returns a new realization of the base pattern in which bits are flipped
     independently with probability ``opt.p_flip`` ("balanced bit flipping"),
     so the marginal firing rate is preserved while the pattern structure is
     stochastically modified.
-  """
+    """
 
     def __init__(self):
         super().__init__()
         self.desc = "Stochastic spike pattern generator"
 
     def __call__(self, seed=None, verbose=False):
-      """Generate a stochastic realization of the spiking pattern.
+        """Generate a stochastic realization of the spiking pattern.
 
         Each call returns a new realization of the base pattern where bits
         are independently flipped with probability ``self.opt.p_flip``. The
         balanced-flip operation preserves the marginal frequency while
         introducing temporal and spatial variability in the structure.
 
-        Args:
+         Args:
             seed: Seed for the bit-flip generator; ``None`` draws a fresh
                 random seed.
             verbose: If ``True``, report the number of flipped bits.
 
-        Returns:
+         Returns:
             torch.Tensor: Stochastic realization of the spiking pattern,
             with the same dimensions as the base pattern.
-      """
+         """
         return flip_bits(self.frozen_target, p_flip=self.opt.p_flip, seed=seed, verbose=verbose)
 
 
 class HD_SNN(nn.Module):
-  """Recurrent spiking neural network with Heterogeneous Delays (HD-SNN).
+    """Recurrent spiking neural network with Heterogeneous Delays (HD-SNN).
 
     Each of the ``num_delay`` delays of every synapse carries an independent
-    learnable weight, gathered in a single tensor
-    ``W`` of shape ``(N_neuron, N_neuron * num_delay)``: the membrane of a
-    neuron is driven by the last ``num_delay`` spikes of all its presynaptic
-    peers. The network is a ``lin`` (the delay-expanded linear layer, no
-    bias) followed by ``dropout`` and a leaky integrate-and-fire neuron
+    learnable weight, gathered in a single tensor ``W`` of shape
+     ``(N_neuron, N_neuron * num_delay)``: the membrane of a neuron is
+    driven by the last ``num_delay`` spikes of all its presynaptic peers.
+    The network is a ``lin`` (the delay-expanded linear layer, no bias)
+    followed by ``dropout`` and a leaky integrate-and-fire neuron
     (``snntorch`` ``snn.Leaky``) whose non-differentiable threshold crossing
     is trained through a surrogate gradient.
 
-    Attributes:
+     Attributes:
         opt: The :class:`~mnesis_boilerplate.Params` configuration.
         pattern_object: The spiking-pattern generator providing the targets.
         net: ``nn.Sequential`` of the ``('lin', 'dropout', 'lif')`` modules.
-  """
+     """
 
     def __init__(self, opt, pattern_object):
-      """Build the network and initialise the pattern generator.
+        """Build the network and initialise the pattern generator.
 
-        Args:
+         Args:
             opt: A :class:`~mnesis_boilerplate.Params` instance.
             pattern_object: A :class:`SpikingPattern`-like object; its
-                ``init(opt)`` method is called to produce the targets.
-      """
+                 ``init(opt)`` method is called to produce the targets.
+         """
         super().__init__()
         self.opt = opt
         self.pattern_object = pattern_object
@@ -148,25 +148,25 @@ class HD_SNN(nn.Module):
         self.net = self.net.to(opt.device)
           
     def forward_pass(self, input_spikes, reset_spikes=None):
-      """Unroll the network over time and record its activations.
+        """Unroll the network over time and record its activations.
 
-        Starting at ``t = num_delay``, each neuron receives the last
+         Starting at ``t = num_delay``, each neuron receives the last
         ``num_delay`` spikes of every neuron, taken from the recurrent
         output, the external input and (optionally) a reset mask, combined
         as ``(A + B - C).clamp(0, 1)`` and ravelled into the delay-expanded
         linear layer before the leaky integrate-and-fire step.
 
-        Args:
+         Args:
             input_spikes: External spikes of shape
-                ``(N_pattern, N_neuron, N_time)``.
+                 ``(N_pattern, N_neuron, N_time)``.
             reset_spikes: Spikes to clamp off from the recurrent drive,
                 same shape as ``input_spikes``; ``None`` means no reset.
 
-        Returns:
+         Returns:
             tuple: ``(current, mem_rec, spikes)`` -- the post-synaptic
             current, the membrane potential and the output spikes, each of
             shape ``(N_pattern, N_neuron, N_time)``.
-      """
+         """
         input_spikes = input_spikes.to(self.opt.device).detach()
         if reset_spikes is None: reset_spikes = torch.zeros_like(input_spikes)
 
@@ -177,7 +177,7 @@ class HD_SNN(nn.Module):
         N_pattern = input_spikes.shape[0]
         N_time = input_spikes.shape[-1]
         current = torch.zeros(N_pattern, self.opt.N_neuron, N_time, device=device, dtype=dtype)
-        spikes  = torch.zeros(N_pattern, self.opt.N_neuron, N_time, device=device, dtype=dtype)
+        spikes   = torch.zeros(N_pattern, self.opt.N_neuron, N_time, device=device, dtype=dtype)
         mem_rec = torch.zeros(N_pattern, self.opt.N_neuron, N_time, device=device, dtype=dtype)
         mem = self.net.lif.init_leaky()
 
@@ -197,7 +197,7 @@ class HD_SNN(nn.Module):
         return current, mem_rec, spikes
 
     def get_W_init(self):
-      """Compute the closed-form (analytical) weight initialisation.
+        """Compute the closed-form (analytical) weight initialisation.
 
         The target patterns are cast as a linear regression problem: every
         sliding window of ``num_delay`` past spikes (the "context") should
@@ -211,14 +211,14 @@ class HD_SNN(nn.Module):
           ``W = pinv(C) T``; otherwise use the normalised Hebbian
           cross-correlation ``T^T C / <||c||^2>``.
 
-        Returns:
+         Returns:
             torch.Tensor: The initial weights for ``net.lin``, of shape
              ``(N_neuron, N_neuron * num_delay)``.
-      """
+         """
         target = self.pattern_object()
         windows = target[:, :, :-1].unfold(dimension=2, size=self.opt.num_delay, step=1)
-        windows  = windows.permute(0, 2, 1, 3).contiguous()
-        batch    = self.opt.N_pattern * (self.opt.N_time - self.opt.num_delay)
+        windows   = windows.permute(0, 2, 1, 3).contiguous()
+        batch     = self.opt.N_pattern * (self.opt.N_time - self.opt.num_delay)
         contexts = windows.reshape(batch, self.opt.N_neuron * self.opt.num_delay)
             
         if self.opt.do_deconv:
@@ -241,53 +241,53 @@ class HD_SNN(nn.Module):
         return W_init
         
     def update_weight(self):
-      """Set ``net.lin.weight`` to the analytical initialisation.
+        """Set ``net.lin.weight`` to the analytical initialisation.
 
-        Copies :meth:`get_W_init` into the linear layer in-place, under
-        ``torch.no_grad()``.
-      """
+         Copies :meth:`get_W_init` into the linear layer in-place, under
+         ``torch.no_grad()``.
+         """
         with torch.no_grad():            
             W_init = self.get_W_init()
             self.net.lin.weight.copy_(W_init)
             
     def get_input_spikes(self, target, p_A=None, N_pretime=None, N_trigger_time=None, N_time=None):
-      """Build the trigger input spikes for the network.
+        """Build the trigger input spikes for the network.
 
         The input concatenates a ``N_pretime`` chunk of spontaneous
         Bernoulli activity at rate ``p_A``, then the first
-        ``N_trigger_time`` steps of the target as the cue; any remaining
+         ``N_trigger_time`` steps of the target as the cue; any remaining
         time bins stay silent. The total length is ``N_time + 2*N_pretime``.
 
-        Args:
+         Args:
             target: The memorised pattern of shape
-                ``(N_pattern, N_neuron, N_time)``.
+                 ``(N_pattern, N_neuron, N_time)``.
             p_A: Spontaneous firing rate; defaults to ``opt.p_A``.
             N_pretime: Length of the spontaneous prefix; defaults to
-                ``opt.N_pretime``.
+                 ``opt.N_pretime``.
             N_trigger_time: Length of the cue window; defaults to
-                ``opt.num_delay``.
+                 ``opt.num_delay``.
             N_time: Length of the memory stretch; defaults to ``opt.N_time``.
 
-        Returns:
+         Returns:
             torch.Tensor: Detached input spikes of shape
-             ``(N_pattern, N_neuron, N_time + 2*N_pretime)``.
-      """
+              ``(N_pattern, N_neuron, N_time + 2*N_pretime)``.
+         """
         if p_A is None: p_A = self.opt.p_A 
         if N_pretime is None: N_pretime = self.opt.N_pretime
         if N_trigger_time is None: N_trigger_time = self.opt.num_delay
         if N_time is None: N_time = self.opt.N_time
 
         input_spikes = torch.zeros((self.opt.N_pattern, self.opt.N_neuron, N_time+2*N_pretime))
-        # spontaneous activity before the trigger window
+         # spontaneous activity before the trigger window
         input_spikes[:, :, :N_pretime] = torch.bernoulli(p_A * torch.ones((self.opt.N_pattern, self.opt.N_neuron, N_pretime)))
-        # the trigger window, which is the target pattern for the first milliseconds
+         # the trigger window, which is the target pattern for the first milliseconds
         input_spikes[:, :, N_pretime:(N_pretime+N_trigger_time)] = target[:, :, :N_trigger_time]
         return input_spikes.to(self.opt.device).detach()
 
     def learn_model(self, verbose=True):
-      """Train the delay weights by surrogate-gradient BPTT.
+        """Train the delay weights by surrogate-gradient BPTT.
 
-        At each epoch a fresh target is drawn from ``pattern_object``, the
+         At each epoch a fresh target is drawn from ``pattern_object``, the
         network is unrolled through :meth:`forward_pass` on the cued input
         from :meth:`get_input_spikes`, and the loss (``SpikeF1scoreLoss`` by
         default, or ``MSELoss``) is evaluated only after the spontaneous
@@ -296,9 +296,9 @@ class HD_SNN(nn.Module):
         logs loss, precision, recall and F1 every ``num_epochs // 64``
         epochs.
 
-        Args:
+         Args:
             verbose: If ``True``, print periodic training logs.
-       """
+         """
         if self.opt.loss_name == 'SpikeF1scoreLoss':
             loss_fn = SpikeF1scoreLoss()
         elif self.opt.loss_name == 'MSELoss':
@@ -328,14 +328,14 @@ class HD_SNN(nn.Module):
 
         for i_step in range(self.opt.num_epochs):
             self.net.train()
-            # the pattern that we wish to memorize
+             # the pattern that we wish to memorize
             target = self.pattern_object() # NOTE: we assume that the pattern generator can generate a new pattern each time it is called
-            # the input spikes that we feed to the network, which includes pre-time spontaneous activity (padding) and the target pattern just for the trigger window
+             # the input spikes that we feed to the network, which includes pre-time spontaneous activity (padding) and the target pattern just for the trigger window
             input_spikes = self.get_input_spikes(target=target).detach()
             optimizer.zero_grad()
-            # the optimal output spikes that the network produces in response to the input spikes
-            _, _, output_spikes = self.forward_pass(input_spikes)
-            # the loss is computed only on the output spikes that correspond to the target pattern, i.e. after the pre-time spontaneous activity and after the trigger window
+             # the optimal output spikes that the network produces in response to the input spikes
+             _, _, output_spikes = self.forward_pass(input_spikes)
+             # the loss is computed only on the output spikes that correspond to the target pattern, i.e. after the pre-time spontaneous activity and after the trigger window
             loss_train = loss_fn(output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(self.opt.N_time+self.opt.N_pretime)], 
                                  target[:, :, self.opt.num_delay:])
             loss_train.backward()
@@ -344,12 +344,12 @@ class HD_SNN(nn.Module):
 
             with torch.no_grad():
                 self.net.eval()
-                # the pattern that we wish to memorize
+                 # the pattern that we wish to memorize
                 target = self.pattern_object()
-                # the input spikes 
+                 # the input spikes 
                 input_spikes = self.get_input_spikes(target=target).detach()
-                # the optimal output spikes that the network produces in response to the input spikes
-                _, _, output_spikes = self.forward_pass(input_spikes)
+                 # the optimal output spikes that the network produces in response to the input spikes
+                 _, _, output_spikes = self.forward_pass(input_spikes)
                 output_spikes_trimmed = output_spikes[:, :, (self.opt.N_pretime+self.opt.num_delay):(self.opt.N_time+self.opt.N_pretime)]
                 input_target_trimmed = target[:, :, self.opt.num_delay:]
                 loss_val_ = loss_fn(output_spikes_trimmed, input_target_trimmed)
@@ -364,6 +364,20 @@ class HD_SNN(nn.Module):
                 loss_val, precision, recall, f1_score = [], [], [], []
 
 def load(opt, model_filename, pattern_object=None):
+    """Load a trained checkpoint into a fresh :class:`HD_SNN`.
+
+     Rebuild the network (re-initialising the pattern generator), restore
+    the saved ``net`` state dict and switch it to evaluation mode.
+
+     Args:
+        opt: A :class:`~mnesis_boilerplate.Params` instance.
+        model_filename: Path to a ``.pth`` state dict saved from ``hd.net``.
+        pattern_object: Generator providing the targets; defaults to a
+            :class:`StochasticSpikingPattern`.
+
+     Returns:
+        HD_SNN: The trained network in ``eval()`` mode.
+     """
     if pattern_object is None:
         pattern_object = StochasticSpikingPattern()
 
