@@ -21,7 +21,6 @@ class SpikingPattern:
     distribution of rate ``p_A``, seeded with ``opt.seed`` so that the same
     pattern is obtained across runs.
     """
-    """Generate a frozen spiking pattern based on a Bernoulli process."""
 
     def __init__(self):
         self.desc = "Frozen Spike pattern generator"
@@ -66,26 +65,8 @@ class StochasticSpikingPattern(SpikingPattern):
     so the marginal firing rate is preserved while the pattern structure is
     stochastically modified.
     """
-    """A stochastic spiking pattern generator.
-
-    A stochastic pattern generator that creates variable realizations
-    of patterns while preserving average firing rates.
-
-    This class extends SpikingPattern by adding stochastic variability through
-    a "balanced bit flipping" operation. Each call to __call__() returns a new realization
-    of the base pattern with bits flipped independently with probability p_flip.
-    The marginal frequency is exactly preserved while the pattern structure
-    is stochastically modified.
-    """
 
     def __init__(self): 
-        """
-        A stochastic spiking pattern generator that creates variable realizations
-        of patterns while preserving average firing rates.
-
-        This class extends SpikingPattern by adding stochastic variability through
-        a "balanced bit flipping" operation. 
-        """
         super().__init__()
         self.desc = "Stochastic spike pattern generator"
 
@@ -105,19 +86,6 @@ class StochasticSpikingPattern(SpikingPattern):
         Returns:
             torch.Tensor: Stochastic realization of the spiking pattern,
             with the same dimensions as the base pattern.
-        """
-        """
-        Generate a stochastic realization of the spiking pattern.
-
-        Returns a new version of the base pattern where each bit has been
-        independently flipped with probability self.p_flip. Each call to __call__() returns a new realization
-        of the base pattern with bits flipped independently with probability p_flip. The flip operation
-        preserves the marginal frequency while introducing temporal and spatial
-        variability in the pattern structure.
-
-        Returns:
-            torch.Tensor: Stochastic realization of the spiking pattern
-                         with same dimensions as base pattern
         """
         return flip_bits(self.frozen_target, p_flip=self.opt.p_flip, seed=seed, verbose=verbose)
 
@@ -300,10 +268,6 @@ class HD_SNN(nn.Module):
         Returns:
             torch.Tensor: Detached input spikes of shape
             ``(N_pattern, N_neuron, N_time + 2*N_pretime)``.
-        """
-        """
-        generate the trigger input spikes for the network, including pre-time spontaneous activity and the target pattern.
-        
         """
         if p_A is None: p_A = self.opt.p_A 
         if N_pretime is None: N_pretime = self.opt.N_pretime
