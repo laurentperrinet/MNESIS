@@ -82,8 +82,8 @@ class Params:
 
     # figures
     verbose: bool = False                # Displays more verbose output.
-    fig_width: float = 30                # width of figure
-    fig_height: float = 15                # width of figure
+    fig_width: float = 8.6                # width of figure in cm
+    fig_height: float = 4.3                # height of figure in cm
     phi: float = 1.61803                 # beauty is gold
     N_time_show: int = 1000               # number of time points to show in plots
     N_neuron_show: int = 1024             # number of SM to show in plots
@@ -116,7 +116,7 @@ def pprint(s):
     print(s)
     print(len(s)*'=')
 
-def printfig(fig, name='', fig_width=12, fig_height=None, exts=['pdf', 'png', 'svg'], figpath=figpath, dpi_exp=None, bbox='tight', verbose=True, do_overwrite=False):
+def printfig(fig, name='', fig_width=12, fig_height=None, exts=['pdf', 'png', 'svg'], figpath=figpath, dpi_exp=None, bbox='tight', verbose=True, do_overwrite=True):
     if fig_height is None: fig_height = fig_width/phi
     cm = 1/2.54  # centimeters in inches
     fig.set_size_inches((fig_width*cm, fig_height*cm))
