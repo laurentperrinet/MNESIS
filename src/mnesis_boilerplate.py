@@ -25,7 +25,7 @@ if DEBUG > 1:
 
 datetag = '2026-07-11' # run with new parameters from the camera ready
 datetag = '2026-08-06' # novel run on the revamped code
-datetag = '2026-09-07' # post poster RT neurocomp
+datetag = '2026-09-07' # post poster RT neurocomp - preparing ICANN poster, INT semainr and paper submission
 print(f"datetag = '{datetag}'")
 
 # --- Torch Setup ---
