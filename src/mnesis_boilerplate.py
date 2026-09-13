@@ -1,3 +1,15 @@
+"""Shared boilerplate for the MNESIS experiments.
+
+Provides the entry-point imports (torch, snntorch, numpy, matplotlib, ...),
+automatic device detection (MPS -> CUDA -> CPU), the :class:`Params`
+dataclass that is the single source of hyperparameter truth, and the
+utilities reused by :mod:`mnesis_chains` and all notebooks: random bit
+flipping (:func:`flip_bits`), figure saving (:func:`printfig`), spike-score
+metrics (:func:`get_scores`, :func:`get_f1score`,
+:class:`SpikeF1scoreLoss`) and the cosine learning-rate schedule
+(:func:`get_cosine_schedule_with_warmup`).
+"""
+
 from pathlib import Path
 from dataclasses import dataclass, asdict, field
 import os
@@ -46,7 +58,22 @@ print(f'Using device: {device}')
 
 @dataclass
 class Params:
-    """Hyperparameters for the MNESIS spiking-neural network experiments."""
+    """Single source of hyperparameter truth for the MNESIS experiments.
+
+    Instances also seed ``torch`` and ``numpy`` (in ``__post_init__``) so
+    that a given ``seed`` reproduces a run. Field groups:
+
+    Attributes:
+        N_neuron, num_delay (odd, for convolution symmetry), N_pattern,
+            N_time, N_pretime, p_A, p_flip, seed: network size and statistics.
+        lif_beta, lif_threshold, learn_beta, learn_threshold, do_pinv,
+            do_deconv: membrane dynamics and analytical-init flags.
+        num_epochs, num_warmup_epochs, base_lr, final_lr, delta1, delta2,
+            dropout, alpha_surrogate, surrogate_name, loss_name,
+            reset_mechanism, optimizer: learning dynamics.
+        verbose, fig_width, fig_height, phi, N_time_show, N_neuron_show,
+            i_pattern, N_scan, N_cv: figure/scan settings.
+    """
     datetag: str = datetag  
     N_neuron: int = 1024 // DEBUG        # number of presynaptic inputs
     num_delay: int = 41                  # number of timesteps in SM, must be a odd number for convolutions
@@ -85,8 +112,9 @@ class Params:
     fig_width: float = 8.6                # width of figure in cm
     fig_height: float = 4.3                # height of figure in cm
     phi: float = 1.61803                 # beauty is gold
-    N_time_show: int = 1000               # number of time points to show in plots
-    N_neuron_show: int = 1024             # number of SM to show in plots
+    N_time_show: int = 1000                # number of time points to show in plots
+    N_neuron_show: int = 1024              # number of SM to show in plots
+    i_pattern: int = 0                     # index of the motif shown in plots
     N_scan: int = 13 // DEBUG + 1        # number of values to scan
     N_cv: int = 10 // DEBUG + 1        # number of cross-validation steps
 
@@ -108,15 +136,22 @@ if os.environ.get("USER") == "uvb28bo":
 # --- Constants ---
 phi = np.sqrt(5)/2 + 1/2
 subplotpars = SubplotParams(left=0.125, right=.95, bottom=0.25, top=.975, wspace=0.05, hspace=0.05,)
-i_pattern = 0
 
 # --- Utility Functions ---
 def pprint(s):
+    """Print a headline surrounded by '=' banners of the same length."""
     print(len(s)*'=')
     print(s)
     print(len(s)*'=')
 
 def printfig(fig, name='', fig_width=12, fig_height=None, exts=['pdf', 'png', 'svg'], figpath=figpath, dpi_exp=None, bbox='tight', verbose=True, do_overwrite=True):
+    """Save a matplotlib figure to ``figpath`` under several extensions.
+
+    Sizes the figure in centimetres, defaulting the height to
+    ``fig_width / phi`` (golden ratio). On the Jean Zay cluster
+    (``figpath is None``) saving is silently skipped. Existing files are
+    overwritten only if ``do_overwrite`` is true.
+    """
     if fig_height is None: fig_height = fig_width/phi
     cm = 1/2.54  # centimeters in inches
     fig.set_size_inches((fig_width*cm, fig_height*cm))
@@ -131,6 +166,15 @@ def printfig(fig, name='', fig_width=12, fig_height=None, exts=['pdf', 'png', 's
                 fig.savefig(filename, dpi=dpi_exp, bbox_inches=bbox, transparent=True)
 
 def flip_bits(a, p_flip, seed=None, verbose=False):
+    """Balanced bit flipping preserving the marginal firing rate of ``a``.
+
+    Each entry of the binary tensor ``a`` is replaced, with probability
+    ``p_flip``, by a fresh Bernoulli draw of rate ``a.mean()``, so the
+    expected spike rate is preserved while the pattern is perturbed.
+
+    Returns:
+        torch.Tensor: A new tensor of the same shape as ``a``.
+    """
     generator = torch.Generator(device=a.device)
     if seed is None:
         seed = generator.seed()
@@ -143,20 +187,30 @@ def flip_bits(a, p_flip, seed=None, verbose=False):
     return torch.where(mask == 1., flipped, a)
 
 def stop(): 
+    """Raise an AssertionError on purpose: temporary end of the script."""
     assert False, "Temporary end of the road"
 
 def approx_equals(series, value, rtol=1e-6, atol=1e-12):
+    """Elementwise ``np.isclose`` for a pandas Series, falling back to ``==``.
+
+    Returns:
+        Boolean mask selecting the entries close to ``value``.
+    """
     try:
         return np.isclose(series.astype(float), float(value), rtol=rtol, atol=atol)
     except (TypeError, ValueError):
         return series == value
 
 def get_scores(pred, target, epsilon=1e-12):
-    """
-    
-    High precision → few false positives (FP, Predicted Positive is actually Negative)
-    High recall → few false negatives (FN, Predicted Negative is actually Positive)
-   
+    """Precision, recall and F1 between two (soft) spike tensors.
+
+    Sums the elementwise true/false positives and negatives; high
+    precision means few false positives, high recall few false
+    negatives. ``epsilon`` avoids division by zero. High precision
+    means few false positives (FP), high recall few false negatives (FN).
+
+    Returns:
+        tuple: (precision, recall, f1_score) as scalar tensors.
     """
     TP = (pred * target).sum()
     FP = (pred * (1 - target)).sum()
@@ -167,22 +221,30 @@ def get_scores(pred, target, epsilon=1e-12):
     return precision, recall, f1_score
 
 def get_f1score(pred, target, epsilon=1e-12):
-    """
-    
-    The F1 score is the harmonic mean of precision and recall, is high only when both precision and recall are high.
-    
+    """F1 score: the harmonic mean of precision and recall.
+
+    High only when both precision and recall are high; one minus this
+    value is the training loss (:class:`SpikeF1scoreLoss`).
     """
     _, _, f1_score = get_scores(pred, target, epsilon=epsilon)
     return f1_score
 
 class SpikeF1scoreLoss(nn.Module):
+    """Training loss ``L = 1 - F1`` between predicted and target spikes."""
     def __init__(self, epsilon=1e-12):
         super().__init__()
         self.epsilon = epsilon
     def forward(self, pred, target):
+        """Return ``1 - F1score(pred, target)``, differentiable via the surrogate."""
         return 1 - get_f1score(pred, target, self.epsilon)
 
 def get_cosine_schedule_with_warmup(optimizer, num_warmup_epochs, num_epochs, rel_final_lr):
+    """Cosine learning-rate decay with warmup, as a ``torch`` ``LambdaLR``.
+
+    The learning-rate multiplier is constant (1) during
+    ``num_warmup_epochs``, then follows a half-cosine from 1 down to
+    ``rel_final_lr`` (``final_lr / base_lr``) at ``num_epochs``.
+    """
     def lr_lambda(current_epoch):
         if current_epoch < num_warmup_epochs:
             return 1
