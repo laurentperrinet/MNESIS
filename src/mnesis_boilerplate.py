@@ -131,7 +131,64 @@ figpath = Path('../figures')
 if os.environ.get("USER") == "uvb28bo": 
     figpath = None # Jean Zay
 
-# plt.style.use(['nature', 'science', 'prl'])   # or 'nature' for a colour figure
+# --- Figure style (single source of truth, applied globally at import) ---
+# Figures are typeset with the same face as the LaTeX manuscript and poster
+# (lualatex -> Latin Modern), at Physical-Review-like single-column size.
+def _register_tex_fonts():
+    faces = []
+    roots = [Path('/usr/local/texlive'), Path('/opt/homebrew/texlive'),
+             Path('/usr/share/texlive'), Path.home() / 'texmf']
+    try:
+        from matplotlib import font_manager
+        for root in roots:
+            if not root.exists():
+                continue
+            for otf in sorted(root.glob('*/texmf-dist/fonts/opentype/public/lm/lmroman10-*.otf')):
+                try:
+                    font_manager.fontManager.addfont(str(otf))
+                    name = font_manager.FontProperties(fname=str(otf)).get_name()
+                    if name not in faces:
+                        faces.append(name)
+                except Exception:
+                    pass
+            if faces:
+                break
+    except Exception:
+        pass
+    return faces
+
+_tex_faces = _register_tex_fonts()
+
+STYLE = {
+     'font.family': 'serif',
+     'font.serif': ['Latin Modern Roman'] + _tex_faces + ['DejaVu Serif', 'STIXGeneral'],
+     'mathtext.fontset': 'cm',
+     'mathtext.default': 'regular',
+     'text.usetex': False,
+     'font.size': 8,
+     'axes.linewidth': 0.8,
+     'axes.labelsize': 8,
+     'axes.titlesize': 8,
+     'axes.spines.left': True,
+     'axes.spines.right': False,
+     'axes.spines.top': False,
+     'axes.spines.bottom': True,
+     'xtick.labelsize': 7,
+     'ytick.labelsize': 7,
+     'xtick.direction': 'in',
+     'ytick.direction': 'in',
+     'xtick.major.size': 3.0,
+     'ytick.major.size': 3.0,
+     'xtick.major.width': 0.8,
+     'ytick.major.width': 0.8,
+     'errorbar.capsize': 1.5,
+     'lines.linewidth': 1.0,
+     'lines.markersize': 3.5,
+     'legend.fontsize': 7,
+     'legend.frameon': False,
+     'savefig.transparent': True,
+}
+plt.style.use(STYLE)
 
 # --- Constants ---
 phi = np.sqrt(5)/2 + 1/2
