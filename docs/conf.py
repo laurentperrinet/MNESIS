@@ -59,6 +59,7 @@ myst_enable_extensions = [
 
 autodoc_member_order = "bysource"
 autodoc_typehints = "description"
+autoclass_content = "both"
 autodoc_mock_imports = []           # real torch/snntorch are installed for the build
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
@@ -71,8 +72,6 @@ intersphinx_mapping = {
 
 # -- HTML output ---------------------------------------------------------------
 templates_path = []
-
-output_dir = "_build/html"
 
 html_theme = "furo"
 html_static_path = []
