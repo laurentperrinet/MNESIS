@@ -1,0 +1,9 @@
+# Documentation build dependencies for MNESIS.
+# Install with: pip install -r docs/requirements.txt
+sphinx>=7.0
+furo
+nbsphinx
+myst-parser
+ipykernel
+# runtime dependencies needed to import the modules for autodoc
+-r ../src/requirements.txt
