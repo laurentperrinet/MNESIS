@@ -4,7 +4,7 @@
 % -*- coding: UTF-8; -*-
 % vim: set fenc=utf-8
 %=== file: myfigure.tex ==========================================
-\documentclass[tikz,border=0pt]{standalone}   % “border” adds optional margin
+\documentclass[tikz,border=0pt]{standalone}   % "border" adds optional margin
 % -------------------------------------------------------------
 % 1. Packages you used in the original doc (add any that are missing)
 \usepackage{amsmath,amssymb}          % math, symbols
@@ -26,9 +26,9 @@
   % Draw the random dots
   % ---------------------------------------------------------
   \foreach \i in {1,...,\numdots} {
-    % generate a random x‑coordinate between 0 and the page width (841 mm)
+    % generate a random x-coordinate between 0 and the page width (841 mm)
     \pgfmathrandominteger{\randx}{0}{841}
-    % generate a random y‑coordinate between 0 and the page height (1189 mm)
+    % generate a random y-coordinate between 0 and the page height (1189 mm)
     \pgfmathrandominteger{\randy}{0}{1189}
     % place a filled circle (dot) at the random point
     \fill[black] (\randx,\randy) circle[radius=\dotradius];
