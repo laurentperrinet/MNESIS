@@ -118,6 +118,17 @@ Results are saved to `cached_data/` (excluded from git via `.gitignore`):
 
 Delete a cached `.pth`, `.json`, `.npz`, or `.sqlite3` file to force recomputation; set `RECOMPUTE = True` at the top of any notebook to invalidate the full cache for that notebook. The scan/optimisation notebooks additionally guard each run with a `.lock` sentinel file to allow safe incremental resumption.
 
+### Build and publish the documentation
+
+```bash
+pip install -r docs/requirements.txt && make -C docs html   # then: git add docs && git commit && git push
+```
+
+This builds the Sphinx/furo site in place inside `docs/` (symlinking the
+`src/` notebooks into `docs/notebooks/` and rendering them with their stored
+outputs); GitHub Pages is configured to serve that folder from `main` at
+[https://laurentperrinet.github.io/MNESIS/](https://laurentperrinet.github.io/MNESIS/).
+
 ---
 
 ## Model
