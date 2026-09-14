@@ -4,7 +4,7 @@
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 [![Paper](https://img.shields.io/badge/Paper-AIROV%202026-orange.svg)](tex/Perrinet26mnesis.pdf)
 
-> **MNESIS** — *Memory Network Every Spike Is Sacred*
+> **MNESIS** — *a Memory Network where Every Spike Is Sacred*
 
 This repository contains the full implementation, experiments, and paper source for **MNESIS**, a recurrent spiking neural network (SNN) with heterogeneous synaptic delays that stores and recalls arbitrary spike patterns as sequential chains of overlapping Spiking Motifs.
 

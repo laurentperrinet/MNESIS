@@ -9,7 +9,7 @@
    :target: https://laurentperrinet.github.io/publication/perrinet-26-icann/
 ```
 
-> **MNESIS** — *Memory Network Every Spike Is Sacred*
+> **MNESIS** — *a Memory Network where Every Spike Is Sacred*
 
 This documentation covers the full implementation and experiments of **MNESIS**, a
 recurrent spiking neural network (SNN) with heterogeneous synaptic delays that stores
