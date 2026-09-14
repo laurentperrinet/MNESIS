@@ -1,12 +1,15 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+# Build the Sphinx documentation in docs/ and deploy it to GitHub Pages.
+# The Pages source is set (in repository Settings > Pages) to "GitHub Actions";
+# this workflow regenerates the site from docs/ + src/ notebooks on every push
+# to main, so the HTML committed under docs/ is only a convenience fallback.
+name: Deploy docs to Pages
 
 on:
-  # Runs on pushes targeting the default branch
+   # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
 
-  # Allows you to run this workflow manually from the Actions tab
+   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -22,22 +25,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
+
+       - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+       - name: Install pandoc   # required by nbsphinx to parse notebooks
+        run: sudo apt-get update && sudo apt-get install -y pandoc
+
+       - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+           # CPU-only torch is enough for autodoc and saves ~2 GB of downloads
+          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install snntorch numpy scipy matplotlib seaborn pandas tqdm
+          pip install sphinx furo nbsphinx myst-parser ipykernel
+
+       - name: Build docs
+        env:
+           _RTD_VERSION: ${{ github.ref_name }}
+        run: make -C docs html
+
+       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+           # Upload only the built documentation folder
+          path: 'docs'
+
+   # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
