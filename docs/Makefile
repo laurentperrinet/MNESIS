@@ -33,7 +33,15 @@ notebooks:
 	@printf '*\n!.gitignore\n!*.html\n' > notebooks/.gitignore
 
 html: notebooks
-	$(SPHINXBUILD) -b html $(SPHINXOPTS) -d $(BUILDDIR)/doctrees . .
+	$(SPHINXBUILD) -b html $(SPHINXOPTS) -d $(BUILDDIR)/doctrees . $(BUILDDIR)/html
+	@# publish the generated site in place (docs/), protected sources excluded
+	rsync -a --delete --exclude='/_build/' --exclude='/conf.py' \
+		--exclude='/Makefile' --exclude='/requirements.txt' --exclude='/*.md' \
+		--exclude='/notebooks/' --exclude='/.gitignore' --exclude='/*.log' \
+		$(BUILDDIR)/html/ ./
+	rsync -a --delete --exclude='*.ipynb' --exclude='.gitignore' \
+		$(BUILDDIR)/html/notebooks/ notebooks/
+	@echo "Site ready in docs/ - publish with: git add docs && git commit && git push"
 
 clean:
 	rm -rf $(BUILDDIR) _static _sources notebooks
