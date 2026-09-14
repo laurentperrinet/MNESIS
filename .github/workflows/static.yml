@@ -5,11 +5,11 @@
 name: Deploy docs to Pages
 
 on:
-   # Runs on pushes targeting the default branch
+  # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
 
-   # Allows you to run this workflow manually from the Actions tab
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -18,8 +18,9 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Allow only one concurrent deployment, skipping runs queued between the run
+# in-progress and latest queued. However, do NOT cancel in-progress runs as we
+# want to allow these production deployments to complete.
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -30,36 +31,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-       - name: Set up Python 3.12
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-
-       - name: Install pandoc   # required by nbsphinx to parse notebooks
+      - name: Install pandoc
         run: sudo apt-get update && sudo apt-get install -y pandoc
-
-       - name: Install dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-           # CPU-only torch is enough for autodoc and saves ~2 GB of downloads
+          # CPU-only torch is enough for autodoc and saves ~2 GB of downloads
           pip install --index-url https://download.pytorch.org/whl/cpu torch
           pip install snntorch numpy scipy matplotlib seaborn pandas tqdm
           pip install sphinx furo nbsphinx myst-parser ipykernel
-
-       - name: Build docs
+      - name: Build docs
         env:
-           _RTD_VERSION: ${{ github.ref_name }}
+          _RTD_VERSION: ${{ github.ref_name }}
         run: make -C docs html
-
-       - name: Upload artifact
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-           # Upload only the built documentation folder
           path: 'docs'
 
-   # Single deploy job since we're just deploying
+  # Single deploy job since we're just deploying
   deploy:
     environment:
       name: github-pages
