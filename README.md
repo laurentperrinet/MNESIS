@@ -226,6 +226,14 @@ initialisation in `HD_SNN.get_W_init()`:
 
 ---
 
+## TODO list
+
+- [ ] Build docs from the code ipynb and  (and tex?) / publish to GitHub Pages
+
+
+
+---
+
 ## License
 
 GPL-3.0 — see [LICENSE](LICENSE).
