@@ -109,7 +109,7 @@ class Params:
 
     # figures
     verbose: bool = False                # Displays more verbose output.
-    fig_width: float = 8.6                # width of figure in cm
+    fig_width: float = 8.6               # width of figure in cm
     fig_height: float = 4.3                # height of figure in cm
     phi: float = 1.61803                 # beauty is gold
     N_time_show: int = 1000                # number of time points to show in plots
