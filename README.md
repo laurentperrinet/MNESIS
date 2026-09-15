@@ -228,8 +228,7 @@ initialisation in `HD_SNN.get_W_init()`:
 
 ## TODO list
 
-- [ ] Build docs from the code ipynb and  (and tex?) / publish to GitHub Pages
-
+- [ ] https://laurentperrinet.github.io/MNESIS/ : Build docs from the code ipynb and  (and tex?) / publish to GitHub Pages
 
 
 ---
