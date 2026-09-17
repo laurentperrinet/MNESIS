@@ -109,11 +109,11 @@ class Params:
 
     # figures
     verbose: bool = False                # Displays more verbose output.
-    fig_width: float = 8.6               # width of figure in cm
-    fig_height: float = 4.3                # height of figure in cm
+    fig_width: float = 8.6 *2              # width of figure in cm
+    fig_height: float = 4.3  *2              # height of figure in cm
     phi: float = 1.61803                 # beauty is gold
-    N_time_show: int = 1000                # number of time points to show in plots
-    N_neuron_show: int = 1024              # number of SM to show in plots
+    N_time_show: int = N_time                # number of time points to show in plots
+    N_neuron_show: int = N_neuron              # number of SM to show in plots
     i_pattern: int = 0                     # index of the motif shown in plots
     N_scan: int = 13 // DEBUG + 1        # number of values to scan
     N_cv: int = 10 // DEBUG + 1        # number of cross-validation steps
