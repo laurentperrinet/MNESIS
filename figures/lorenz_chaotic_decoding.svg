@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-09-18T09:17:18.570211</dc:date>
+    <dc:date>2026-09-18T09:41:33.713602</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -7069,7 +7069,7 @@ L 61.17725 101.623607
 L 61.805927 100.295533 
 L 62.606912 99.10914 
 L 62.606912 99.10914 
-" clip-path="url(#p6d3eea242d)" style="fill: none; stroke: #0000ff; stroke-opacity: 0.7; stroke-width: 0.5; stroke-linecap: square"/>
+" clip-path="url(#p20dbdfa5f9)" style="fill: none; stroke: #0000ff; stroke-opacity: 0.7; stroke-width: 0.5; stroke-linecap: square"/>
    </g>
    <g id="line2d_19">
     <path d="M 85.339934 118.926221 
@@ -16005,7 +16005,7 @@ L 61.747954 106.413878
 L 60.055542 103.848078 
 L 62.120203 100.155679 
 L 62.120203 100.155679 
-" clip-path="url(#p6d3eea242d)" style="fill: none; stroke: #ff0000; stroke-opacity: 0.7; stroke-width: 0.5; stroke-linecap: square"/>
+" clip-path="url(#p20dbdfa5f9)" style="fill: none; stroke: #ff0000; stroke-opacity: 0.7; stroke-width: 0.5; stroke-linecap: square"/>
    </g>
    <g id="text_18">
     <!-- Decoding the Lorenz Attractor -->
@@ -16413,7 +16413,7 @@ z
   </g>
  </g>
  <defs>
-  <clipPath id="p6d3eea242d">
+  <clipPath id="p20dbdfa5f9">
    <rect x="7.2" y="19.648" width="187.710236" height="187.710236"/>
   </clipPath>
  </defs>
