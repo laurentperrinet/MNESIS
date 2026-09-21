@@ -201,7 +201,7 @@ def pprint(s):
     print(s)
     print(len(s)*'=')
 
-def printfig(fig, name='', fig_width=12, fig_height=None, exts=['pdf', 'png', 'svg'], figpath=figpath, dpi_exp=None, bbox='tight', verbose=True, do_overwrite=True):
+def printfig(fig, name='', fig_width=12, fig_height=None, exts=['pdf', 'png', 'svg'], figpath=figpath, dpi_exp=None, bbox='tight', verbose=True, do_overwrite=DEBUG > 1):
     """Save a matplotlib figure to ``figpath`` under several extensions.
 
     Sizes the figure in centimetres, defaulting the height to
