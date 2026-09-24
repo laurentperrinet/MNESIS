@@ -3,151 +3,236 @@
 %!TeX spellcheck = en-UK
 % -*- coding: UTF-8; -*-
 % vim: set fenc=utf-8
-%=== file: myfigure.tex ==========================================
-\documentclass[tikz,border=2pt]{standalone}   % "border" adds optional margin
+%%%-----------------------------------------------------------------
+% Standalone figure: chaining two Spiking Motifs in a recurrent HD-SNN.
+% Build:  lualatex -interaction=nonstopmode fig_izhikevich.tex
+%
+% Everything is data-driven: to change the network, edit only the block
+% "Motif definition" below.
+%   * \Nneurons                      size of the population;
+%   * \greenMotif / \brownMotif      comma separated "neuron/delay" pairs;
+%   * \greenSyncTime / \brownSyncTime  instant of detection.
+% Spike times, trajectories and delay labels are all *derived* from those
+% lists, so the wiring diagram (left) and the raster (right) cannot drift
+% apart: the delay printed on an arrow is exactly the horizontal distance
+% covered by its spike, and an input spike is drawn where delay + time =
+% instant of detection.
+%%%-----------------------------------------------------------------
+\documentclass[tikz,border=2pt]{standalone}     % "border" adds optional margin
 % -------------------------------------------------------------
-% 1. Packages you used in the original doc (add any that are missing)
-\usepackage{amsmath,amssymb}          % math, symbols
+\usepackage{amsmath,amssymb}            % math, symbols
 \usepackage{tikz}
-\usetikzlibrary{arrows,calc,positioning,shapes,decorations.pathreplacing} % etc.
-\usepackage{pgfplots}                % if you used pgfplots
-\pgfplotsset{compat=newest}           % optional – keep the same version as before
+\usetikzlibrary{arrows,calc,positioning,shapes,decorations.pathreplacing}
+\usepackage{pgfplots}                   % if you used pgfplots
+\pgfplotsset{compat=newest}             % optional - keep the same version as before
 % -------------------------------------------------------------
-% 2. Any global TikZ settings that the picture depends on
+
+%==================== Motif definition ==========================
+% --- Population ---------------------------------------------------------
+\def\Nneurons{8}         % neurons in the recurrent population (1 ... \Nneurons)
+\def\Nmotif{8}           % highest index used by the two motifs; above: background
+
+% --- Motifs: "presynaptic neuron / axonal delay in ms" ------------------
+\def\greenMotif{8/1, 3/6, 4/2, 7/8}     % a2--a5 -> b5
+\def\brownMotif{8/3, 3/8, 4/4, 5/2}     % a2--a5 -> b1
+
+% --- Neuron emitting the detected (polychronous) spike ------------------
+\def\greenTarget{5}
+\def\brownTarget{2}
+
+% --- Instant of detection (ms) ------------------------------------------
+% The green spike re-enters the population and feeds the dark-red motif,
+% which is what chains the two motifs.
+\def\greenSyncTime{9}
+\def\brownSyncTime{11}
+
+% --- Background activity of the unconnected neurons, "time/neuron" ------
+\def\spontaneousSpikes{1/1, 1/4, 3/4, 5/7, 6/2, 12/2}
+
+% Where the delay labels sit along their arrow, in [0, 1]. The two motifs are
+% pulled apart so that their labels do not overlap where the bundles cross.
+\def\greenLabelPos{0.62}
+\def\brownLabelPos{0.38}
+
+% --- Geometry -----------------------------------------------------------
+\def\preLabelX{-0.15}    % abscissa of the "pre" title
+\def\postLabelX{4.15}    % abscissa of the "post" title
+\def\bRightShift{4.55}   % abscissa of the post-synaptic column
+\def\panelShift{7.4cm}   % gap between the wiring diagram and the raster
+\def\spikeTop{0.75}      % height of a spike, in row units
+
+% Derived quantities. Every one is evaluated by pgfmath, never left as text.
+\pgfmathtruncatemacro\lastRow{\Nneurons - 1}
+\pgfmathtruncatemacro\lastTick{\brownSyncTime + 1}
+\pgfmathsetmacro\rowGreen{\Nneurons - \greenTarget}
+\pgfmathsetmacro\rowBrown{\Nneurons - \brownTarget}
+\pgfmathsetmacro\rasterRight{\lastTick + 0.8}
+\pgfmathsetmacro\axisRight{\lastTick + 0.4}
+\pgfmathsetmacro\windowTop{\lastRow + \spikeTop + 0.3}
+\pgfmathsetmacro\titleY{\Nneurons - 0.45}
+
+%======================= Styles and helpers ======================
 \tikzset{
-   % example: thin arrows everywhere
-   > = stealth,
-   % ... copy from your original preamble
+    > = stealth,
+    neuron/.style={circle, draw=blue!70!black, line width=1.1pt,
+        fill=blue!8, minimum size=0.95cm, inner sep=0pt,
+        font=\sffamily\small},
+    % Neighbours taking no part in the two motifs are faded out.
+    neuron background/.style={neuron, draw=blue!70!black!35, fill=blue!3,
+        text=blue!70!black!45},
+    panelbox/.style={rounded corners=2pt, line width=1.1pt,
+        dash pattern=on 2.2pt off 3.2pt},
+    layer/.style={draw=blue!60!black, line width=1.2pt},
+    layer background/.style={draw=blue!60!black!30, line width=1pt},
+    brownlink/.style={draw=black!60!red!75!brown, line width=1.7pt},
+    greenlink/.style={draw=green!60!black, line width=1.7pt},
+    trigger/.style={draw=orange!90!black, line width=3.5pt},
+    greenout/.style={draw=green!45!black, line width=3.5pt},
+    redout/.style={draw=red!90!black, line width=4.4pt},
+    spontaneous/.style={draw=black!45, line width=2.2pt, opacity=0.4},
+    nodeLabel/.style={sloped, above, fill=white, inner sep=2pt,
+        font=\sffamily\scriptsize},
+    panelTitle/.style={font=\itshape\Large},
+    axisLabel/.style={font=\Large},
+    tick/.style={font=\small},
 }
-% -------------------------------------------------------------
+
+% Vertical spike mark of height \spikeTop standing on the row of neuron #2.
+% #1 = time, #2 = neuron index, #3 = style.
+\newcommand\spikeMark[3]{%
+   \pgfmathsetmacro\row{\Nneurons - #2}%
+   \draw[#3] (#1,\row) -- (#1,{\row + \spikeTop});%
+}
+
+% Wiring diagram: one arrow per input spike, converging on the target.
+% #1 = style, #2 = motif list, #3 = target neuron, #4 = label position.
+\newcommand\drawWiring[4]{%
+   \pgfmathsetmacro\targetRow{\Nneurons - #3}%
+   \foreach \i/\d in #2 {%
+     \pgfmathsetmacro\row{\Nneurons - \i}%
+     \draw[#1] (0,\row) -- node[nodeLabel, pos=#4] {$\d$\,ms} (\bRightShift,\targetRow);%
+   }%
+}
+
+% Raster: one trajectory per input spike, converging on the detected spike.
+% #1 = style, #2 = motif list, #3 = instant of detection, #4 = target neuron.
+\newcommand\drawTrajectories[4]{%
+   \pgfmathsetmacro\targetRow{\Nneurons - #4}%
+   \foreach \i/\d in #2 {%
+     \pgfmathsetmacro\spikeTime{#3 - \d}%
+     \pgfmathsetmacro\row{\Nneurons - \i}%
+     \draw[#1] (\spikeTime,\row) -- (#3,\targetRow);%
+   }%
+}
+
+%------------------- START OF THE PICTURE -------------------
 \begin{document}
-% ------------------- START OF YOUR PICTURE --------------------
-  \begin{tikzpicture}[
+\begin{tikzpicture}[
     x=1.2cm,
     y=1.2cm,
     line cap=round,
     line join=round,
     font=\sffamily,
-    neuron/.style={circle, draw=blue!70!black, line width=1.1pt, fill=blue!8, minimum size=1.05cm, inner sep=0pt},
-    panelbox/.style={rounded corners=2pt, line width=1.1pt, dash pattern=on 2.2pt off 3.2pt},
-    layer/.style={draw=blue!60!black, line width=1.2pt},
-    brownlink/.style={draw=black!60!red!75!brown, line width=1.7pt},
-    greenlink/.style={draw=green!60!black, line width=1.7pt},
-    spike/.style={line width=3.3pt, draw=#1},
-    nodeLabel/.style={midway, sloped, above, fill=white, inner sep=2pt, font=\small},
-  ]
- 
-\def\xLeftPanelLabel{-0.15}
-  \def\xPostLabel{4.15}
-  \def\bRightShift{4.55}
-  % Left panel
-  \node[anchor=south, font=\itshape\Large] at (\xLeftPanelLabel,4.55) {pre};
-  \node[anchor=south west, font=\itshape\Large] at (\xPostLabel,4.55) {post};
- 
-  \coordinate (a1) at (0,4);
-  \coordinate (a2) at (0,3);
-  \coordinate (a3) at (0,2);
-  \coordinate (a4) at (0,1);
-  \coordinate (a5) at (0,0);
- 
-  \coordinate (b1) at (\bRightShift,4);
-  \coordinate (b2) at (\bRightShift,3);
-  \coordinate (b3) at (\bRightShift,2);
-  \coordinate (b4) at (\bRightShift,1);
-  \coordinate (b5) at (\bRightShift,0);
- 
-  % Dotted lines between corresponding neurons
-  \foreach \n in {1,...,5} {
-    \draw[densely dotted, green!50!black] (a\n) -- (b\n);
-  }
- 
-  % Connections from pre to post
-  \draw[brownlink] (a2) -- node[nodeLabel] {3 ms} (b1);
-  \draw[brownlink] (a3) -- node[nodeLabel] {8 ms} (b1);
-  \draw[brownlink] (a4) -- node[nodeLabel] {4 ms} (b1);
-  \draw[brownlink] (a5) -- node[nodeLabel] {2 ms} (b1);
- 
-  \draw[greenlink] (a2) -- node[nodeLabel] {1 ms} (b5);
-  \draw[greenlink] (a3) -- node[nodeLabel] {6 ms} (b5);
-  \draw[greenlink] (a4) -- node[nodeLabel] {2 ms} (b5);
-  \draw[greenlink] (a5) -- node[nodeLabel] {8 ms} (b5);
- 
-  \foreach \i/\p in {1/a1,2/a2,3/a3,4/a4,5/a5} {
-    \node[neuron] at (\p) {$a_{\i}$};
-  }
-  \foreach \i/\p in {1/b1,2/b2,3/b3,4/b4,5/b5} {
-    \node[neuron] at (\p) {$b_{\i}$};
-  }
- 
-  % Right panel
+]
 
-  % Spike height parameters
-  \def\spikeTop{0.75}
-  
-  \def\spikeTOne{1} 
-  \def\spikeYOne{0.} 
-  \def\spikeTTwo{3} 
-  \def\spikeYTwo{2} 
-  \def\spikeTThree{7}
-  \def\spikeYThree{1}
-  \def\spikeTFour{8}
-  \def\spikeYFour{3}
-  % Green propagated spikes
-  \def\greenSpikeT{9}
-  \def\spikeYgreen{0.0}
-  % Red output spike
-  \def\spikeTred{11}
-  \def\spikeYred{4.}
-  
-  \begin{scope}[xshift=7.4cm]
-    
-    \foreach \y in {0,1,2,3,4} {
-      \draw[layer] (0,\y) -- (11.8,\y);
-      }
-      
-      % Green branches converging on the lower output spike
-      \draw[greenlink] (\spikeTOne,\spikeYOne) -- (\greenSpikeT,\spikeYgreen);
-      \draw[greenlink] (\spikeTTwo,\spikeYTwo) -- (\greenSpikeT,\spikeYgreen);
-      \draw[greenlink] (\spikeTThree,\spikeYThree) -- (\greenSpikeT,\spikeYgreen);
-      \draw[greenlink] (\spikeTFour,\spikeYFour) -- (\greenSpikeT,\spikeYgreen);
-      
-      % % Brown branches to the final spike (stems from foot)
-      \draw[brownlink] (\spikeTTwo,\spikeYTwo) -- (\spikeTred,\spikeYred);
-      \draw[brownlink] (\spikeTThree,\spikeYThree) -- (\spikeTred,\spikeYred);
-      \draw[brownlink] (\spikeTFour,\spikeYFour) -- (\spikeTred,\spikeYred);
-      \draw[brownlink] (\greenSpikeT,\spikeYgreen) -- (\spikeTred,\spikeYred);
-      
-      % % Orange trigger spikes
-      \draw[orange!90!black, line width=3.5pt] (\spikeTOne,\spikeYOne) -- (\spikeTOne,{ \spikeYOne + \spikeTop });
-      \draw[orange!90!black, line width=3.5pt] (\spikeTTwo,\spikeYTwo) -- (\spikeTTwo,{ \spikeYTwo + \spikeTop });
-      \draw[orange!90!black, line width=3.5pt] (\spikeTThree,\spikeYThree) -- (\spikeTThree,{ \spikeYThree + \spikeTop });
-      \draw[orange!90!black, line width=3.5pt] (\spikeTFour,\spikeYFour) -- (\spikeTFour,{ \spikeYFour + \spikeTop });
-      
-      \draw[green!45!black, line width=3.5pt] (\greenSpikeT,\spikeYgreen) -- (\greenSpikeT,{\spikeYgreen + \spikeTop});
-      % \def\spikeTredopY{4.95}
-      
-      \draw[red!90!black, line width=4.4pt] (\spikeTred,\spikeYred) -- (\spikeTred,{\spikeYred + \spikeTop});
-      
+%=== Left panel: the two motifs, seen from the wiring diagram ============
+\node[panelTitle, anchor=south] at (\preLabelX,\titleY) {pre};
+\node[panelTitle, anchor=south west] at (\postLabelX,\titleY) {post};
 
-      % context window 
-      \draw[panelbox, draw=green!45!black, opacity=.35] (0.15,-0.12) rectangle (\greenSpikeT,{\spikeYred+1.05});
-      \draw[panelbox, draw=black!35!red, opacity=.35] (2.0,-0.10) rectangle (\spikeTred,{\spikeYred+1.08});
+% The population is recurrent: neuron \i has a pre- and a post-synaptic side.
+\foreach \i in {1,...,\Nneurons} {%
+   \pgfmathsetmacro\row{\Nneurons - \i}%
+   \coordinate (a\i) at (0,\row);
+   \coordinate (b\i) at (\bRightShift,\row);
+}
 
-      % D marker and time axis
-      % \draw[<->, line width=1.1pt] (0.0,-0.16) -- node[below, font=\Large] {$D = 41\,\mathrm{ms}$} (\greenSpikeT,-0.16);
-      \draw[->, line width=1.3pt] (0.0,-0.68) -- (12.4,-0.68) node[above, font=\Large] {time (ms)};
-      % Time axis markers at 1ms intervals
-      \foreach \t in {0,1,2,3,4,5,6,7,8,9,10,11,12} {
-        \draw (\t,-0.78) -- +(0,-0.05) node[below] {$\t$};
-      }
-      
-      % Time axis markers at 1ms intervals
-      \foreach \t in {8,7,6,5,4,3,2,1,0} {
-        \draw[green!60!black] ({9-\t},-0.24) -- +(0,-0.05) node[below] {$\t$};
-      }
-      
-  \end{scope}
-  \end{tikzpicture}
-% -------------------- END OF YOUR PICTURE -----------------
+% Recurrent link between the two sides of the same neuron.
+\foreach \i in {1,...,\Nneurons} {%
+   \ifnum\i>\Nmotif\relax
+     \draw[densely dotted, blue!60!black!25] (a\i) -- (b\i);
+   \else
+     \draw[densely dotted, green!50!black] (a\i) -- (b\i);
+   \fi
+}
+
+\drawWiring{brownlink}{\brownMotif}{\brownTarget}{\brownLabelPos}
+\drawWiring{greenlink}{\greenMotif}{\greenTarget}{\greenLabelPos}
+
+% Nodes on top of the links; motif neurons at full contrast, others faded.
+\foreach \i in {1,...,\Nneurons} {%
+   \ifnum\i>\Nmotif\relax
+     \node[neuron background] at (a\i) {$a_{\i}$};
+     \node[neuron background] at (b\i) {$b_{\i}$};
+   \else
+     \node[neuron] at (a\i) {$a_{\i}$};
+     \node[neuron] at (b\i) {$b_{\i}$};
+   \fi
+}
+
+%=== Right panel: the same motifs, seen from the spike train =============
+\begin{scope}[xshift=\panelShift]
+
+   % Context windows, first, so that spikes stay in the foreground.
+   \draw[panelbox, draw=green!45!black, opacity=.35]
+     (0.15,-0.12) rectangle (\greenSyncTime,\windowTop);
+   \draw[panelbox, draw=black!35!red, opacity=.35]
+     (2.0,-0.10) rectangle (\brownSyncTime,\windowTop);
+
+   % Membrane traces.
+   \foreach \r in {0,...,\lastRow} {%
+     \pgfmathtruncatemacro\neuronAtRow{\Nneurons - \r}%
+     \ifnum\neuronAtRow>\Nmotif\relax
+       \draw[layer background] (0,\r) -- (\rasterRight,\r);
+     \else
+       \draw[layer] (0,\r) -- (\rasterRight,\r);
+     \fi
+   }
+
+   % Axonal trajectories.
+   \drawTrajectories{greenlink}{\greenMotif}{\greenSyncTime}{\greenTarget}
+   \drawTrajectories{brownlink}{\brownMotif}{\brownSyncTime}{\brownTarget}
+
+   % Trigger spikes feeding the green motif.
+   \foreach \i/\d in \greenMotif {%
+     \pgfmathsetmacro\spikeTime{\greenSyncTime - \d}%
+     \spikeMark{\spikeTime}{\i}{trigger}%
+   }
+
+   % Trigger spikes feeding the dark-red motif. The spike that re-enters the
+   % network is the green output spike, so it is not redrawn in orange.
+   \foreach \i/\d in \brownMotif {%
+     \pgfmathsetmacro\spikeTime{\brownSyncTime - \d}%
+     \pgfmathtruncatemacro\isReentry{int((\i == \greenTarget) * (\spikeTime == \greenSyncTime))}%
+     \ifnum\isReentry=0\relax
+       \spikeMark{\spikeTime}{\i}{trigger}%
+     \fi
+   }
+
+   % Background activity of the unconnected neurons.
+   \foreach \t/\i in \spontaneousSpikes {%
+     \spikeMark{\t}{\i}{spontaneous}%
+   }
+
+   % Detected spikes: the green one, then the dark-red one it triggers.
+   \spikeMark{\greenSyncTime}{\greenTarget}{greenout}
+   \spikeMark{\brownSyncTime}{\brownTarget}{redout}
+
+   % Time axis.
+   \draw[->, line width=1.3pt] (0.0,-0.68) -- (\axisRight,-0.68)
+     node[above, axisLabel] {time (ms)};
+   \foreach \t in {0,...,\lastTick} {
+     \draw (\t,-0.78) -- +(0,-0.05) node[below, tick] {$\t$};
+   }
+
+   % Countdown axis: time left before the green motif is detected.
+   \foreach \t in {0,...,\greenSyncTime} {
+     \pgfmathsetmacro\xpos{\greenSyncTime - \t}%
+     \draw[green!60!black] (\xpos,-0.24) -- +(0,-0.05)
+       node[below, tick] {$\t$};
+   }
+
+\end{scope}
+\end{tikzpicture}
+%------------------- END OF THE PICTURE -----------------
 \end{document}
 %================================================================
