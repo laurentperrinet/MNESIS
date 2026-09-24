@@ -33,8 +33,8 @@
 \def\Nmotif{8}           % highest index used by the two motifs; above: background
 
 % --- Motifs: "presynaptic neuron / axonal delay in ms" ------------------
-\def\greenMotif{8/1, 3/6, 4/2, 7/8}     % a2--a5 -> b5
-\def\brownMotif{8/3, 3/8, 4/4, 5/2}     % a2--a5 -> b1
+\def\greenMotif{8/1, 3/6, 4/2, 7/8}     % a3, a4, a7, a8 -> b5
+\def\brownMotif{8/3, 3/8, 4/4, 5/2}     % a3, a4, a5, a8 -> b2
 
 % --- Neuron emitting the detected (polychronous) spike ------------------
 \def\greenTarget{5}
@@ -90,6 +90,7 @@
     greenout/.style={draw=green!45!black, line width=3.5pt},
     redout/.style={draw=red!90!black, line width=4.4pt},
     spontaneous/.style={draw=black!45, line width=2.2pt, opacity=0.4},
+    recurrent/.style={densely dotted, draw=blue!55!black!35, line width=0.9pt},
     nodeLabel/.style={sloped, above, fill=white, inner sep=2pt,
         font=\sffamily\scriptsize},
     panelTitle/.style={font=\itshape\Large},
@@ -146,13 +147,11 @@
    \coordinate (b\i) at (\bRightShift,\row);
 }
 
-% Recurrent link between the two sides of the same neuron.
+% Recurrent link between the two sides of the same neuron. Drawn with a neutral
+% style for every neuron: motif membership is carried by the colored bundles,
+% not by this link.
 \foreach \i in {1,...,\Nneurons} {%
-   \ifnum\i>\Nmotif\relax
-     \draw[densely dotted, blue!60!black!25] (a\i) -- (b\i);
-   \else
-     \draw[densely dotted, green!50!black] (a\i) -- (b\i);
-   \fi
+    \draw[recurrent] (a\i) -- (b\i);
 }
 
 \drawWiring{brownlink}{\brownMotif}{\brownTarget}{\brownLabelPos}
