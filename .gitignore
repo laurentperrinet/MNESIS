@@ -236,7 +236,6 @@ tex/tikz_izhikevich.bbl
 tex/tikz_izhikevich.blg
 tex/tikz_izhikevich.synctex.gz
 tex/*.synctex.gz
-tex/tikz_snntorch.pdf
 tex/Perrinet26mnesis_poster.bbl
 tex/Perrinet26mnesis_poster.blg
 tex/Perrinet26mnesis_poster.pdf
@@ -253,3 +252,4 @@ tex/Perrinet26mnesis_poster.run.xml
 tex/Perrinet26mnesis_poster.bcf
 CLAUDE.md
 tex/Perrinet26mnesis_poster.bbl-SAVE-ERROR
+tex/Perrinet26mnesis.bbl-SAVE-ERROR
