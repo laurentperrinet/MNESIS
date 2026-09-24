@@ -121,7 +121,7 @@ jupyter nbconvert --to notebook --execute --inplace 99_MNESIS_run-all.ipynb
 |---|---|
 | `Perrinet26mnesis.tex` | Main paper. `\input{metadata}` + biblatex (`\addbibresource{mnesis.bib}`, `\printbibliography`). Uses `fontspec` — **must be built with `lualatex`**, not `pdflatex`. |
 | `metadata.tex` | `\input` fragment (author/affiliation/AI-statement macros); **no** `\documentclass`, do not compile standalone. |
-| `fig_izhikevich.tex`, `fig_snntorch.tex` | Standalone TikZ figures (`\documentclass{standalone}`); compiled to their own PDFs in `tex/`. |
+| `tikz_izhikevich.tex`, `tikz_snntorch.tex` | Standalone TikZ figures (`\documentclass{standalone}`); compiled to their own PDFs in `tex/`. |
 | `figure_*.tex` | `\input` figure environments (caption + `\label`) whose graphics come from `../figures/` (e.g. `figure_target.tex` → `fig:target`, `figure_robustness.tex` → `fig:noise`). |
 | `mnesis.bib` | Bibliography database. |
 
@@ -140,8 +140,8 @@ Full build (reproduces `tex/Perrinet26mnesis.pdf`):
 cd tex
 
 # 1. Standalone TikZ figures
-lualatex -interaction=nonstopmode fig_izhikevich.tex
-lualatex -interaction=nonstopmode fig_snntorch.tex
+lualatex -interaction=nonstopmode tikz_izhikevich.tex
+lualatex -interaction=nonstopmode tikz_snntorch.tex
 
 # 2. Experiment figures — must already exist in ../figures/
 #    generate them by running the relevant notebooks in src/ (see above), e.g.
